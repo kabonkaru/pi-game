@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Pi Game - how many digits can you type?</title>
+  <meta name="description" content="An 8-bit pi typing game. Type as many digits of pi as you can before the clock (or your memory) runs out.">
+  <meta name="theme-color" content="#05041a">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+  <!-- 8-bit fonts (Google Fonts). Offline? See README for how to self-host them. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+
+  <!-- apply the saved theme before first paint (no flash) -->
+  <script>
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem('pigame.settings.v1') || '{}');
+        var t = s.theme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-screen="menu">
+
+  <!-- shared SVG gradient used by the big pixel pi -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="piGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" style="stop-color:var(--pi-1)"/>
+        <stop offset="0.55" style="stop-color:var(--pi-2)"/>
+        <stop offset="1" style="stop-color:var(--pi-3)"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <!-- ===== parallax space background ===== -->
+  <div class="bg" aria-hidden="true">
+    <div class="bg-sky"></div>
+    <div class="bg-nebula">
+      <i class="blob b1" data-depth="14"></i>
+      <i class="blob b2" data-depth="24"></i>
+      <i class="blob b3" data-depth="34"></i>
+    </div>
+    <canvas id="stars"></canvas>
+    <canvas id="planet" class="pixel-art" width="64" height="64" data-depth="46"></canvas>
+    <canvas id="moon" class="pixel-art" width="32" height="32" data-depth="70"></canvas>
+    <div class="bg-grid"></div>
+  </div>
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div id="flash" aria-hidden="true"></div>
+
+  <div id="app">
+    <header class="topbar">
+      <button class="brand sfx-click" data-nav="menu" aria-label="Pi Game - main menu">
+        <span class="brand-pi" data-icon="pi"></span>
+        <span class="brand-text">PI GAME</span>
+      </button>
+      <div class="top-actions">
+        <button class="icon-btn shiny" id="btn-theme" aria-label="Switch theme"><span data-icon="sun"></span></button>
+        <button class="icon-btn shiny" id="btn-settings" aria-label="Settings"><span data-icon="gear"></span></button>
+      </div>
+    </header>
+
+    <main id="stage">
+
+      <!-- ===================== MAIN MENU ===================== -->
+      <section class="screen is-active" id="screen-menu" data-screen="menu" aria-labelledby="title">
+        <div class="hero">
+          <div class="hero-pi" data-icon="pi-hero" data-depth="-10" aria-hidden="true"></div>
+          <h1 class="title" id="title">PI GAME</h1>
+          <p class="tagline">how many digits can you remember?</p>
+        </div>
+
+        <nav class="menu-grid" aria-label="Game modes">
+          <button class="menu-card shiny tilt c-timer" data-start="timer">
+            <span class="mc-badge">MODE 01</span>
+            <span class="mc-big">3:00</span>
+            <span class="mc-title">TIMER</span>
+            <span class="mc-sub">3 minutes. Type as much pi as you can.</span>
+            <span class="mc-best">BEST <b id="best-timer">0</b></span>
+          </button>
+          <button class="menu-card shiny tilt c-zen" data-start="zen">
+            <span class="mc-badge">MODE 02</span>
+            <span class="mc-big">10s</span>
+            <span class="mc-title">ZEN</span>
+            <span class="mc-sub">No clock. One wrong digit and it's over.</span>
+            <span class="mc-best">BEST <b id="best-zen">0</b></span>
+          </button>
+          <button class="menu-card shiny tilt c-guide" data-nav="guide">
+            <span class="mc-badge">LEARN</span>
+            <span class="mc-big">3.14</span>
+            <span class="mc-title">THE PI</span>
+            <span class="mc-sub">A guide to pi, up to 1000 digits.</span>
+            <span class="mc-best">&nbsp;</span>
+          </button>
+        </nav>
+
+        <div class="menu-links">
+          <button class="chip shiny" data-nav="board" data-board="timer">TIMER TOP 10</button>
+          <button class="chip shiny" data-nav="board" data-board="zen">ZEN TOP 10</button>
+        </div>
+      </section>
+
+      <!-- ===================== GAME ===================== -->
+      <section class="screen" id="screen-game" data-screen="game" aria-label="Game">
+        <div class="game">
+          <div class="hud">
+            <button class="chip shiny" data-nav="menu">&lt; MENU</button>
+            <span class="mode-chip" id="mode-chip">TIMER</span>
+            <span class="clock" id="clock">03:00</span>
+          </div>
+          <div class="meter" aria-hidden="true"><i id="meter-fill"></i></div>
+
+          <div class="lcd" id="lcd">
+            <div class="lcd-stats">
+              <span>SCORE <b id="score">0</b></span>
+              <span>BEST <b id="best">0</b></span>
+              <span>COMBO <b id="combo">0</b></span>
+            </div>
+            <div class="lcd-text" id="lcd-text" aria-live="off"></div>
+            <div class="lcd-pop" id="lcd-pop" aria-hidden="true"></div>
+          </div>
+          <p class="hint" id="hint" role="status"></p>
+
+          <div class="keypad" id="keypad">
+            <button class="key fn wide2" data-act="reset" aria-label="Restart">RESET</button>
+            <button class="key fn" data-act="del" aria-label="Delete">DEL</button>
+            <button class="key" data-key="7">7</button>
+            <button class="key" data-key="8">8</button>
+            <button class="key" data-key="9">9</button>
+            <button class="key" data-key="4">4</button>
+            <button class="key" data-key="5">5</button>
+            <button class="key" data-key="6">6</button>
+            <button class="key" data-key="1">1</button>
+            <button class="key" data-key="2">2</button>
+            <button class="key" data-key="3">3</button>
+            <button class="key wide2" data-key="0">0</button>
+            <button class="key dot" data-key=".">.</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== RESULT ===================== -->
+      <section class="screen" id="screen-result" data-screen="result" aria-label="Results">
+        <div class="panel result">
+          <h2 class="r-title" id="res-title">TIME'S UP!</h2>
+          <p class="r-sub" id="res-sub"></p>
+          <div class="r-score"><span>SCORE</span><b id="res-score">0</b></div>
+          <div class="r-save" id="res-save"></div>
+          <div class="board" id="res-board"></div>
+          <div class="btn-row">
+            <button class="btn btn-primary shiny" id="btn-again">PLAY AGAIN</button>
+            <button class="btn shiny" data-nav="menu">MENU</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== LEADERBOARD ===================== -->
+      <section class="screen" id="screen-board" data-screen="board" aria-label="Leaderboards">
+        <div class="panel">
+          <h2 class="s-title">LEADERBOARD</h2>
+          <div class="tabs" role="tablist">
+            <button class="tab" role="tab" data-tab="timer">TIMER</button>
+            <button class="tab" role="tab" data-tab="zen">ZEN</button>
+          </div>
+          <div class="board" id="board-list"></div>
+          <div class="btn-row"><button class="btn shiny" data-nav="menu">BACK</button></div>
+        </div>
+      </section>
+
+      <!-- ===================== THE PI ===================== -->
+      <section class="screen" id="screen-guide" data-screen="guide" aria-label="The Pi">
+        <div class="panel guide">
+          <h2 class="s-title">THE PI</h2>
+          <p class="g-intro">If you don't know, pi is equal to</p>
+          <div class="g-hero">3.1415.......</div>
+          <p class="g-sub">(up to 1000 digits)</p>
+          <div class="digits" id="pi-digits" tabindex="0" aria-label="Digits of pi"></div>
+          <div class="btn-row"><button class="btn shiny" data-nav="menu">BACK</button></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ===================== SETTINGS ===================== -->
+  <dialog id="settings" class="modal" aria-labelledby="settings-title">
+    <div class="modal-head">
+      <h2 id="settings-title">SETTINGS</h2>
+      <button class="icon-btn" id="settings-close" aria-label="Close settings">X</button>
+    </div>
+
+    <div class="setting">
+      <div><b>MUSIC</b><small>Space dreamy 8-bit</small></div>
+      <button class="switch" role="switch" id="set-music" aria-checked="true"><span class="knob"></span><span class="sw-label">ON</span></button>
+    </div>
+    <div class="setting">
+      <div><b>SOUND FX</b><small>Blips, combos &amp; jingles</small></div>
+      <button class="switch" role="switch" id="set-sfx" aria-checked="true"><span class="knob"></span><span class="sw-label">ON</span></button>
+    </div>
+    <div class="setting">
+      <div><b>SCREEN SHAKE</b><small>A little wobble inside the game</small></div>
+      <button class="switch" role="switch" id="set-shake" aria-checked="true"><span class="knob"></span><span class="sw-label">ON</span></button>
+    </div>
+
+    <h3 class="modal-sub">THEME</h3>
+    <div class="themes">
+      <button class="theme-card" data-theme-pick="dark" aria-pressed="true">
+        <span class="swatch sw-dark"></span><span class="t-name">DEEP SPACE</span><span class="t-tag">DARK</span>
+      </button>
+      <button class="theme-card" data-theme-pick="light" aria-pressed="false">
+        <span class="swatch sw-light"></span><span class="t-name">DREAMY DAY</span><span class="t-tag">LIGHT</span>
+      </button>
+      <div class="theme-card skeleton" aria-disabled="true"><span class="swatch"></span><span class="sk-line"></span><span class="sk-line short"></span><em>COMING SOON</em></div>
+      <div class="theme-card skeleton" aria-disabled="true"><span class="swatch"></span><span class="sk-line"></span><span class="sk-line short"></span><em>COMING SOON</em></div>
+      <div class="theme-card skeleton" aria-disabled="true"><span class="swatch"></span><span class="sk-line"></span><span class="sk-line short"></span><em>COMING SOON</em></div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn small danger" id="btn-reset-scores">RESET SCORES</button>
+      <span class="ver">v1.0</span>
+    </div>
+  </dialog>
+
+  <noscript><p style="position:fixed;inset:auto 0 0 0;padding:1rem;background:#000;color:#fff;text-align:center">Pi Game needs JavaScript.</p></noscript>
+
+  <script src="js/pi.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/fx.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
