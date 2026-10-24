@@ -7,19 +7,33 @@
 
   const { PiEngine, computePi, WARMUP } = PiGame.pi;
   const { ScoreKeeper, SCORING } = PiGame.score;
-  const { settings, scores } = PiGame.store;
+  const { settings, scores, wallet } = PiGame.store;
   const audio = PiGame.audio;
   const fx = PiGame.fx;
 
   /* ------------------------------ config -------------------------------- */
   const CONFIG = {
     TIMER_SECONDS: 180,      // Timer mode length
+    COINS_PER_SCORE: 0.01,   // PLACEHOLDER: Pi Coins earned per run = final score x this
+    DEV_LOGO_COINS: true,    // DEV TEST: tap the logo 10 times = +100 Pi Coins (set to false before release!)
+    LOGO_TAPS: 1, LOGO_REWARD: 100, LOGO_WINDOW_MS: 2500,
     DECIMALS: 1000,          // digits after "3."
     SHAKE: { key: 2, milestone: 6, wrong: 9, finish: 12 },   // pixels (inside the page only)
   };
 
   const $ = (sel, root) => (root || document).querySelector(sel);
   const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+
+  /* ------------------------ themes (each bundles a music track) ------------------------ */
+  const THEMES = [
+    { id: 'dark',     name: 'DEEP SPACE', tag: 'DARK',      swatch: 'sw-dark',     bgm: 'deep-space', cost: 0,    icon: 'moon', meta: '#05041a' },
+    { id: 'light',    name: 'DREAMY DAY', tag: 'LIGHT',     swatch: 'sw-light',    bgm: 'dreamy-day', cost: 0,    icon: 'sun',  meta: '#cfe6ff' },
+    { id: 'terminal', name: 'PHOSPHOR',   tag: 'RETRO CRT', swatch: 'sw-terminal', bgm: 'phosphor',   cost: 3140, icon: 'term', meta: '#000a02' },
+  ];
+  const themeById = (id) => THEMES.find((t) => t.id === id);
+  const isOwned = (t) => t.cost === 0 || wallet.owns(t.id);
+  const currentTheme = () => themeById(document.documentElement.dataset.theme) || THEMES[0];
+  const fmtCoins = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
   const PI = computePi(CONFIG.DECIMALS);
   const el = {
@@ -318,6 +332,11 @@
       '<dt>DIGITS ' + sum.totalDigits + ' x ' + SCORING.LENGTH_BONUS + '</dt><dd>+' + sum.lengthBonus + '</dd>' +
       '<dt>MAX COMBO</dt><dd>' + sum.maxCombo + '</dd>' +
       '<dt>HIGH SCORE</dt><dd>' + Math.max(prevBest, score) + (score > prevBest ? ' NEW!' : '') + '</dd>';
+    const earned = Math.floor(score * CONFIG.COINS_PER_SCORE);       // Pi Coins for this run
+    if (earned > 0) wallet.add(earned);
+    const rc = $('#res-coins');
+    rc.innerHTML = earned > 0 ? '<span data-icon="coin"></span>+' + fmtCoins(earned) + ' PI COIN' : '';
+    fx.icons.mount(rc);
     state.lastResult = { mode, score, saved: false };
 
     const box = $('#res-save');
@@ -398,14 +417,174 @@
     $('.sw-label', btn).textContent = on ? 'ON' : 'OFF';
   }
 
-  function applyTheme(theme) {
-    document.documentElement.dataset.theme = theme;
+  function applyTheme(id) {
+    const t = themeById(id) || THEMES[0];
+    document.documentElement.dataset.theme = t.id;
     const meta = $('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', theme === 'light' ? '#cfe6ff' : '#05041a');
-    fx.icons.set($('#btn-theme [data-icon]'), theme === 'light' ? 'moon' : 'sun');
-    $('#btn-theme').setAttribute('aria-label', theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme');
-    $$('[data-theme-pick]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themePick === theme)));
+    if (meta) meta.setAttribute('content', t.meta);
+    const owned = THEMES.filter(isOwned);                     // the top button cycles the themes you own
+    const next = owned[(owned.indexOf(t) + 1) % owned.length];
+    fx.icons.set($('#btn-theme [data-icon]'), next.icon);
+    $('#btn-theme').setAttribute('aria-label', 'Switch to ' + next.name + ' theme');
     if (background) background.onTheme();
+  }
+
+  function equipTheme(id) {
+    const t = themeById(id);
+    if (!t || !isOwned(t)) return;
+    settings.set('theme', t.id);
+    applyTheme(t.id);
+    renderThemes();
+    syncBgm();
+  }
+
+  /* --------------------------- Pi Coins + theme shop --------------------------- */
+  function toast(text) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.setAttribute('role', 'status');
+    t.textContent = text;
+    document.body.appendChild(t);
+    window.setTimeout(() => t.remove(), 2700);
+  }
+
+  function refreshCoins() { $('#coin-count').textContent = fmtCoins(wallet.coins()); }
+
+  function trackOwned(id) { const t = THEMES.find((x) => x.bgm === id); return !!t && isOwned(t); }
+  function trackFor() {
+    const pick = settings.get('bgm');
+    if (pick !== 'auto' && audio.TRACKS[pick] && trackOwned(pick)) return pick;
+    return currentTheme().bgm;                                // AUTO: the track bundled with the theme
+  }
+  function syncBgm() { audio.setTrack(trackFor()); renderBgm(); }
+
+  function renderBgm() {
+    const host = $('#bgm-list');
+    if (!host) return;
+    const pick = settings.get('bgm');
+    const chosen = pick !== 'auto' && audio.TRACKS[pick] && trackOwned(pick) ? pick : 'auto';
+    const rows = [{ id: 'auto', name: 'AUTO', sub: 'Follows your theme', locked: false }].concat(
+      THEMES.map((t) => ({ id: t.bgm, name: audio.TRACKS[t.bgm].name, sub: 'Bundled with ' + t.name, locked: !isOwned(t), theme: t.name })));
+    host.innerHTML = rows.map((r) =>
+      '<button class="bgm-opt' + (r.locked ? ' locked' : '') + '" role="radio" data-bgm="' + r.id + '" aria-checked="' + String(r.id === chosen) + '">' +
+      '<span><b>' + r.name + '</b><small>' + (r.locked ? 'Locked - unlock the ' + r.theme + ' theme' : r.sub) + '</small></span>' +
+      (r.locked ? '<span class="lock-ico" data-icon="lock"></span>' : '') + '</button>').join('');
+    fx.icons.mount(host);
+  }
+
+  function renderThemes() {
+    const host = $('#theme-list');
+    if (!host) return;
+    const cur = currentTheme().id;
+    const skeleton = '<div class="theme-card skeleton" aria-disabled="true"><span class="swatch"></span><span class="sk-line"></span><span class="sk-line short"></span><em>COMING SOON</em></div>';
+    host.innerHTML = THEMES.map((t) => {
+      const owned = isOwned(t);
+      return '<button class="theme-card' + (owned ? '' : ' locked') + '" data-theme-id="' + t.id + '" aria-pressed="' + String(owned && cur === t.id) + '">' +
+        '<span class="swatch ' + t.swatch + '">' + (owned ? '' : '<span class="lock" data-icon="lock"></span>') + '</span>' +
+        '<span class="t-name">' + t.name + '</span><span class="t-tag">' + t.tag + '</span>' +
+        (owned ? '' : '<span class="t-price"><span data-icon="coin"></span><b>' + fmtCoins(t.cost) + '</b></span>') + '</button>';
+    }).join('') + skeleton + skeleton;
+    fx.icons.mount(host);
+  }
+
+  const buy = { theme: null };
+  function refreshConfirm() {
+    const th = buy.theme;
+    if (!th) return;
+    const have = wallet.coins(), need = th.cost - have;
+    const msg = $('#confirm-msg'), ok = $('#confirm-ok');
+    $('#confirm-cost').textContent = fmtCoins(th.cost);
+    $('#confirm-have').textContent = fmtCoins(have);
+    if (need > 0) {
+      msg.textContent = 'Not enough Pi Coins - you need ' + fmtCoins(need) + ' more.';
+      msg.className = 'c-msg bad';
+      ok.disabled = true; ok.textContent = 'NOT ENOUGH';
+    } else {
+      msg.textContent = 'Spend ' + fmtCoins(th.cost) + ' Pi Coins? It is yours forever.';
+      msg.className = 'c-msg';
+      ok.disabled = false; ok.textContent = 'UNLOCK';
+    }
+  }
+  function openConfirm(theme) {
+    buy.theme = theme;
+    $('#confirm-swatch').className = 'swatch ' + theme.swatch;
+    $('#confirm-name').textContent = theme.name + ' + ' + audio.TRACKS[theme.bgm].name + ' music';
+    refreshConfirm();
+    const dlg = $('#confirm');
+    if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+  }
+  function closeConfirm() {
+    const dlg = $('#confirm');
+    if (typeof dlg.close === 'function') dlg.close(); else dlg.removeAttribute('open');
+    buy.theme = null;
+  }
+  function doUnlock() {
+    const th = buy.theme;
+    if (!th) return;
+    if (!wallet.unlock(th.id, th.cost)) { audio.sfx('reject'); refreshConfirm(); return; }   // not enough coins
+    closeConfirm();
+    audio.sfx('unlock');
+    particles.burst(innerWidth / 2, innerHeight / 3, { n: 60, speed: 6, size: 6, life: 60, colors: ['#ffe066', '#39ff14', '#ffffff'] });
+    toast(th.name + ' UNLOCKED!');
+    equipTheme(th.id);                                        // wear it right away (its music follows in AUTO)
+  }
+
+  function initShop() {
+    wallet.onChange(() => { refreshCoins(); refreshConfirm(); });
+
+    $('#theme-list').addEventListener('click', (e) => {
+      const card = e.target.closest('[data-theme-id]');
+      const t = card && themeById(card.dataset.themeId);
+      if (!t) return;
+      if (isOwned(t)) equipTheme(t.id); else openConfirm(t);
+    });
+    $('#bgm-list').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-bgm]');
+      if (!b) return;
+      const id = b.dataset.bgm;
+      if (id !== 'auto' && !trackOwned(id)) {
+        audio.sfx('reject');
+        toast('Unlock the ' + THEMES.find((x) => x.bgm === id).name + ' theme to get this track');
+        return;
+      }
+      settings.set('bgm', id);
+      syncBgm();
+    });
+
+    $('#confirm-ok').addEventListener('click', doUnlock);
+    $('#confirm-cancel').addEventListener('click', closeConfirm);
+    $('#confirm-close').addEventListener('click', closeConfirm);
+    $('#confirm').addEventListener('click', (e) => { if (e.target === $('#confirm')) closeConfirm(); });
+    $('#confirm').addEventListener('cancel', () => { buy.theme = null; });   // Esc key
+
+    // coin chip: hover on desktop, tap-to-toggle on phones
+    const btn = $('#btn-coin'), tip = $('#coin-tip');
+    let hideTimer = 0;
+    const showTip = (on) => {
+      tip.classList.toggle('show', on);
+      btn.setAttribute('aria-expanded', String(on));
+      window.clearTimeout(hideTimer);
+      if (on) hideTimer = window.setTimeout(() => showTip(false), 5000);
+    };
+    btn.addEventListener('click', () => showTip(!tip.classList.contains('show')));
+    document.addEventListener('pointerdown', (e) => { if (!e.target.closest('#coin-wrap')) showTip(false); });
+
+    // DEV: tap the logo 10 times in a row for free Pi Coins
+    if (CONFIG.DEV_LOGO_COINS) {
+      const logo = $('.brand');
+      let taps = 0, last = 0;
+      logo.addEventListener('click', () => {
+        const now = performance.now();
+        taps = now - last > CONFIG.LOGO_WINDOW_MS ? 1 : taps + 1;
+        last = now;
+        if (taps < CONFIG.LOGO_TAPS) return;
+        taps = 0;
+        wallet.add(CONFIG.LOGO_REWARD);
+        audio.sfx('coin');
+        toast('+' + CONFIG.LOGO_REWARD + ' PI COINS (DEV)');
+        burstFrom(btn, { n: 28, speed: 4.5, colors: ['#ffe066', '#fff6b0', '#ffffff'] });
+      });
+    }
   }
 
   function initSettings() {
@@ -433,15 +612,11 @@
     el.settings.addEventListener('click', (e) => { if (e.target === el.settings) el.settings.close(); });
 
     $('#btn-theme').addEventListener('click', () => {
-      const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
-      settings.set('theme', next);
-      applyTheme(next);
-      audio.sfx(next === 'light' ? 'toggle_on' : 'toggle_off');
+      const owned = THEMES.filter(isOwned);
+      const next = owned[(owned.indexOf(currentTheme()) + 1) % owned.length];
+      equipTheme(next.id);
+      audio.sfx(next.id === 'light' ? 'toggle_on' : 'toggle_off');
     });
-    $$('[data-theme-pick]').forEach((b) => b.addEventListener('click', () => {
-      settings.set('theme', b.dataset.themePick);
-      applyTheme(b.dataset.themePick);
-    }));
 
     $('#btn-reset-scores').addEventListener('click', (e) => {
       const b = e.currentTarget;
@@ -492,7 +667,7 @@
     $$('.tab').forEach((t) => t.addEventListener('click', () => showBoard(t.dataset.tab)));
 
     // UI sounds: click on press, a soft tick on hover (mouse only)
-    const clickable = '.btn, .chip, .menu-card, .icon-btn, .tab, .brand, button.theme-card, .switch';
+    const clickable = '.btn, .chip, .menu-card, .icon-btn, .tab, .brand, button.theme-card, .switch, .coin-chip, .bgm-opt';
     document.addEventListener('pointerdown', (e) => {
       audio.unlock();
       if (e.target.closest && e.target.closest(clickable)) audio.sfx('click');
@@ -545,7 +720,14 @@
     background = new fx.Background();
     buildGuide();
     initSettings();
-    applyTheme(document.documentElement.dataset.theme || settings.get('theme'));
+    const saved = themeById(document.documentElement.dataset.theme || settings.get('theme'));
+    const start = saved && isOwned(saved) ? saved.id : 'dark';   // never start in a theme you haven't unlocked
+    if (settings.get('theme') !== start) settings.set('theme', start);
+    applyTheme(start);
+    renderThemes();
+    initShop();
+    refreshCoins();
+    syncBgm();
     const keys = bindKeypad();
     bindGlobal(keys);
     showBoard('timer');

@@ -61,6 +61,16 @@
         <span class="brand-text">PI GAME</span>
       </button>
       <div class="top-actions">
+        <div class="coin-wrap" id="coin-wrap">
+          <button class="coin-chip shiny" id="btn-coin" aria-describedby="coin-tip" aria-expanded="false" aria-label="Pi Coins">
+            <span class="coin-ico" data-icon="coin"></span><b id="coin-count">0</b>
+          </button>
+          <div class="coin-tip" id="coin-tip" role="tooltip">
+            <b>PI COIN</b>
+            <span>The currency of Pi Game. Earn them by playing, spend them on themes and their music.</span>
+            <em>because a coin made of pi.. uhh coin is circle yeah..</em>
+          </div>
+        </div>
         <button class="icon-btn shiny" id="btn-theme" aria-label="Switch theme"><span data-icon="sun"></span></button>
         <button class="icon-btn shiny" id="btn-settings" aria-label="Settings"><span data-icon="gear"></span></button>
       </div>
@@ -153,6 +163,7 @@
           <p class="r-sub" id="res-sub"></p>
           <div class="r-score"><span>SCORE</span><b id="res-score">0</b></div>
           <dl class="r-break" id="res-break"></dl>
+          <p class="r-coins" id="res-coins"></p>
           <div class="r-save" id="res-save"></div>
           <div class="board" id="res-board"></div>
           <div class="btn-row">
@@ -210,22 +221,34 @@
       <button class="switch" role="switch" id="set-shake" aria-checked="true"><span class="knob"></span><span class="sw-label">ON</span></button>
     </div>
 
+    <h3 class="modal-sub">MUSIC TRACK</h3>
+    <div class="bgm-list" id="bgm-list" role="radiogroup" aria-label="Music track"></div>
+
     <h3 class="modal-sub">THEME</h3>
-    <div class="themes">
-      <button class="theme-card" data-theme-pick="dark" aria-pressed="true">
-        <span class="swatch sw-dark"></span><span class="t-name">DEEP SPACE</span><span class="t-tag">DARK</span>
-      </button>
-      <button class="theme-card" data-theme-pick="light" aria-pressed="false">
-        <span class="swatch sw-light"></span><span class="t-name">DREAMY DAY</span><span class="t-tag">LIGHT</span>
-      </button>
-      <div class="theme-card skeleton" aria-disabled="true"><span class="swatch"></span><span class="sk-line"></span><span class="sk-line short"></span><em>COMING SOON</em></div>
-      <div class="theme-card skeleton" aria-disabled="true"><span class="swatch"></span><span class="sk-line"></span><span class="sk-line short"></span><em>COMING SOON</em></div>
-      <div class="theme-card skeleton" aria-disabled="true"><span class="swatch"></span><span class="sk-line"></span><span class="sk-line short"></span><em>COMING SOON</em></div>
-    </div>
+    <div class="themes" id="theme-list"></div>
 
     <div class="modal-foot">
       <button class="btn small danger" id="btn-reset-scores">RESET SCORES</button>
       <span class="ver">v1.1</span>
+    </div>
+  </dialog>
+
+  <!-- ===================== UNLOCK CONFIRMATION ===================== -->
+  <dialog id="confirm" class="modal modal-sm" aria-labelledby="confirm-title">
+    <div class="modal-head">
+      <h2 id="confirm-title">UNLOCK THEME?</h2>
+      <button class="icon-btn" id="confirm-close" aria-label="Close">X</button>
+    </div>
+    <div class="confirm-body">
+      <span class="swatch" id="confirm-swatch"></span>
+      <p class="c-name" id="confirm-name"></p>
+      <p class="c-line">COST <span class="coin-inline"><span data-icon="coin"></span><b id="confirm-cost">0</b></span></p>
+      <p class="c-line">YOU HAVE <span class="coin-inline"><span data-icon="coin"></span><b id="confirm-have">0</b></span></p>
+      <p class="c-msg" id="confirm-msg"></p>
+    </div>
+    <div class="btn-row confirm-actions">
+      <button class="btn btn-primary shiny" id="confirm-ok">UNLOCK</button>
+      <button class="btn shiny" id="confirm-cancel">CANCEL</button>
     </div>
   </dialog>
 

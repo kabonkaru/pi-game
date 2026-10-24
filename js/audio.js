@@ -4,8 +4,10 @@
 
    * SFX : chiptune blips. Key presses climb a pentatonic scale as your score
            grows, so a long run literally sounds like it is going up.
-   * BGM : "space dreamy" generative loop - slow pad, soft pulse-wave arpeggio,
-           twinkling bells and a gentle heartbeat, all through echo + reverb.
+   * BGM : three generative tracks, one bundled with each theme:
+           DEEP SPACE (dark)  - slow "space dreamy" pad, soft arpeggio, bells
+           DREAMY DAY (light) - sunny music-box melody over a bouncy bass
+           PHOSPHOR (retro)   - driving 8-bit minor-key chip tune with drums
    Browsers only allow audio after a user gesture, so call audio.unlock() from
    the first tap / key press.
    ========================================================================== */
@@ -37,6 +39,34 @@
     [0, 1, 2, 3, null, null, 4, 3, 2, 1, null, null, 0, null, 2, null],
   ];
 
+  /* ---- track list (one per theme bundle) ---------------------------------- */
+  const TRACKS = {
+    'deep-space': { name: 'DEEP SPACE', bpm: 76, echo: 0.75 },
+    'dreamy-day': { name: 'DREAMY DAY', bpm: 92, echo: 0.75 },
+    'phosphor':   { name: 'PHOSPHOR',   bpm: 118, echo: 0.5 },
+  };
+  CHORDS.m = [0, 3, 7];                // plain triads for PHOSPHOR
+  CHORDS.maj = [0, 4, 7];
+
+  // DREAMY DAY: C G Am F / F C G Em, major pentatonic music-box melody
+  const DAY_PROGS = [
+    [[48, 'maj7'], [43, 'six'], [45, 'm7'], [41, 'maj7']],
+    [[41, 'add9'], [48, 'maj7'], [43, 'six'], [40, 'm7']],
+  ];
+  const DAY_PENT = [72, 74, 76, 79, 81, 84, 86, 88];           // C5 D5 E5 G5 A5 C6 D6 E6
+  const DAY_MOTIFS = [
+    [0, null, 2, null, 4, null, 2, null, 3, null, null, 1, null, null, 0, null],
+    [4, null, null, 3, null, 2, null, null, 1, null, 2, null, 4, null, null, null],
+    [0, 1, 2, null, null, 4, null, 3, null, null, 2, null, 1, null, null, null],
+  ];
+
+  // PHOSPHOR: A minor.  Am F C G / Am Dm E Am
+  const PHOS_PROGS = [
+    [[45, 'm'], [41, 'maj'], [48, 'maj'], [43, 'maj']],
+    [[45, 'm'], [50, 'm'], [52, 'maj'], [45, 'm']],
+  ];
+  const PHOS_LEAD = [69, 72, 74, 76, 79, 81];                  // A minor pentatonic A4..A5
+
   class Audio8 {
     constructor() {
       this.ctx = null;
@@ -46,6 +76,9 @@
       this.timer = null;
       this.step = 0;
       this.nextTime = 0;
+      this.track = 'deep-space';
+      this.stepLen = 60 / TRACKS['deep-space'].bpm / 4;
+      this.TRACKS = TRACKS;
     }
 
     /* ---------------------------------------------------------- setup ----- */
@@ -84,7 +117,8 @@
       // echo (feedback delay with a dark loop) for the dreamy tails
       this.delayIn = c.createGain();
       const delay = c.createDelay(1.5);
-      delay.delayTime.value = (60 / BPM) * 0.75;           // dotted eighth
+      delay.delayTime.value = (60 / BPM) * 0.75;           // dotted eighth (re-tuned per track)
+      this.delay = delay;
       const fb = c.createGain();
       fb.gain.value = 0.42;
       const dlp = c.createBiquadFilter();
@@ -112,6 +146,25 @@
       this.pulse25 = this._pulse(0.25);
       this.pulse125 = this._pulse(0.125);
       this.noise = this._noiseBuffer();
+      this._applyTrack();
+    }
+
+    _applyTrack() {
+      const tr = TRACKS[this.track];
+      this.stepLen = 60 / tr.bpm / 4;
+      if (this.delay) this.delay.delayTime.setValueAtTime((60 / tr.bpm) * tr.echo, this.ctx.currentTime);
+    }
+
+    /** switch BGM track; if music is playing, fade out and restart on the new track */
+    setTrack(id) {
+      if (!TRACKS[id] || id === this.track) return;
+      this.track = id;
+      this.stepLen = 60 / TRACKS[id].bpm / 4;
+      if (this.ctx && this.timer) {
+        this.stopBgm();
+        clearTimeout(this._swap);
+        this._swap = setTimeout(() => { if (this.musicOn) this.startBgm(); }, 450);
+      }
     }
 
     _impulse(seconds, decay) {
@@ -300,6 +353,14 @@
           arp([60, 64, 67, 72, 76, 79, 84, 88, 91, 96], 0.07, 'square', 0.09);
           arp([48, 52, 55, 60, 64, 67, 72, 76, 79, 84], 0.07, 'triangle', 0.1);
           break;
+        case 'coin':
+          this._voice(out, { freq: midi(83), t, dur: 0.07, wave: this.pulse25, vol: 0.11, r: 0.05 });
+          this._voice(out, { freq: midi(88), t: t + 0.07, dur: 0.22, wave: this.pulse25, vol: 0.11, r: 0.2 });
+          break;
+        case 'unlock':
+          arp([72, 76, 79, 84, 88, 91], 0.07, 'square', 0.09);
+          arp([60, 64, 67, 72], 0.07, 'triangle', 0.1);
+          break;
         case 'save':
           this._voice(out, { freq: 988, t, dur: 0.07, wave: this.pulse25, vol: 0.12, r: 0.05 });
           this._voice(out, { freq: 1319, t: t + 0.07, dur: 0.25, wave: this.pulse25, vol: 0.12, r: 0.2 });
@@ -316,6 +377,7 @@
       this.musicBus.gain.cancelScheduledValues(now);
       this.musicBus.gain.setValueAtTime(this.musicBus.gain.value, now);
       this.musicBus.gain.linearRampToValueAtTime(0.6, now + 2);
+      this._applyTrack();
       this.step = 0;
       this.nextTime = now + 0.1;
       this.timer = setInterval(() => this._schedule(), 40);
@@ -336,7 +398,7 @@
       if (this.nextTime < c.currentTime - 0.5) this.nextTime = c.currentTime + 0.05; // after a long pause
       while (this.nextTime < c.currentTime + 0.3) {
         this._playStep(this.step, this.nextTime);
-        this.nextTime += STEP;
+        this.nextTime += this.stepLen;
         this.step++;
       }
     }
@@ -348,11 +410,18 @@
     }
 
     _playStep(step, t) {
+      if (this.track === 'dreamy-day') this._stepDreamyDay(step, t);
+      else if (this.track === 'phosphor') this._stepPhosphor(step, t);
+      else this._stepDeepSpace(step, t);
+    }
+
+    /* ---------------------------------------------- DEEP SPACE (original) -- */
+    _stepDeepSpace(step, t) {
       const s = step % 16;
       const bar = Math.floor(step / 16);
       const { root, tones } = this._chordAt(bar);
       const out = this.musicBus;
-      const barLen = STEP * 16;
+      const barLen = this.stepLen * 16;
       const padRoot = root < 47 ? root + 12 : root;
 
       if (s === 0) {
@@ -384,7 +453,7 @@
         const pool = tones.map((iv) => padRoot + 12 + iv).concat(tones.map((iv) => padRoot + 24 + iv));
         const note = pool[idx % pool.length];
         this._voice(out, {
-          freq: midi(note), t, dur: STEP * 1.6, wave: this.pulse25,
+          freq: midi(note), t, dur: this.stepLen * 1.6, wave: this.pulse25,
           vol: 0.04 + this.intensity * 0.02, a: 0.01, r: 0.25,
           lp: 1800 + this.intensity * 2600, delay: 0.6, verb: 0.3,
         });
@@ -396,6 +465,94 @@
         const note = pool[Math.floor(Math.random() * pool.length)] + (Math.random() < 0.3 ? 12 : 0);
         this._voice(out, { freq: midi(note), t, dur: 0.05, type: 'sine', vol: 0.05, a: 0.004, r: 1.6, delay: 0.7, verb: 0.6 });
         this._voice(out, { freq: midi(note) * 2, t, dur: 0.03, type: 'triangle', vol: 0.015, a: 0.004, r: 0.9, delay: 0.5, verb: 0.5 });
+      }
+    }
+
+    /* ------------------------------------------------------- DREAMY DAY ---- */
+    _stepDreamyDay(step, t) {
+      const s = step % 16;
+      const bar = Math.floor(step / 16);
+      const L = this.stepLen;
+      const out = this.musicBus;
+      const [root, type] = DAY_PROGS[Math.floor(bar / 4) % DAY_PROGS.length][bar % 4];
+      const tones = CHORDS[type];
+      const padRoot = root < 47 ? root + 12 : root;
+      let bass = 36 + (root % 12);
+      if (bass < 40) bass += 12;
+
+      if (s === 0) {                                   // airy pad
+        tones.forEach((iv) => {
+          this._voice(out, { freq: midi(padRoot + iv), t, dur: L * 15, type: 'triangle', vol: 0.03, a: 0.3, r: 1.0, lp: 2200, verb: 0.4, detune: Math.random() * 10 - 5 });
+        });
+      }
+      const hop = { 0: 0, 6: 7, 8: 12, 14: 7 }[s];     // bouncy bass: root, 5th, octave, 5th
+      if (hop != null) {
+        this._voice(out, { freq: midi(bass + hop), t, dur: L * 1.4, type: 'triangle', vol: 0.1, a: 0.01, r: 0.15, lp: 900 });
+      }
+      if (s === 0 || s === 8) this._voice(out, { freq: 120, slideTo: 50, t, dur: 0.09, type: 'sine', vol: s === 0 ? 0.06 : 0.035, r: 0.04 });
+      if (s % 2 === 0) this._noise(out, t, 0.035, s % 4 === 2 ? 0.018 : 0.008, 8000, null);   // shaker
+
+      const pat = DAY_MOTIFS[(bar + Math.floor(bar / 4)) % DAY_MOTIFS.length];
+      const idx = pat[s];
+      if (idx != null && Math.random() > 0.08) {       // music-box melody
+        const note = DAY_PENT[idx + (bar % 8 >= 4 ? 1 : 0)];
+        this._voice(out, { freq: midi(note), t, dur: L * 1.3, wave: this.pulse125, vol: 0.04 + this.intensity * 0.02, a: 0.006, r: 0.3, lp: 3200 + this.intensity * 2400, delay: 0.5, verb: 0.3 });
+        this._voice(out, { freq: midi(note + 12), t, dur: 0.03, type: 'sine', vol: 0.012, a: 0.004, r: 0.8, verb: 0.5 });
+      }
+      if (s % 4 === 2 && Math.random() < 0.1 + this.intensity * 0.05) {   // sparkle
+        const note = padRoot + 24 + tones[Math.floor(Math.random() * tones.length)];
+        this._voice(out, { freq: midi(note), t, dur: 0.05, type: 'sine', vol: 0.045, a: 0.004, r: 1.4, delay: 0.6, verb: 0.5 });
+      }
+    }
+
+    /* --------------------------------------------------------- PHOSPHOR ---- */
+    _stepPhosphor(step, t) {
+      const s = step % 16;
+      const bar = Math.floor(step / 16);
+      const L = this.stepLen;
+      const out = this.musicBus;
+      const [root, type] = PHOS_PROGS[Math.floor(bar / 4) % PHOS_PROGS.length][bar % 4];
+      const tones = CHORDS[type];
+      const padRoot = root < 47 ? root + 12 : root;
+      let bass = 36 + (root % 12);
+      if (bass < 40) bass += 12;
+      const breakdown = bar % 8 === 7;                 // every 8th bar the drums drop out
+
+      if (!breakdown) {
+        if (s === 0 || s === 8 || (s === 6 && bar % 2 === 1)) {                          // kick
+          this._voice(out, { freq: 150, slideTo: 45, t, dur: 0.1, type: 'sine', vol: s === 6 ? 0.08 : 0.13, r: 0.04 });
+        }
+        if (s === 4 || s === 12) {                                                       // snare
+          this._noise(out, t, 0.11, 0.07, 1200, 7000);
+          this._voice(out, { freq: 210, slideTo: 120, t, dur: 0.06, type: 'triangle', vol: 0.05, r: 0.05 });
+        }
+      }
+      if (s % 2 === 0) this._noise(out, t, 0.025, s % 4 === 2 ? 0.02 : 0.01, 9000, null); // hats
+
+      if (s % 2 === 0) {                                                                 // square bass, 8ths
+        const n = bass + (s % 8 === 6 ? 12 : 0);
+        this._voice(out, { freq: midi(n), t, dur: L * 1.7, wave: this.pulse125, vol: 0.075, a: 0.004, r: 0.05, lp: 1100 });
+      }
+      if (s === 0) {                                                                     // buzzy pad
+        tones.forEach((iv) => {
+          this._voice(out, { freq: midi(padRoot + iv), t, dur: L * 15, type: 'sawtooth', vol: 0.014, a: 0.15, r: 0.6, lp: 800, verb: 0.3 });
+        });
+      }
+
+      const pool = tones.map((iv) => padRoot + 12 + iv);                                 // 16th arpeggio
+      pool.push(pool[0] + 12);
+      if (Math.random() > 0.12) {
+        const note = pool[[0, 1, 2, 3, 2, 1, 2, 3][s % 8]];
+        this._voice(out, { freq: midi(note), t, dur: L * 0.85, wave: this.pulse25, vol: 0.026 + this.intensity * 0.014, a: 0.003, r: 0.05, lp: 2400 + this.intensity * 2400, delay: 0.22 });
+      }
+
+      if (s % 4 === 0 && bar % 2 === 1 && Math.random() < 0.3 + this.intensity * 0.15) { // lead beeps
+        const lead = root === 52 ? [69, 76, 81] : PHOS_LEAD;                             // E bar: avoid the G natural
+        const note = lead[Math.floor(Math.random() * lead.length)];
+        this._voice(out, { freq: midi(note), t, dur: L * 1.6, type: 'square', vol: 0.035, a: 0.004, r: 0.25, lp: 3000, delay: 0.55, verb: 0.25 });
+      }
+      if (s === 15 && Math.random() < 0.3) {                                             // data chirp
+        this._voice(out, { freq: midi(93), slideTo: midi(81), t, dur: 0.06, type: 'square', vol: 0.02, r: 0.04 });
       }
     }
   }

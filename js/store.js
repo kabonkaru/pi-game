@@ -7,6 +7,8 @@
 
   const KEY_SETTINGS = 'pigame.settings.v1';
   const KEY_SCORES = 'pigame.scores.v2';
+  const KEY_WALLET = 'pigame.wallet.v1';
+  const MAX_COINS = 999999999;
   const BOARD_SIZE = 10;
   const MAX_NAME = 12;
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -51,6 +53,7 @@
       sfx: true,
       shake: !media('(prefers-reduced-motion: reduce)'),
       theme: media('(prefers-color-scheme: light)') ? 'light' : 'dark',
+      bgm: 'auto',               // 'auto' = follow the theme, or a track id
     };
   }
   let settingsCache = Object.assign(settingsDefaults(), read(KEY_SETTINGS) || {});
@@ -110,7 +113,52 @@
     },
   };
 
-  const api = { settings, scores, fmtDate, cleanName };
+  /* ------------------------------ Pi Coins -------------------------------- */
+  function loadWallet() {
+    const raw = read(KEY_WALLET) || {};
+    const coins = Number.isInteger(raw.coins) && raw.coins >= 0 ? Math.min(raw.coins, MAX_COINS) : 0;
+    const owned = (Array.isArray(raw.owned) ? raw.owned : [])
+      .filter((id) => typeof id === 'string' && id.length <= 32).slice(0, 50);
+    return { coins, owned };
+  }
+  let walletCache = loadWallet();
+  const walletListeners = [];
+  function saveWallet() {
+    write(KEY_WALLET, walletCache);
+    walletListeners.forEach((fn) => fn(walletCache.coins));
+  }
+
+  const wallet = {
+    coins() { return walletCache.coins; },
+    owns(id) { return walletCache.owned.indexOf(id) >= 0; },
+    onChange(fn) { walletListeners.push(fn); },
+    add(n) {
+      n = Math.floor(n);
+      if (!(n > 0)) return walletCache.coins;
+      walletCache.coins = Math.min(MAX_COINS, walletCache.coins + n);
+      saveWallet();
+      return walletCache.coins;
+    },
+    /** returns false (and changes nothing) if you can't afford it */
+    spend(n) {
+      n = Math.floor(n);
+      if (!(n >= 0) || n > walletCache.coins) return false;
+      walletCache.coins -= n;
+      saveWallet();
+      return true;
+    },
+    /** atomic purchase: pays and marks `id` as owned. false = not enough coins */
+    unlock(id, cost) {
+      if (this.owns(id)) return true;
+      if (!(cost >= 0) || cost > walletCache.coins) return false;
+      walletCache.coins -= cost;
+      walletCache.owned.push(id);
+      saveWallet();
+      return true;
+    },
+  };
+
+  const api = { settings, scores, wallet, fmtDate, cleanName };
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;
   } else {

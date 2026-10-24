@@ -43,6 +43,41 @@
   --sk-a: rgba(255, 255, 255, .06); --sk-b: rgba(255, 255, 255, .16);
 }
 
+/* ---- PHOSPHOR (locked retro theme: black + green CRT) ---- */
+:root[data-theme="terminal"] {
+  color-scheme: dark;
+  --bg-a: #000a02; --bg-b: #01140a; --bg-c: #032a0f;
+  --text: #c8ffd0;  --muted: #4fbf6a;
+  --line: #1fbf4a; --line-strong: #001a07;
+  --surface: rgba(0, 24, 8, .92); --surface-2: rgba(0, 14, 5, .8); --surface-solid: #00170a;
+  --shadow: rgba(0, 10, 2, .8);    --shadow-solid: #000a03;
+  --glow: rgba(57, 255, 20, .4);
+
+  --key: #04381a; --key-hi: #07522a; --key-shadow: #011a0b; --key-text: #9dffb0;
+  --fn: #1fbf4a;  --fn-shadow: #0b6b27; --fn-text: #00170a;
+  --btn-bg: #04381a; --btn-shadow: #011a0b; --btn-text: #9dffb0;
+  --on-accent: #00170a;
+
+  --c-timer-a: #b6ff3a; --c-timer-b: #2bd96b; --c-timer-s: #0d6a2c;
+  --c-zen-a:   #3dffa2; --c-zen-b:   #19b8a0; --c-zen-s:   #0b6a5f;
+  --c-guide-a: #7dff7d; --c-guide-b: #d6ff4a; --c-guide-s: #4f8f12;
+
+  --silver: #8fd9a0; --good: #39ff14; --bad: #ff4d4d; --gold: #d8ff3a; --gold-bg: rgba(216, 255, 58, .16);
+
+  --lcd-bg: #001a07; --lcd-text: #39ff14; --lcd-dim: #1b7a35; --lcd-bad: #ff4d4d;
+  --lcd-glow: 0 0 10px rgba(57, 255, 20, .7);
+
+  --star1: #39ff14; --star2: #9dffb0; --star3: #d8ff3a;
+  --blob1: rgba(57, 255, 20, .16); --blob2: rgba(0, 255, 150, .12); --blob3: rgba(0, 120, 40, .4);
+  --grid: rgba(57, 255, 20, .3);
+  --pi-1: #d8ff3a; --pi-2: #39ff14; --pi-3: #0fa83a;
+  --sk-a: rgba(255, 255, 255, .06); --sk-b: rgba(255, 255, 255, .16);
+}
+/* CRT scanlines (decoration only) */
+:root[data-theme="terminal"] body::after { content: ""; position: fixed; inset: 0; z-index: 40; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .24) 0 1px, transparent 1px 3px); }
+:root[data-theme="terminal"] .title, :root[data-theme="terminal"] .r-title { filter: drop-shadow(0 0 10px rgba(57, 255, 20, .55)); }
+
 /* ---- DREAMY DAY (light) ---- */
 :root[data-theme="light"] {
   color-scheme: light;
@@ -415,3 +450,57 @@ button.theme-card:active { transform: translateY(3px); box-shadow: 0 2px 0 var(-
   font-family: var(--font-pixel); font-size: .55rem; }
 .r-break dt { color: var(--muted); }
 .r-break dd { margin: 0; text-align: right; }
+
+/* ---- v1.2 Pi Coin, theme shop, music track picker ---- */
+.coin-wrap { position: relative; }
+.coin-chip { display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 12px; border: 4px solid var(--line-strong);
+  background: var(--btn-bg); color: var(--btn-text); box-shadow: 0 4px 0 var(--btn-shadow); font-family: var(--font-pixel); font-size: .6rem; }
+.coin-chip:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--btn-shadow); }
+.coin-ico { width: 18px; height: 18px; color: var(--gold); flex: none; }
+.coin-ico svg, .coin-inline svg, .t-price svg, .r-coins svg { display: block; width: 100%; height: 100%; }
+.coin-tip { display: none; position: absolute; right: 0; top: calc(100% + 12px); z-index: 60; width: min(270px, 80vw);
+  padding: 12px 14px; text-align: left; background: var(--surface-solid); color: var(--text); border: 4px solid var(--line-strong);
+  box-shadow: 0 6px 0 var(--shadow-solid), 0 18px 30px -10px #000; }
+.coin-tip b { display: block; font-family: var(--font-pixel); font-size: .6rem; color: var(--gold); margin-bottom: 6px; }
+.coin-tip span { display: block; font-size: 1.2rem; line-height: 1.1; }
+.coin-tip em { display: block; margin-top: 8px; font-size: 1.15rem; color: var(--muted); }
+.coin-wrap:hover .coin-tip, .coin-tip.show { display: block; }
+
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); translate: -50% 0; z-index: 90; max-width: 90vw;
+  padding: 12px 16px; background: var(--surface-solid); color: var(--text); border: 4px solid var(--line-strong);
+  box-shadow: 0 5px 0 var(--shadow-solid); font-family: var(--font-pixel); font-size: .6rem; text-align: center;
+  animation: toastIn .25s var(--ease), flash .4s ease-in 2.2s forwards; pointer-events: none; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+.r-coins { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 1.4em;
+  font-family: var(--font-pixel); font-size: .65rem; color: var(--gold); }
+.r-coins [data-icon] { width: 16px; height: 16px; }
+
+.bgm-list { display: grid; gap: 10px; padding: 8px 20px 12px; }
+.bgm-opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; text-align: left;
+  border: 4px solid var(--line-strong); background: var(--surface-2); color: var(--text); box-shadow: 0 4px 0 var(--shadow-solid); }
+.bgm-opt b { font-family: var(--font-pixel); font-size: .55rem; font-weight: normal; }
+.bgm-opt small { display: block; margin-top: 4px; color: var(--muted); font-size: 1.1rem; }
+.bgm-opt[aria-checked="true"] { outline: 4px solid var(--c-zen-a); outline-offset: 2px; }
+.bgm-opt.locked { opacity: .6; }
+.bgm-opt .lock-ico { width: 16px; height: 16px; flex: none; color: var(--muted); }
+.bgm-opt .lock-ico svg { display: block; width: 100%; height: 100%; }
+
+.sw-terminal { background: linear-gradient(135deg, #000a02, #032a0f 55%, #39ff14); }
+.theme-card.locked .swatch { position: relative; filter: saturate(.6) brightness(.75); }
+.theme-card .lock { position: absolute; inset: 0; margin: auto; width: 22px; height: 22px; color: #fff; filter: drop-shadow(2px 2px 0 #000); }
+.theme-card .lock svg { display: block; width: 100%; height: 100%; }
+.t-price { display: flex; align-items: center; gap: 6px; font-family: var(--font-pixel); font-size: .5rem; color: var(--gold); }
+.t-price [data-icon] { width: 14px; height: 14px; }
+
+dialog.modal-sm { width: min(88vw, 400px); }
+.confirm-body { display: grid; gap: 10px; justify-items: center; text-align: center; padding: 20px; }
+.confirm-body .swatch { width: 100%; }
+.c-name { font-family: var(--font-pixel); font-size: .85rem; }
+.c-line { display: flex; align-items: center; gap: 8px; font-family: var(--font-pixel); font-size: .55rem; color: var(--muted); }
+.coin-inline { display: inline-flex; align-items: center; gap: 6px; color: var(--gold); }
+.coin-inline [data-icon] { width: 14px; height: 14px; }
+.c-msg { min-height: 2.4em; font-size: 1.25rem; color: var(--muted); line-height: 1.05; }
+.c-msg.bad { color: var(--bad); }
+.confirm-actions { padding: 0 20px 20px; }
+.btn:disabled { opacity: .55; cursor: not-allowed; filter: grayscale(.5); }

@@ -72,6 +72,40 @@
       const cut = (dx - 2.4) * (dx - 2.4) + (dy + 1.6) * (dy + 1.6) <= 12;
       return outer && !cut;
     }),
+    coin: [                       // Pi Coin: a disc with a pi cut out of it
+      '...#####...',
+      '..#######..',
+      '.#########.',
+      '###.....###',
+      '####.#.####',
+      '####.#.####',
+      '####.#.####',
+      '####.#..###',
+      '.#########.',
+      '..#######..',
+      '...#####...',
+    ],
+    lock: [
+      '..#####..',
+      '.##...##.',
+      '.#.....#.',
+      '.#.....#.',
+      '#########',
+      '#########',
+      '####.####',
+      '####.####',
+      '#########',
+    ],
+    term: [                       // ">_" prompt
+      '#........',
+      '##.......',
+      '.##......',
+      '..##.....',
+      '.##......',
+      '##.......',
+      '#..#####.',
+      '.........',
+    ],
     gear: grid(11, 11, (dx, dy) => {
       const d = Math.sqrt(dx * dx + dy * dy);
       const ring = d <= 3.7 && d >= 1.8;
@@ -136,6 +170,11 @@
       planet: { bands: ['#ff9ec7', '#ffb7a0', '#ffd08a', '#ffa4d6', '#ffc2b5'], shade: '#b45c9a', ring: ['#ffffff', '#b9a7ff'] },
       moon: { base: '#fff6d9', crater: '#ecd9a4', shade: '#c9a96a' },
     },
+  };
+
+  PALETTES.terminal = {         // PHOSPHOR: green CRT planet + moon
+    planet: { bands: ['#0b6b27', '#13a53f', '#39ff14', '#0f8a33', '#7dff6a'], shade: '#00170a', ring: ['#d8ff3a', '#2bd96b'] },
+    moon: { base: '#b6ffb9', crater: '#5fcf78', shade: '#0b5a24' },
   };
 
   function drawPlanet(cv, pal) {
@@ -227,7 +266,7 @@
     }
 
     drawArt() {
-      const theme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+      const theme = PALETTES[document.documentElement.dataset.theme] ? document.documentElement.dataset.theme : 'dark';
       drawPlanet(this.planet, PALETTES[theme].planet);
       drawMoon(this.moon, PALETTES[theme].moon);
     }
