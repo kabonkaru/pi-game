@@ -223,7 +223,7 @@ body[data-screen="game"] #stage { min-height: 0; }
   box-shadow: inset 0 0 0 3px rgba(0,0,0,.22), 0 6px 0 var(--shadow-solid), 0 18px 34px -14px var(--shadow); overflow: hidden; }
 .lcd::after { content: ""; position: absolute; inset: 0; pointer-events: none;
   background: repeating-linear-gradient(0deg, rgba(0,0,0,.1) 0 1px, transparent 1px 3px); }
-.lcd-stats { display: flex; justify-content: space-between; gap: 8px; font-family: var(--font-pixel); font-size: .5rem; color: var(--lcd-dim); }
+.lcd-stats { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 8px; font-family: var(--font-pixel); font-size: .5rem; color: var(--lcd-dim); }
 .lcd-stats b { color: var(--lcd-text); font-weight: normal; margin-left: 4px; }
 .lcd-text { height: calc(1.55em * 4 + 6px); margin-top: 8px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;
   font-family: var(--font-pixel); font-size: clamp(1.05rem, 5.3vw, 1.45rem); line-height: 1.55; text-align: right;
@@ -406,3 +406,12 @@ button.theme-card:active { transform: translateY(3px); box-shadow: 0 2px 0 var(-
   .menu-card { grid-template-columns: 1fr; grid-template-areas: "badge" "big" "title" "sub" "best"; min-height: 0; }
   .hero-pi { width: 60px; }
 }
+
+/* ---- v1.1 scoring ---- */
+.tier[data-tier="S"] { color: var(--good); }
+.tier[data-tier="A"] { color: #ffe066; }
+.tier.pop { display: inline-block; animation: pop .25s steps(3); }
+.r-break { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; width: 100%; margin: 0;
+  font-family: var(--font-pixel); font-size: .55rem; }
+.r-break dt { color: var(--muted); }
+.r-break dd { margin: 0; text-align: right; }

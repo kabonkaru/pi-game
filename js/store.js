@@ -6,7 +6,7 @@
   'use strict';
 
   const KEY_SETTINGS = 'pigame.settings.v1';
-  const KEY_SCORES = 'pigame.scores.v1';
+  const KEY_SCORES = 'pigame.scores.v2';
   const BOARD_SIZE = 10;
   const MAX_NAME = 12;
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

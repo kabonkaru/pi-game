@@ -88,7 +88,7 @@
             <span class="mc-badge">MODE 02</span>
             <span class="mc-big">10s</span>
             <span class="mc-title">ZEN</span>
-            <span class="mc-sub">No clock. One wrong digit and it's over.</span>
+            <span class="mc-sub">10s survival clock. One wrong digit ends it.</span>
             <span class="mc-best">BEST <b id="best-zen">0</b></span>
           </button>
           <button class="menu-card shiny tilt c-guide" data-nav="guide">
@@ -121,6 +121,7 @@
               <span>SCORE <b id="score">0</b></span>
               <span>BEST <b id="best">0</b></span>
               <span>COMBO <b id="combo">0</b></span>
+              <span>TIER <b id="tier" class="tier" data-tier="-">-</b></span>
             </div>
             <div class="lcd-text" id="lcd-text" aria-live="off"></div>
             <div class="lcd-pop" id="lcd-pop" aria-hidden="true"></div>
@@ -151,6 +152,7 @@
           <h2 class="r-title" id="res-title">TIME'S UP!</h2>
           <p class="r-sub" id="res-sub"></p>
           <div class="r-score"><span>SCORE</span><b id="res-score">0</b></div>
+          <dl class="r-break" id="res-break"></dl>
           <div class="r-save" id="res-save"></div>
           <div class="board" id="res-board"></div>
           <div class="btn-row">
@@ -223,13 +225,14 @@
 
     <div class="modal-foot">
       <button class="btn small danger" id="btn-reset-scores">RESET SCORES</button>
-      <span class="ver">v1.0</span>
+      <span class="ver">v1.1</span>
     </div>
   </dialog>
 
   <noscript><p style="position:fixed;inset:auto 0 0 0;padding:1rem;background:#000;color:#fff;text-align:center">Pi Game needs JavaScript.</p></noscript>
 
   <script src="js/pi.js"></script>
+  <script src="js/score.js"></script>
   <script src="js/store.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/fx.js"></script>

@@ -6,6 +6,7 @@
   'use strict';
 
   const { PiEngine, computePi, WARMUP } = PiGame.pi;
+  const { ScoreKeeper, SCORING } = PiGame.score;
   const { settings, scores } = PiGame.store;
   const audio = PiGame.audio;
   const fx = PiGame.fx;
@@ -13,7 +14,6 @@
   /* ------------------------------ config -------------------------------- */
   const CONFIG = {
     TIMER_SECONDS: 180,      // Timer mode length
-    ZEN_THINK_SECONDS: 10,   // Zen mode: time allowed per digit
     DECIMALS: 1000,          // digits after "3."
     SHAKE: { key: 2, milestone: 6, wrong: 9, finish: 12 },   // pixels (inside the page only)
   };
@@ -26,15 +26,15 @@
     stage: $('#stage'),
     modeChip: $('#mode-chip'), clock: $('#clock'), meter: $('#meter-fill'),
     lcd: $('#lcd'), lcdText: $('#lcd-text'), lcdPop: $('#lcd-pop'),
-    score: $('#score'), best: $('#best'), combo: $('#combo'), hint: $('#hint'),
+    score: $('#score'), best: $('#best'), combo: $('#combo'), tier: $('#tier'), hint: $('#hint'),
     keypad: $('#keypad'), flash: $('#flash'),
     settings: $('#settings'),
   };
 
   const state = {
     screen: 'menu', engine: null, round: 0,
-    deadline: 0, think: 0, warned: -1,
-    combo: 0, best: 0, boardTab: 'timer', lastResult: null,
+    deadline: 0, warned: -1, keeper: null,          // deadline = Timer-mode 3:00 clock
+    best: 0, boardTab: 'timer', lastResult: null,
   };
 
   /* ---------------------------- tiny helpers ----------------------------- */
@@ -84,12 +84,13 @@
   function startGame(mode) {
     state.round++;
     state.engine = new PiEngine(mode, PI);
-    state.deadline = 0; state.think = 0; state.warned = -1; state.combo = 0;
+    state.deadline = 0; state.warned = -1;
+    state.keeper = new ScoreKeeper({ survival: mode === 'zen' });   // Zen = 10s survival clock
     state.best = scores.best(mode);
     audio.setIntensity(0);
     el.modeChip.textContent = mode === 'timer' ? 'TIMER' : 'ZEN';
     el.modeChip.dataset.mode = mode;
-    el.clock.textContent = mode === 'timer' ? fmtClock(CONFIG.TIMER_SECONDS) : '--';
+    el.clock.textContent = mode === 'timer' ? fmtClock(CONFIG.TIMER_SECONDS) : '10.0s';
     el.clock.classList.remove('danger');
     setMeter(1);
     $$('.screen').forEach((s) => s.classList.toggle('is-active', s.dataset.screen === 'game'));
@@ -122,9 +123,12 @@
       if (bad) html += '<span class="bad">' + bad + '</span>';
     }
     el.lcdText.innerHTML = '<div class="lcd-inner">' + html + '</div>';
-    el.score.textContent = eng.score;
-    el.best.textContent = Math.max(state.best, eng.score);
-    el.combo.textContent = state.combo;
+    const k = state.keeper;
+    el.score.textContent = k.totalScore;
+    el.best.textContent = Math.max(state.best, k.totalScore);
+    el.combo.textContent = k.currentCombo;
+    el.tier.textContent = k.speedTier;
+    el.tier.dataset.tier = k.speedTier;
     updateHint();
   }
 
@@ -148,7 +152,7 @@
     } else if (eng.mode === 'timer' && eng.correctLen < n) {
       text = 'Wrong digit! Press DEL to fix it.'; cls = 'bad';
     } else if (eng.mode === 'zen') {
-      text = CONFIG.ZEN_THINK_SECONDS + ' seconds per digit. Do not blink.';
+      text = 'Survive! Every correct digit adds ' + (SCORING.SURVIVAL_REFILL_MS / 1000) + 's.';
     } else {
       text = 'Keep going!';
     }
@@ -170,9 +174,12 @@
     if (ev === 'ignore') return;
     const now = performance.now();
     if (eng.justStarted) { state.deadline = now + CONFIG.TIMER_SECONDS * 1000; audio.sfx('go'); }
-    if (eng.mode === 'zen' && (ev === 'warmup_done' || ev === 'ok')) {
-      state.think = now + CONFIG.ZEN_THINK_SECONDS * 1000;
-    }
+    // ---- v1.1 scoring: speed tier x combo tier, survival clock refill ----
+    const k = state.keeper;
+    let hit = null;
+    if (ev === 'warmup_done') k.start(now);
+    else if (ev === 'ok' || ev === 'complete') hit = k.onCorrect(now, eng.score);
+    else if (ev === 'wrong' || ev === 'wrong_over') k.onWrong(now);
 
     if (ev === 'reject') {
       render();
@@ -183,10 +190,12 @@
       return;
     }
 
-    if (ev === 'ok') state.combo++;
-    else if (ev === 'wrong' || ev === 'wrong_over') state.combo = 0;
-    audio.setIntensity(Math.min(1, state.combo / 60));
+    audio.setIntensity(Math.min(1, k.currentCombo / 60));
     render(ev === 'ok' || ev === 'warmup_ok' || ev === 'warmup_done' || ev === 'complete');
+    if (hit && hit.isNew) {                   // speed-tier popup
+      el.tier.classList.remove('pop'); void el.tier.offsetWidth; el.tier.classList.add('pop');
+      if (hit.tier === 'S' && eng.score % 5 !== 0) fx.floatText(el.lcdPop, 'S +' + hit.points, 'good');
+    }
 
     switch (ev) {
       case 'warmup_ok':
@@ -204,9 +213,9 @@
           burstFrom(keyEl, { n: 36, speed: 5.5, size: 6, life: 52 });
           shake(CONFIG.SHAKE.milestone);
         } else {
-          burstFrom(keyEl, { n: 7 + Math.min(10, Math.floor(state.combo / 8)) });
+          burstFrom(keyEl, { n: 7 + Math.min(10, Math.floor(k.currentCombo / 8)) });
           shake(CONFIG.SHAKE.key);
-          if (state.combo > 0 && state.combo % 5 === 0) fx.floatText(el.lcdPop, 'COMBO x' + state.combo, 'good');
+          if (k.currentCombo > 0 && k.currentCombo % 5 === 0) fx.floatText(el.lcdPop, 'COMBO x' + k.currentCombo, 'good');
         }
         break;
       case 'wrong':
@@ -234,7 +243,7 @@
 
   function onBack() {
     if (state.screen !== 'game') return;
-    if (state.engine.backspace()) { audio.sfx('del'); render(); }
+    if (state.engine.backspace()) { state.keeper.touch(performance.now()); audio.sfx('del'); render(); }
   }
 
   function finishRound(reason) {
@@ -257,6 +266,7 @@
     const eng = state.engine;
     if (!eng || eng.over) return;
     const now = performance.now();
+    if (state.keeper.decay(now)) render();     // 8s without a correct digit: combo drops
     if (eng.mode === 'timer') {
       if (!eng.started) return;
       const left = state.deadline - now;
@@ -270,9 +280,10 @@
       el.clock.classList.toggle('danger', left <= 10000);
       if (sec <= 10 && sec !== state.warned) { state.warned = sec; audio.sfx('warn', { urgent: sec <= 3 }); }
       setMeter(left / (CONFIG.TIMER_SECONDS * 1000));
-    } else {
-      if (!state.think) return;
-      const left = state.think - now;
+    } else {                                    // Zen: survival clock (10.0s max, +0.25s per digit)
+      const kp = state.keeper;
+      if (!kp.deadline) return;
+      const left = kp.left(now);
       if (left <= 0) {
         el.clock.textContent = '0.0s'; setMeter(0);
         finishRound('timeout');
@@ -283,24 +294,30 @@
       const sec = Math.ceil(left / 1000);
       if (sec <= 3 && sec !== state.warned) { state.warned = sec; audio.sfx('warn', { urgent: true }); }
       if (sec > 3) state.warned = -1;
-      setMeter(left / (CONFIG.ZEN_THINK_SECONDS * 1000));
+      setMeter(left / SCORING.SURVIVAL_MAX_MS);
     }
   }
 
   /* ------------------------------- results ------------------------------- */
   function showResult() {
     const eng = state.engine;
-    const mode = eng.mode, score = eng.score;
+    const mode = eng.mode, sum = state.keeper.summary(), score = sum.totalScore;
+    const prevBest = scores.best(mode);
     const [title, sub] = {
       time: ["TIME'S UP!", 'Your 3 minutes are over.'],
       wrong: ['GAME OVER', 'You typed ' + eng.wrongChar + ' - the next digit was ' + eng.expectedChar + '.'],
-      timeout: ['TOO SLOW!', 'No digit within ' + CONFIG.ZEN_THINK_SECONDS + ' seconds.'],
+      timeout: ['TOO SLOW!', 'Your survival timer ran out.'],
       complete: ['PERFECT PI!', 'All ' + CONFIG.DECIMALS + ' decimals. Legend.'],
     }[eng.reason] || ['GAME OVER', ''];
 
     $('#res-title').textContent = title;
     $('#res-sub').textContent = sub;
     $('#res-score').textContent = score;
+    $('#res-break').innerHTML =
+      '<dt>KEYSTROKES</dt><dd>' + sum.strokeScore + '</dd>' +
+      '<dt>DIGITS ' + sum.totalDigits + ' x ' + SCORING.LENGTH_BONUS + '</dt><dd>+' + sum.lengthBonus + '</dd>' +
+      '<dt>MAX COMBO</dt><dd>' + sum.maxCombo + '</dd>' +
+      '<dt>HIGH SCORE</dt><dd>' + Math.max(prevBest, score) + (score > prevBest ? ' NEW!' : '') + '</dd>';
     state.lastResult = { mode, score, saved: false };
 
     const box = $('#res-save');
