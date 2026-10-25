@@ -79,6 +79,8 @@
       this.ctx = null;
       this.musicOn = true;
       this.sfxOn = true;
+      this.musicVol = 70;        // 0-100 (sliders); 70 matches the old fixed loudness
+      this.sfxVol = 80;
       this.intensity = 0;        // 0..1, brightens the arpeggio during hot streaks
       this.timer = null;
       this.step = 0;
@@ -114,7 +116,7 @@
       comp.connect(c.destination);
 
       this.sfxBus = c.createGain();
-      this.sfxBus.gain.value = this.sfxOn ? 0.85 : 0;
+      this.sfxBus.gain.value = this.sfxOn ? this._sfxLevel() : 0;
       this.sfxBus.connect(this.master);
 
       this.musicBus = c.createGain();
@@ -206,6 +208,18 @@
     }
 
     /* ------------------------------------------------------- settings ----- */
+    _musicLevel() { const v = this.musicVol / 100; return 1.2 * v * v; }     // squared = feels linear to the ear
+    _sfxLevel() { const v = this.sfxVol / 100; return 1.33 * v * v; }
+
+    setMusicVolume(v) {
+      this.musicVol = Math.max(0, Math.min(100, v));
+      if (this.ctx && this.timer) this.musicBus.gain.setTargetAtTime(this._musicLevel(), this.ctx.currentTime, 0.05);
+    }
+    setSfxVolume(v) {
+      this.sfxVol = Math.max(0, Math.min(100, v));
+      if (this.ctx && this.sfxOn) this.sfxBus.gain.setTargetAtTime(this._sfxLevel(), this.ctx.currentTime, 0.02);
+    }
+
     setMusic(on) {
       this.musicOn = on;
       if (!this.ctx) return;
@@ -218,7 +232,7 @@
       if (!this.ctx) return;
       const g = this.sfxBus.gain;
       g.cancelScheduledValues(this.ctx.currentTime);
-      g.setTargetAtTime(on ? 0.85 : 0, this.ctx.currentTime, 0.02);
+      g.setTargetAtTime(on ? this._sfxLevel() : 0, this.ctx.currentTime, 0.02);
     }
 
     setIntensity(x) {
@@ -383,7 +397,7 @@
       const now = this.ctx.currentTime;
       this.musicBus.gain.cancelScheduledValues(now);
       this.musicBus.gain.setValueAtTime(this.musicBus.gain.value, now);
-      this.musicBus.gain.linearRampToValueAtTime(0.6, now + 2);
+      this.musicBus.gain.linearRampToValueAtTime(this._musicLevel(), now + 2);
       this._applyTrack();
       this.step = 0;
       this.nextTime = now + 0.1;

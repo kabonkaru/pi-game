@@ -13,7 +13,6 @@
 
   /* ------------------------------ config -------------------------------- */
   const CONFIG = {
-    TIMER_SECONDS: 180,      // Timer mode length
     COINS_PER_SCORE: 0.01,   // PLACEHOLDER: Pi Coins earned per run = final score x this
     DEV_LOGO_COINS: true,    // DEV TEST: tap the logo 10 times = +100 Pi Coins (set to false before release!)
     LOGO_TAPS: 10, LOGO_REWARD: 100, LOGO_WINDOW_MS: 2500,
@@ -41,14 +40,14 @@
     stage: $('#stage'),
     modeChip: $('#mode-chip'), clock: $('#clock'), meter: $('#meter-fill'),
     lcd: $('#lcd'), lcdText: $('#lcd-text'), lcdPop: $('#lcd-pop'),
-    score: $('#score'), best: $('#best'), combo: $('#combo'), tier: $('#tier'), hint: $('#hint'),
+    score: $('#score'), best: $('#best'), combo: $('#combo'), tier: $('#tier'), clockPop: $('#clock-pop'), hint: $('#hint'),
     keypad: $('#keypad'), flash: $('#flash'),
     settings: $('#settings'),
   };
 
   const state = {
     screen: 'menu', engine: null, round: 0,
-    deadline: 0, warned: -1, keeper: null,          // deadline = Timer-mode 3:00 clock
+    warned: -1, keeper: null, lastTip: '',
     best: 0, boardTab: 'timer', lastResult: null,
   };
 
@@ -99,13 +98,14 @@
   function startGame(mode) {
     state.round++;
     state.engine = new PiEngine(mode, PI);
-    state.deadline = 0; state.warned = -1;
-    state.keeper = new ScoreKeeper({ survival: mode === 'zen' });   // Zen = 10s survival clock
+    state.warned = -1;
+    state.keeper = new ScoreKeeper({ mode });      // owns the clock: Zen resets to 10s, Timer is a 3:00 bank
     state.best = scores.best(mode);
     audio.setIntensity(0);
     el.modeChip.textContent = mode === 'timer' ? 'TIMER' : 'ZEN';
+    el.clockPop.textContent = '';
     el.modeChip.dataset.mode = mode;
-    el.clock.textContent = mode === 'timer' ? fmtClock(CONFIG.TIMER_SECONDS) : '10.0s';
+    el.clock.textContent = mode === 'timer' ? fmtClock(SCORING.TIMER_MS / 1000) : (SCORING.ZEN_MS / 1000).toFixed(1) + 's';
     el.clock.classList.remove('danger');
     setMeter(1);
     $$('.screen').forEach((s) => s.classList.toggle('is-active', s.dataset.screen === 'game'));
@@ -167,7 +167,7 @@
     } else if (eng.mode === 'timer' && eng.correctLen < n) {
       text = 'Wrong digit! Press DEL to fix it.'; cls = 'bad';
     } else if (eng.mode === 'zen') {
-      text = 'Survive! Every correct digit adds ' + (SCORING.SURVIVAL_REFILL_MS / 1000) + 's.';
+      text = 'Every correct digit resets the clock to ' + (SCORING.ZEN_MS / 1000) + 's.';
     } else {
       text = 'Keep going!';
     }
@@ -188,9 +188,8 @@
     const ev = eng.press(ch);
     if (ev === 'ignore') return;
     const now = performance.now();
-    if (eng.justStarted) { state.deadline = now + CONFIG.TIMER_SECONDS * 1000; audio.sfx('go'); }
-    // ---- v1.1 scoring: speed tier x combo tier, survival clock refill ----
     const k = state.keeper;
+    if (eng.justStarted) { k.beginTimer(now); audio.sfx('go'); }       // Timer mode: the 3:00 clock starts on this digit
     let hit = null;
     if (ev === 'warmup_done') k.start(now);
     else if (ev === 'ok' || ev === 'complete') hit = k.onCorrect(now, eng.score);
@@ -210,6 +209,10 @@
     if (hit && hit.isNew) {                   // speed-tier popup
       el.tier.classList.remove('pop'); void el.tier.offsetWidth; el.tier.classList.add('pop');
       if (hit.tier === 'S' && eng.score % 5 !== 0) fx.floatText(el.lcdPop, 'S +' + hit.points, 'good');
+      if (hit.timeAdded > 0) {                // Timer mode: show the time earned by this digit
+        el.clockPop.textContent = '+' + (hit.timeAdded / 1000).toFixed(2) + 's';
+        el.clockPop.classList.remove('go'); void el.clockPop.offsetWidth; el.clockPop.classList.add('go');
+      }
     }
 
     switch (ev) {
@@ -282,46 +285,67 @@
     if (!eng || eng.over) return;
     const now = performance.now();
     if (state.keeper.decay(now)) render();     // 8s without a correct digit: combo drops
-    if (eng.mode === 'timer') {
-      if (!eng.started) return;
-      const left = state.deadline - now;
-      if (left <= 0) {
-        el.clock.textContent = '00:00'; setMeter(0);
-        finishRound('time');
-        return;
-      }
-      const sec = Math.ceil(left / 1000);
+    const k = state.keeper;
+    if (!k.deadline) return;                    // Timer mode: the clock hasn't started yet
+    const left = k.left(now);
+    if (left <= 0) {
+      el.clock.textContent = eng.mode === 'timer' ? '00:00' : '0.0s'; setMeter(0);
+      finishRound(eng.mode === 'timer' ? 'time' : 'timeout');
+      return;
+    }
+    const sec = Math.ceil(left / 1000);
+    if (eng.mode === 'timer') {                 // 3:00 bank: big mm:ss, warnings in the last 10s
       el.clock.textContent = fmtClock(sec);
       el.clock.classList.toggle('danger', left <= 10000);
       if (sec <= 10 && sec !== state.warned) { state.warned = sec; audio.sfx('warn', { urgent: sec <= 3 }); }
-      setMeter(left / (CONFIG.TIMER_SECONDS * 1000));
-    } else {                                    // Zen: survival clock (10.0s max, +0.25s per digit)
-      const kp = state.keeper;
-      if (!kp.deadline) return;
-      const left = kp.left(now);
-      if (left <= 0) {
-        el.clock.textContent = '0.0s'; setMeter(0);
-        finishRound('timeout');
-        return;
-      }
+      if (sec > 10) state.warned = -1;
+    } else {                                    // Zen: 10.0s, resets on every correct digit
       el.clock.textContent = (left / 1000).toFixed(1) + 's';
       el.clock.classList.toggle('danger', left <= 3000);
-      const sec = Math.ceil(left / 1000);
       if (sec <= 3 && sec !== state.warned) { state.warned = sec; audio.sfx('warn', { urgent: true }); }
       if (sec > 3) state.warned = -1;
-      setMeter(left / SCORING.SURVIVAL_MAX_MS);
     }
+    setMeter(left / k.maxMs);
   }
 
   /* ------------------------------- results ------------------------------- */
+  // Game Over feedback: [label, text], chosen by how many digits you reached.
+  // (Fact-checked: NASA/JPL = 15 decimal places; Indiana 1897 = passed the House, shelved by the Senate;
+  //  Guinness record = 70,000 digits, blindfolded, nearly 10 hours.)
+  const FEEDBACK = [
+    { max: 9, items: [
+      ['DID YOU KNOW?', 'Most people only remember a handful of digits of Pi, like 3.14159!'],
+      ['TIP', "Try chunking digits into groups of 3 or 4 in your mind (e.g., '141', '592', '653')!"],
+    ] },
+    { max: 30, items: [
+      ['GREAT JOB!', "You've gone well beyond what most people can recite from memory."],
+      ['PI FACT', "NASA's JPL uses just 15 decimal places of Pi for its highest-precision interplanetary navigation!"],
+    ] },
+    { max: 50, items: [
+      ['MEMORY WALL BROKEN!', "You broke past the 'Memory Wall'! Very few people can recite 30+ digits of Pi."],
+      ['PI FACT', "In 1897, Indiana's House passed a bill that would have set Pi to about 3.2. The Senate shelved it, so it never became law!"],
+    ] },
+    { max: Infinity, items: [
+      ['LEGENDARY RECALL!', 'Memory athletes train for exactly this kind of streak.'],
+      ['PI FACT', 'The Guinness record for memorizing Pi is 70,000 digits, recited blindfolded in nearly 10 hours!'],
+    ] },
+  ];
+  function pickTip(digits) {
+    const group = FEEDBACK.find((g) => digits <= g.max);
+    let i = Math.floor(Math.random() * group.items.length);
+    if (group.items.length > 1 && state.lastTip === group.max + ':' + i) i = (i + 1) % group.items.length;   // don't repeat back-to-back
+    state.lastTip = group.max + ':' + i;
+    return group.items[i];
+  }
+
   function showResult() {
     const eng = state.engine;
     const mode = eng.mode, sum = state.keeper.summary(), score = sum.totalScore;
     const prevBest = scores.best(mode);
     const [title, sub] = {
-      time: ["TIME'S UP!", 'Your 3 minutes are over.'],
+      time: ["TIME'S UP!", 'Your clock ran out.'],
       wrong: ['GAME OVER', 'You typed ' + eng.wrongChar + ' - the next digit was ' + eng.expectedChar + '.'],
-      timeout: ['TOO SLOW!', 'Your survival timer ran out.'],
+      timeout: ['TOO SLOW!', 'No correct digit within 10 seconds.'],
       complete: ['PERFECT PI!', 'All ' + CONFIG.DECIMALS + ' decimals. Legend.'],
     }[eng.reason] || ['GAME OVER', ''];
 
@@ -338,6 +362,11 @@
     const rc = $('#res-coins');
     rc.innerHTML = earned > 0 ? '<span data-icon="coin"></span>+' + fmtCoins(earned) + ' PI COIN' : '';
     fx.icons.mount(rc);
+    const tip = pickTip(sum.totalDigits), box0 = $('#res-tip');
+    box0.textContent = '';
+    const tb = document.createElement('b'), tt = document.createElement('span');
+    tb.textContent = tip[0]; tt.textContent = tip[1];
+    box0.appendChild(tb); box0.appendChild(tt);
     state.lastResult = { mode, score, saved: false };
 
     const box = $('#res-save');
@@ -425,10 +454,6 @@
     if (tg) tg.textContent = t.tagline;
     const meta = $('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', t.meta);
-    const owned = THEMES.filter(isOwned);                     // the top button cycles the themes you own
-    const next = owned[(owned.indexOf(t) + 1) % owned.length];
-    fx.icons.set($('#btn-theme [data-icon]'), next.icon);
-    $('#btn-theme').setAttribute('aria-label', 'Switch to ' + next.name + ' theme');
     if (background) background.onTheme();
   }
 
@@ -456,38 +481,29 @@
   function trackOwned(id) { const t = THEMES.find((x) => x.bgm === id); return !!t && isOwned(t); }
   function trackFor() {
     const pick = settings.get('bgm');
-    if (pick !== 'auto' && audio.TRACKS[pick] && trackOwned(pick)) return pick;
+    if (pick !== 'auto' && pick !== 'none' && audio.TRACKS[pick] && trackOwned(pick)) return pick;
     return currentTheme().bgm;                                // AUTO: the track bundled with the theme
   }
-  function syncBgm() { audio.setTrack(trackFor()); renderBgm(); }
+  function applyMusic() { audio.setMusic(!!settings.get('music') && settings.get('bgm') !== 'none'); }
+  function syncBgm() { audio.setTrack(trackFor()); applyMusic(); renderBgm(); }
 
-  function renderBgm() {
-    const host = $('#bgm-list');
-    if (!host) return;
+  function renderBgm() {                                      // background-track dropdown
+    const sel = $('#set-bgm');
+    if (!sel) return;
     const pick = settings.get('bgm');
-    const chosen = pick !== 'auto' && audio.TRACKS[pick] && trackOwned(pick) ? pick : 'auto';
-    const rows = [{ id: 'auto', name: 'AUTO', sub: 'Follows your theme', locked: false }].concat(
-      THEMES.map((t) => ({ id: t.bgm, name: audio.TRACKS[t.bgm].name, sub: 'Bundled with ' + t.name, locked: !isOwned(t), theme: t.name })));
-    host.innerHTML = rows.map((r) =>
-      '<button class="bgm-opt' + (r.locked ? ' locked' : '') + '" role="radio" data-bgm="' + r.id + '" aria-checked="' + String(r.id === chosen) + '">' +
-      '<span><b>' + r.name + '</b><small>' + (r.locked ? 'Locked - unlock the ' + r.theme + ' theme' : r.sub) + '</small></span>' +
-      (r.locked ? '<span class="lock-ico" data-icon="lock"></span>' : '') + '</button>').join('');
-    fx.icons.mount(host);
+    const opts = [['auto', 'AUTO (follows theme)'], ['none', 'NONE (silent)']].concat(
+      THEMES.map((t) => [t.bgm, audio.TRACKS[t.bgm].name + (isOwned(t) ? '' : '  [LOCKED]')]));
+    sel.innerHTML = opts.map((o) => '<option value="' + o[0] + '">' + o[1] + '</option>').join('');
+    sel.value = pick === 'auto' || pick === 'none' || (audio.TRACKS[pick] && trackOwned(pick)) ? pick : 'auto';
   }
 
-  function renderThemes() {
-    const host = $('#theme-list');
-    if (!host) return;
-    const cur = currentTheme().id;
-    const skeleton = '<div class="theme-card skeleton" aria-disabled="true"><span class="swatch"></span><span class="sk-line"></span><span class="sk-line short"></span><em>COMING SOON</em></div>';
-    host.innerHTML = THEMES.map((t) => {
-      const owned = isOwned(t);
-      return '<button class="theme-card' + (owned ? '' : ' locked') + '" data-theme-id="' + t.id + '" aria-pressed="' + String(owned && cur === t.id) + '">' +
-        '<span class="swatch ' + t.swatch + '">' + (owned ? '' : '<span class="lock" data-icon="lock"></span>') + '</span>' +
-        '<span class="t-name">' + t.name + '</span><span class="t-tag">' + t.tag + '</span>' +
-        (owned ? '' : '<span class="t-price"><span data-icon="coin"></span><b>' + fmtCoins(t.cost) + '</b></span>') + '</button>';
-    }).join('') + skeleton;
-    fx.icons.mount(host);
+  function renderThemes() {                                   // theme dropdown (+ swatch preview)
+    const sel = $('#set-theme');
+    if (!sel) return;
+    sel.innerHTML = THEMES.map((t) => '<option value="' + t.id + '">' + t.name +
+      (isOwned(t) ? '' : '  [LOCKED - ' + fmtCoins(t.cost) + ' PI]') + '</option>').join('');
+    sel.value = currentTheme().id;
+    $('#theme-prev').className = 'swatch theme-prev ' + currentTheme().swatch;
   }
 
   const buy = { theme: null };
@@ -535,19 +551,19 @@
   function initShop() {
     wallet.onChange(() => { refreshCoins(); refreshConfirm(); });
 
-    $('#theme-list').addEventListener('click', (e) => {
-      const card = e.target.closest('[data-theme-id]');
-      const t = card && themeById(card.dataset.themeId);
+    $('#set-theme').addEventListener('change', (e) => {
+      const t = themeById(e.target.value);
       if (!t) return;
-      if (isOwned(t)) equipTheme(t.id); else openConfirm(t);
+      if (isOwned(t)) { equipTheme(t.id); return; }
+      renderThemes();                                         // snap the dropdown back to the theme you're wearing
+      openConfirm(t);                                         // ...and offer to buy the locked one
     });
-    $('#bgm-list').addEventListener('click', (e) => {
-      const b = e.target.closest('[data-bgm]');
-      if (!b) return;
-      const id = b.dataset.bgm;
-      if (id !== 'auto' && !trackOwned(id)) {
+    $('#set-bgm').addEventListener('change', (e) => {
+      const id = e.target.value;
+      if (id !== 'auto' && id !== 'none' && !trackOwned(id)) {
         audio.sfx('reject');
         toast('Unlock the ' + THEMES.find((x) => x.bgm === id).name + ' theme to get this track');
+        renderBgm();
         return;
       }
       settings.set('bgm', id);
@@ -598,14 +614,23 @@
         const on = !settings.get(key);
         settings.set(key, on);
         setSwitch(sw[key], on);
-        if (key === 'music') audio.setMusic(on);
-        if (key === 'sfx') { audio.setSfx(on); if (on) audio.sfx('toggle_on'); }
+        if (key === 'music') { applyMusic(); $('#set-music-vol').disabled = !on; }
+        if (key === 'sfx') { audio.setSfx(on); $('#set-sfx-vol').disabled = !on; if (on) audio.sfx('toggle_on'); }
         if (key === 'shake' && on) shake(CONFIG.SHAKE.wrong);
         if (key === 'music' && on) audio.unlock();
       });
     });
-    audio.musicOn = settings.get('music');
+    audio.musicOn = settings.get('music') && settings.get('bgm') !== 'none';
     audio.sfxOn = settings.get('sfx');
+
+    // volume sliders (the mute toggles above switch them off)
+    [['musicVol', '#set-music-vol', 'setMusicVolume', 'music'], ['sfxVol', '#set-sfx-vol', 'setSfxVolume', 'sfx']].forEach(([key, sel, fn, onKey]) => {
+      const r = $(sel), out = $('#' + r.id.replace('set-', '') + '-out');
+      r.value = settings.get(key); out.textContent = r.value + '%'; r.disabled = !settings.get(onKey);
+      audio[fn](+r.value);
+      r.addEventListener('input', () => { out.textContent = r.value + '%'; audio[fn](+r.value); settings.set(key, +r.value); });
+      r.addEventListener('change', () => { if (key === 'sfxVol') audio.sfx('toggle_on'); });     // let you hear the level
+    });
 
     $('#btn-settings').addEventListener('click', () => {
       if (typeof el.settings.showModal === 'function') el.settings.showModal();
@@ -613,13 +638,6 @@
     });
     $('#settings-close').addEventListener('click', () => el.settings.close());
     el.settings.addEventListener('click', (e) => { if (e.target === el.settings) el.settings.close(); });
-
-    $('#btn-theme').addEventListener('click', () => {
-      const owned = THEMES.filter(isOwned);
-      const next = owned[(owned.indexOf(currentTheme()) + 1) % owned.length];
-      equipTheme(next.id);
-      audio.sfx(next.id === 'light' ? 'toggle_on' : 'toggle_off');
-    });
 
     $('#btn-reset-scores').addEventListener('click', (e) => {
       const b = e.currentTarget;
@@ -663,6 +681,12 @@
         go(nav.dataset.nav);
         return;
       }
+      const soon = e.target.closest('[data-soon]');
+      if (soon) {                                   // locked teaser card: wiggle + toast
+        audio.sfx('reject'); toast('CHAOS MODE: COMING SOON!');
+        soon.classList.remove('wiggle'); void soon.offsetWidth; soon.classList.add('wiggle');
+        return;
+      }
       const start = e.target.closest('[data-start]');
       if (start) startGame(start.dataset.start);
     });
@@ -670,7 +694,7 @@
     $$('.tab').forEach((t) => t.addEventListener('click', () => showBoard(t.dataset.tab)));
 
     // UI sounds: click on press, a soft tick on hover (mouse only)
-    const clickable = '.btn, .chip, .menu-card, .icon-btn, .tab, .brand, button.theme-card, .switch, .coin-chip, .bgm-opt';
+    const clickable = '.btn, .chip, .menu-card, .icon-btn, .tab, .brand, .hero-pi, .switch, .coin-chip, .select select';
     document.addEventListener('pointerdown', (e) => {
       audio.unlock();
       if (e.target.closest && e.target.closest(clickable)) audio.sfx('click');

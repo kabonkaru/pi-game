@@ -53,7 +53,9 @@
       sfx: true,
       shake: !media('(prefers-reduced-motion: reduce)'),
       theme: media('(prefers-color-scheme: light)') ? 'light' : 'dark',
-      bgm: 'auto',               // 'auto' = follow the theme, or a track id
+      bgm: 'auto',               // 'auto' = follow the theme, 'none' = silent, or a track id
+      musicVol: 70,              // 0-100
+      sfxVol: 80,
     };
   }
   let settingsCache = Object.assign(settingsDefaults(), read(KEY_SETTINGS) || {});

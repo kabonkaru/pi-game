@@ -76,7 +76,6 @@
             <em>because a coin made of pi.. uhh coin is circle yeah..</em>
           </div>
         </div>
-        <button class="icon-btn shiny" id="btn-theme" aria-label="Switch theme"><span data-icon="sun"></span></button>
         <button class="icon-btn shiny" id="btn-settings" aria-label="Settings"><span data-icon="gear"></span></button>
       </div>
     </header>
@@ -86,38 +85,39 @@
       <!-- ===================== MAIN MENU ===================== -->
       <section class="screen is-active" id="screen-menu" data-screen="menu" aria-labelledby="title">
         <div class="hero">
-          <div class="hero-pi" data-icon="pi-hero" data-depth="-10" aria-hidden="true"></div>
+          <button class="hero-pi" data-nav="guide" data-icon="pi-hero" data-depth="-10" aria-label="Open The Pi: a guide to the digits of pi"></button>
           <h1 class="title" id="title">PI GAME</h1>
           <p class="tagline">how many digits can you remember?</p>
+          <p class="pi-hint">tap the &pi; to see the digits</p>
         </div>
 
         <nav class="menu-grid" aria-label="Game modes">
-          <button class="menu-card shiny tilt c-timer" data-start="timer">
-            <span class="mc-badge">MODE 01</span>
-            <span class="mc-big">3:00</span>
-            <span class="mc-title">TIMER</span>
-            <span class="mc-sub">3 minutes. Type as much pi as you can.</span>
-            <span class="mc-best">BEST <b id="best-timer">0</b></span>
-          </button>
           <button class="menu-card shiny tilt c-zen" data-start="zen">
-            <span class="mc-badge">MODE 02</span>
+            <span class="mc-badge">MODE 01 &middot; ACTIVE</span>
             <span class="mc-big">10s</span>
             <span class="mc-title">ZEN</span>
-            <span class="mc-sub">10s survival clock. One wrong digit ends it.</span>
+            <span class="mc-sub">Sudden Death. Every correct digit resets a 10s clock.</span>
             <span class="mc-best">BEST <b id="best-zen">0</b></span>
           </button>
-          <button class="menu-card shiny tilt c-guide" data-nav="guide">
-            <span class="mc-badge">LEARN</span>
-            <span class="mc-big">3.14</span>
-            <span class="mc-title">THE PI</span>
-            <span class="mc-sub">A guide to pi, up to 1000 digits.</span>
-            <span class="mc-best">&nbsp;</span>
+          <button class="menu-card shiny tilt c-timer" data-start="timer">
+            <span class="mc-badge">MODE 02 &middot; ACTIVE</span>
+            <span class="mc-big">3:00</span>
+            <span class="mc-title">TIMER</span>
+            <span class="mc-sub">3-Min Run. Fast digits add time to the clock.</span>
+            <span class="mc-best">BEST <b id="best-timer">0</b></span>
+          </button>
+          <button class="menu-card c-chaos" data-soon="chaos" aria-disabled="true" aria-describedby="chaos-sub">
+            <span class="mc-badge"><span class="lock-ico" data-icon="lock"></span> LOCKED &middot; COMING SOON</span>
+            <span class="mc-big glitch" data-text="???">???</span>
+            <span class="mc-title glitch" data-text="CHAOS">CHAOS</span>
+            <span class="mc-sub" id="chaos-sub">Coming Soon: Random visual glitches, inverted controls, fading digits, and extra lives!</span>
+            <span class="mc-best">LIVES &amp; MODIFIERS</span>
           </button>
         </nav>
 
         <div class="menu-links">
-          <button class="chip shiny" data-nav="board" data-board="timer">TIMER TOP 10</button>
           <button class="chip shiny" data-nav="board" data-board="zen">ZEN TOP 10</button>
+          <button class="chip shiny" data-nav="board" data-board="timer">TIMER TOP 10</button>
         </div>
       </section>
 
@@ -127,7 +127,7 @@
           <div class="hud">
             <button class="chip shiny" data-nav="menu">&lt; MENU</button>
             <span class="mode-chip" id="mode-chip">TIMER</span>
-            <span class="clock" id="clock">03:00</span>
+            <span class="clock-wrap"><span class="clock" id="clock">03:00</span><span class="clock-pop" id="clock-pop" aria-hidden="true"></span></span>
           </div>
           <div class="meter" aria-hidden="true"><i id="meter-fill"></i></div>
 
@@ -169,6 +169,7 @@
           <div class="r-score"><span>SCORE</span><b id="res-score">0</b></div>
           <dl class="r-break" id="res-break"></dl>
           <p class="r-coins" id="res-coins"></p>
+          <p class="r-tip" id="res-tip" role="note"></p>
           <div class="r-save" id="res-save"></div>
           <div class="board" id="res-board"></div>
           <div class="btn-row">
@@ -213,28 +214,39 @@
       <button class="icon-btn" id="settings-close" aria-label="Close settings">X</button>
     </div>
 
-    <div class="setting">
-      <div><b>MUSIC</b><small>Space dreamy 8-bit</small></div>
-      <button class="switch" role="switch" id="set-music" aria-checked="true"><span class="knob"></span><span class="sw-label">ON</span></button>
+    <div class="setting stack">
+      <div class="set-row">
+        <div><b>THEME</b><small>Locked themes cost Pi Coins</small></div>
+        <span class="swatch theme-prev" id="theme-prev"></span>
+      </div>
+      <label class="select"><span class="sr-only">Theme</span><select id="set-theme"></select></label>
     </div>
-    <div class="setting">
-      <div><b>SOUND FX</b><small>Blips, combos &amp; jingles</small></div>
-      <button class="switch" role="switch" id="set-sfx" aria-checked="true"><span class="knob"></span><span class="sw-label">ON</span></button>
+
+    <div class="setting stack">
+      <div class="set-row">
+        <div><b>MUSIC</b><small>Background track and volume</small></div>
+        <button class="switch" role="switch" id="set-music" aria-checked="true" aria-label="Music on or off"><span class="knob"></span><span class="sw-label">ON</span></button>
+      </div>
+      <label class="select"><span class="sr-only">Background track</span><select id="set-bgm"></select></label>
+      <label class="range"><span>VOLUME</span><input type="range" id="set-music-vol" min="0" max="100" step="5"><output id="music-vol-out">70%</output></label>
     </div>
+
+    <div class="setting stack">
+      <div class="set-row">
+        <div><b>SOUND FX</b><small>Blips, combos &amp; jingles</small></div>
+        <button class="switch" role="switch" id="set-sfx" aria-checked="true" aria-label="Sound effects on or off"><span class="knob"></span><span class="sw-label">ON</span></button>
+      </div>
+      <label class="range"><span>VOLUME</span><input type="range" id="set-sfx-vol" min="0" max="100" step="5"><output id="sfx-vol-out">80%</output></label>
+    </div>
+
     <div class="setting">
       <div><b>SCREEN SHAKE</b><small>A little wobble inside the game</small></div>
       <button class="switch" role="switch" id="set-shake" aria-checked="true"><span class="knob"></span><span class="sw-label">ON</span></button>
     </div>
 
-    <h3 class="modal-sub">MUSIC TRACK</h3>
-    <div class="bgm-list" id="bgm-list" role="radiogroup" aria-label="Music track"></div>
-
-    <h3 class="modal-sub">THEME</h3>
-    <div class="themes" id="theme-list"></div>
-
     <div class="modal-foot">
       <button class="btn small danger" id="btn-reset-scores">RESET SCORES</button>
-      <span class="ver">v1.1</span>
+      <span class="ver">v1.4</span>
     </div>
   </dialog>
 

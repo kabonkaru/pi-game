@@ -24,11 +24,23 @@ python3 -m http.server 8080
 
 | Mode | Rules |
 | --- | --- |
-| **Timer** | 3 minutes. The clock starts on the first digit *after* `3.14`. A wrong digit turns **red** and doesn't score; press `DEL` to fix it. A wrong key resets your combo. |
-| **Zen** | Sudden death with a **10-second survival clock**. It starts at 10.0s, gains **+0.25s** per correct digit (capped at 10.0s) and drains in real time. A wrong digit or 0.0s ends the run. |
-| **The Pi** | A reference page with pi up to 1000 digits. |
+| **Zen** (Sudden Death) | A 10.0-second clock starts after `3.14`. **Every correct digit fully resets it to 10.0s.** A wrong key, or the clock reaching 0.0s, ends the run instantly. |
+| **Timer** (3-Min Run) | A 3:00 clock counts down in real time. It starts on the first digit after `3.14` and can never go above 3:00. Each correct digit **adds time based on how fast you typed it** (table below). It ends when the clock hits 0:00. A wrong digit turns **red** and doesn't score; press `DEL` to fix it (a wrong key also resets your combo). |
+| **Chaos** (Lives & Modifiers) | *Locked, coming soon:* random visual glitches, inverted controls, fading digits and extra lives. |
+| **The Pi** | A reference page with pi up to 1000 digits. Tap or click the big **π logo** on the main menu to open it. |
 
 `3.14` is a free warm-up and is never scored.
+
+**Timer-mode time bonus** (gap since your previous key):
+
+| Gap | Tier | Time added |
+| --- | --- | --- |
+| under 0.25s | S | +0.40s |
+| 0.25s – 0.50s | A | +0.20s |
+| 0.50s – 1.00s | B | +0.05s |
+| over 1.00s | slow | +0.00s |
+
+A **+0.40s** style popup appears under the clock whenever time is added. Deleting a digit and retyping it earns neither points nor time.
 
 ## Scoring
 
@@ -52,6 +64,11 @@ Every correct digit is worth `round(100 × speed multiplier × combo multiplier)
 - **Length bonus:** every digit you reach adds **+500** to the final score, so long runs beat short bursts.
 - **Final score = keystroke points + (digits × 500).** The result screen shows the breakdown, your max combo and your high score.
 - Deleting a digit and retyping it earns nothing, so there is no way to farm points.
+- The speed multiplier tiers for **score** (0.20s / 0.45s) are separate from the time-bonus tiers for the **Timer clock** (0.25s / 0.50s / 1.00s).
+
+### Game Over tips
+
+The results screen shows a random tip or fact picked by how many digits you reached (0-9, 10-30, 31-50, 51+). They live in the `FEEDBACK` list in `js/app.js`. The facts were checked: NASA's JPL uses 15 decimal places of pi for interplanetary navigation; Indiana's House passed a 1897 bill that would have set pi to about 3.2 and the Senate shelved it; and the Guinness record is 70,000 digits recited blindfolded in nearly 10 hours.
 
 Each mode has its own **top 10** leaderboard (name up to 12 characters, score, date as `MMM-DD-YYYY`), saved in your browser's `localStorage`.
 
@@ -87,11 +104,11 @@ For testing, **tapping the logo 10 times in a row** (from the menu) gives **+100
 
 ## Settings (gear icon)
 
-- **Music** and **Sound FX**, each on/off
-- **Screen shake**: a small wobble of the *page content* (never the browser window). It starts **off** automatically if your OS asks for reduced motion
-- **Music track**: *Auto* (follows your theme) or pick any track you have unlocked
-- **Theme**: pick any theme you own, or unlock a new one. The sun/moon button in the top bar cycles through your themes
-- Reset scores (your Pi Coins and unlocks are kept)
+- **Theme:** a dropdown of every theme. Locked themes show their price; choosing one opens the purchase confirmation. The swatch next to it previews your current theme.
+- **Music:** an on/off (mute) toggle, a **background track** dropdown (*Auto* follows your theme, *None* is silent, or pick any track you own) and a volume slider.
+- **Sound FX:** an on/off (mute) toggle and a volume slider.
+- **Screen shake:** a small wobble of the *page content* (never the browser window). It starts **off** automatically if your OS asks for reduced motion.
+- Reset scores (your Pi Coins and unlocks are kept).
 
 ## Project layout
 
@@ -111,7 +128,7 @@ favicon.svg
 
 ## Customising
 
-- **Scoring numbers** (base points, speed and combo tiers, decay window, survival clock size and refill, length bonus): the `SCORING` block at the top of `js/score.js`. At the default +0.25s refill you need about 4 digits per second to stay even, so raise `SURVIVAL_REFILL_MS` for longer Zen runs.
+- **Scoring and clocks** (base points, speed and combo tiers, decay window, Zen's `ZEN_MS`, Timer's `TIMER_MS` cap and the `TIME_ADD` bonus table, length bonus): the `SCORING` block at the top of `js/score.js`.
 - **Game constants** (Timer length, shake strength, coins per score, dev cheat): `CONFIG` at the top of `js/app.js`.
 - **Themes and prices:** the `THEMES` list in `js/app.js`.
 - **Add a theme:**
@@ -126,7 +143,7 @@ favicon.svg
 
 | Key | Holds |
 | --- | --- |
-| `pigame.settings.v1` | music/sfx/shake switches, theme, music track |
+| `pigame.settings.v1` | music/sfx/shake switches, volumes, theme, music track |
 | `pigame.scores.v2` | the two top-10 leaderboards (v1.1 reset the boards because the scoring changed; old `pigame.scores.v1` data is left untouched) |
 | `pigame.wallet.v1` | Pi Coin balance and unlocked themes |
 
@@ -141,7 +158,7 @@ const game = new PiEngine('zen', computePi(1000));
 console.log(game.score); // 3
 
 const { ScoreKeeper } = require('./js/score.js');
-const k = new ScoreKeeper({ survival: true });
+const k = new ScoreKeeper({ mode: 'zen' });
 k.start(0);                // you typed the 4 of 3.14 at t = 0 ms
 k.onCorrect(150, 1);       // first digit 150 ms later: S tier, 1.5x
 console.log(k.totalScore); // 150 + 1 * 500 = 650
@@ -149,6 +166,7 @@ console.log(k.totalScore); // 150 + 1 * 500 = 650
 
 ## Changelog
 
+- **v1.4**: new clock rules (Zen resets to 10.0s on every correct digit; Timer is a 3:00 bank with speed-based time bonuses, capped at 3:00), Game Over tips and facts, a locked Chaos mode teaser, The Pi opens from the π logo, header theme toggle removed, Settings rebuilt with theme and track dropdowns and volume sliders.
 - **v1.3**: themes rebuilt with their own pixel-art scenes, fonts and UI (Dreamy Day, a handheld-style Phosphor), new locked **Hapi Halloween** theme (9,420 coins) with the Haunted Waltz music.
 - **v1.2**: Pi Coins and wallet, locked **Phosphor** theme (3,140 coins) with confirmation, a unique BGM per theme, a music track selector, new Dreamy Day music.
 - **v1.1**: new scoring system (speed tiers, combos, length bonus), 10-second survival clock for Zen, score breakdown on the results screen.
@@ -156,5 +174,6 @@ console.log(k.totalScore); // 150 + 1 * 500 = 650
 
 ## Ideas for next
 
+- Chaos mode (glitches, inverted controls, fading digits, extra lives)
 - Install as a phone app (add a web app manifest + service worker for PWA)
 - More themes to buy with Pi Coins, seasonal events, daily challenge, sharing your score as an image

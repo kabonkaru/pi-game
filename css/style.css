@@ -593,3 +593,93 @@ dialog.modal-sm { width: min(88vw, 400px); }
 :root[data-theme="terminal"] .float-text { color: #9bbc0f; text-shadow: 2px 2px 0 #0f380f; }
 :root[data-theme="terminal"] .float-text.bad { color: #0f380f; background: #9bbc0f; padding: 0 4px; text-shadow: none; }
 :root[data-theme="terminal"] .lcd .tier[data-tier] { color: var(--lcd-text); }
+
+/* ================= v1.4: π logo button, locked Chaos card, +time popup, tips, settings controls ================= */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+button.hero-pi { display: block; background: none; border: 0; padding: 0; cursor: pointer; color: inherit; transition: scale .15s var(--ease); }
+button.hero-pi:hover { scale: 1.06; }
+button.hero-pi:active { scale: .96; }
+button.hero-pi:focus-visible { outline: 4px solid var(--c-zen-a); outline-offset: 8px; }
+.pi-hint { margin: -4px 0 0; font-size: calc(1.1rem * var(--tf, 1)); color: var(--muted); opacity: .8; letter-spacing: .04em; }
+
+/* locked CHAOS teaser: dark glass, neon glow, glitching text */
+.menu-card.c-chaos { --cA: #1b0b33; --cB: #3b0f5f; --cS: #12061f; position: relative; overflow: hidden; cursor: not-allowed; color: #f3e9ff;
+  border-color: #ff3df2; transform: none;
+  box-shadow: 0 8px 0 var(--cS), 0 0 26px -2px rgba(255, 61, 242, .65), 0 0 56px -10px rgba(77, 245, 210, .5);
+  animation: chaosGlow 2.6s ease-in-out infinite alternate; }
+.menu-card.c-chaos:active { transform: none; box-shadow: 0 8px 0 var(--cS), 0 0 26px -2px rgba(255, 61, 242, .65); }
+.menu-card.c-chaos::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(115deg, transparent 0 14px, rgba(255, 61, 242, .08) 14px 16px); }
+.c-chaos .mc-badge { display: flex; align-items: center; gap: 6px; color: #ff9cf8; opacity: 1; }
+.c-chaos .mc-sub { color: #d9c8ff; }
+.c-chaos .mc-best { color: #4df5d2; opacity: 1; }
+.c-chaos .mc-big { color: #ffffff; text-shadow: 0 0 14px rgba(255, 61, 242, .9); }
+.lock-ico { display: inline-block; width: 14px; height: 14px; flex: none; }
+.lock-ico svg { display: block; width: 100%; height: 100%; }
+.glitch { position: relative; display: inline-block; }
+.glitch::before, .glitch::after { content: attr(data-text); position: absolute; left: 0; top: 0; width: 100%; pointer-events: none; overflow: hidden; clip-path: inset(0 0 100% 0); }
+.glitch::before { color: #ff3df2; animation: glitchA 2.3s steps(1) infinite; }
+.glitch::after { color: #4df5d2; animation: glitchB 1.9s steps(1) infinite; }
+@keyframes glitchA { 0%, 84%, 100% { clip-path: inset(0 0 100% 0); } 86% { clip-path: inset(10% 0 55% 0); translate: -3px 0; } 91% { clip-path: inset(60% 0 8% 0); translate: 3px 0; } 95% { clip-path: inset(30% 0 40% 0); translate: -2px 0; } }
+@keyframes glitchB { 0%, 70%, 100% { clip-path: inset(0 0 100% 0); } 72% { clip-path: inset(50% 0 20% 0); translate: 3px 0; } 78% { clip-path: inset(5% 0 70% 0); translate: -3px 0; } 83% { clip-path: inset(75% 0 0 0); translate: 2px 0; } }
+@keyframes chaosGlow { from { filter: brightness(1); } to { filter: brightness(1.18) saturate(1.2); } }
+.menu-card.wiggle { animation: wiggle .4s steps(8); }
+@keyframes wiggle { 20% { translate: -7px 0; } 40% { translate: 7px 0; } 60% { translate: -4px 0; } 80% { translate: 4px 0; } }
+
+/* +time popup (Timer mode) */
+.clock-wrap { position: relative; display: inline-block; }
+.clock-pop { position: absolute; right: 0; top: 100%; margin-top: 4px; white-space: nowrap; pointer-events: none; opacity: 0;
+  font-family: var(--font-pixel); font-size: calc(.6rem * var(--pf, 1)); color: var(--good); text-shadow: 2px 2px 0 var(--shadow); }
+.clock-pop.go { animation: clockPop .9s ease-out; }
+@keyframes clockPop { 0% { opacity: 1; transform: translateY(-4px); } 100% { opacity: 0; transform: translateY(14px); } }
+
+/* Game Over tip / fact */
+.r-tip { width: 100%; margin: 0; padding: 12px 14px; display: grid; gap: 6px; text-align: left; border: 3px dashed var(--line); background: var(--surface-2); }
+.r-tip:empty { display: none; }
+.r-tip b { font-family: var(--font-pixel); font-weight: normal; font-size: calc(.55rem * var(--pf, 1)); letter-spacing: .06em; color: var(--gold); }
+.r-tip span { font-size: calc(1.3rem * var(--tf, 1)); line-height: 1.1; color: var(--text); }
+
+/* settings: dropdowns + sliders */
+.setting.stack { flex-direction: column; align-items: stretch; gap: 12px; }
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.theme-prev { width: 76px; height: 44px; flex: none; border: 4px solid var(--line-strong); }
+.select { position: relative; display: block; }
+.select select { width: 100%; appearance: none; -webkit-appearance: none; cursor: pointer; border-radius: 0;
+  font-family: var(--font-pixel); font-size: calc(.6rem * var(--pf, 1)); padding: 14px 44px 14px 14px;
+  color: var(--text); background: var(--surface-2); border: 4px solid var(--line-strong); box-shadow: 0 4px 0 var(--shadow-solid); }
+.select::after { content: ""; position: absolute; right: 18px; top: 50%; width: 10px; height: 10px; pointer-events: none;
+  border-right: 4px solid var(--text); border-bottom: 4px solid var(--text); transform: translateY(-75%) rotate(45deg); }
+.select select:focus-visible { outline: 4px solid var(--c-zen-a); outline-offset: 2px; }
+.select option { background: var(--surface-solid); color: var(--text); font-family: var(--font-body); }
+.range { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px;
+  font-family: var(--font-pixel); font-size: calc(.5rem * var(--pf, 1)); color: var(--muted); }
+.range output { min-width: 4ch; text-align: right; color: var(--text); }
+.range input { -webkit-appearance: none; appearance: none; width: 100%; height: 28px; background: transparent; cursor: pointer; margin: 0; }
+.range input::-webkit-slider-runnable-track { height: 12px; background: var(--key); border: 3px solid var(--line-strong); }
+.range input::-moz-range-track { height: 6px; background: var(--key); border: 3px solid var(--line-strong); }
+.range input::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 28px; margin-top: -9px;
+  background: linear-gradient(135deg, var(--c-zen-a), var(--c-zen-b)); border: 3px solid var(--line-strong); }
+.range input::-moz-range-thumb { width: 16px; height: 22px; border-radius: 0; background: linear-gradient(135deg, var(--c-zen-a), var(--c-zen-b)); border: 3px solid var(--line-strong); }
+.range input:focus-visible { outline: 4px solid var(--c-zen-a); outline-offset: 2px; }
+.range input:disabled { opacity: .4; cursor: not-allowed; }
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-card.c-chaos, .glitch::before, .glitch::after, .menu-card.wiggle, .clock-pop.go { animation: none; }
+}
+
+/* the new pieces in each theme */
+:root[data-theme="light"] :is(.select select, .r-tip, .theme-prev) { border-radius: 14px; }
+:root[data-theme="light"] .range input::-webkit-slider-thumb { border-radius: 50%; }
+:root[data-theme="light"] .range input::-moz-range-thumb { border-radius: 50%; }
+:root[data-theme="terminal"] :is(.select select, .r-tip, .theme-prev) { border-radius: 0; border-width: 3px; }
+:root[data-theme="terminal"] .select select { box-shadow: 3px 3px 0 var(--shadow-solid); }
+:root[data-theme="terminal"] .r-tip { border-style: solid; }
+:root[data-theme="terminal"] .menu-card.c-chaos { background: #0f380f; color: #9bbc0f; border-color: #0f380f; box-shadow: 5px 5px 0 #306230; animation: none; }
+:root[data-theme="terminal"] .menu-card.c-chaos::before { background: repeating-linear-gradient(115deg, transparent 0 14px, rgba(155, 188, 15, .1) 14px 16px); }
+:root[data-theme="terminal"] .c-chaos :is(.mc-badge, .mc-big, .mc-best) { color: #9bbc0f; text-shadow: none; }
+:root[data-theme="terminal"] .c-chaos .mc-sub { color: #8bac0f; }
+:root[data-theme="terminal"] .glitch::before { color: #8bac0f; }
+:root[data-theme="terminal"] .glitch::after { color: #306230; }
+:root[data-theme="halloween"] .menu-card.c-chaos { border-color: #ff7a00; box-shadow: 0 8px 0 var(--cS), 0 0 26px -2px rgba(255, 122, 0, .6), 0 0 56px -10px rgba(178, 75, 255, .55); }
+:root[data-theme="halloween"] .c-chaos .mc-badge { color: #ffb347; }
