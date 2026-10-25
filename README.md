@@ -65,11 +65,14 @@ Each mode has its own **top 10** leaderboard (name up to 12 characters, score, d
 
 ### Themes
 
-| Theme | Look | Music | Price |
+Every theme has its own animated pixel-art world, fonts, UI shapes and music, so they are far more than colour swaps.
+
+| Theme | World and look | Music | Price |
 | --- | --- | --- | --- |
-| **Deep Space** | dark purple space | Deep Space (slow, dreamy pads and bells) | free |
-| **Dreamy Day** | light pastel | Dreamy Day (sunny music-box melody, bouncy bass) | free |
-| **Phosphor** | black and green retro CRT, with scanlines | Phosphor (driving minor-key 8-bit with drums) | 3,140 Pi Coins |
+| **Deep Space** | stars, a ringed planet, a moon and shooting stars | Deep Space (slow, dreamy pads and bells) | free |
+| **Dreamy Day** | pixel sun, drifting clouds, layered hills with flowers, a hot-air balloon and birds; soft rounded UI | Dreamy Day (sunny music-box melody, bouncy bass) | free |
+| **Phosphor** | handheld console: four shades of green, LCD pixel grid, flat boxy UI, and a side-scrolling world where a little π runner hops over blocks | Phosphor (driving minor-key 8-bit with drums) | 3,140 Pi Coins |
+| **Hapi Halloween** | giant moon, ghosts, bats, a haunted house, dead trees, tombstones, a pumpkin patch, a cobweb with a dangling spider; gothic titles | Haunted Waltz (spooky 3/4 music box, organ drone, bell tolls) | 9,420 Pi Coins |
 
 Unlocking a locked theme asks for confirmation first, and shows your balance and how many coins you are short.
 
@@ -99,7 +102,7 @@ js/pi.js          pi digits (computed with BigInt) + pure game rules   (unit-tes
 js/score.js       scoring, combo and survival clock                   (unit-testable)
 js/store.js       settings, leaderboards and Pi Coin wallet (localStorage)
 js/audio.js       Web Audio synth: SFX + three generative BGM tracks
-js/fx.js          pixel icons, parallax background, particles, shine/tilt, shake
+js/fx.js          pixel icons, Deep Space parallax, the pixel-art theme scenes, particles, shine/tilt, shake
 js/app.js         screens, game loop, input, results, theme shop, settings
 favicon.svg
 ```
@@ -112,12 +115,12 @@ favicon.svg
 - **Game constants** (Timer length, shake strength, coins per score, dev cheat): `CONFIG` at the top of `js/app.js`.
 - **Themes and prices:** the `THEMES` list in `js/app.js`.
 - **Add a theme:**
-  1. Copy a `:root[data-theme="..."]` block in `css/style.css` and give it a new name.
-  2. Add a palette to `PALETTES` in `js/fx.js` (for the pixel planet and moon).
-  3. Add an entry to `THEMES` in `js/app.js` (id, name, price, swatch class, music track, top-bar icon) and a matching `.sw-...` swatch gradient in `css/style.css`.
-  4. Optionally add a track to `TRACKS` in `js/audio.js` and a step function for it.
+  1. Copy a `:root[data-theme="..."]` block in `css/style.css`, rename it and set the colours and fonts (`--font-pixel`, `--font-body`, `--font-display`, and the size multipliers `--pf`, `--tf`, `--df`).
+  2. Add a scene to `SCENES` in `js/fx.js` (an `init` that builds sprites/positions and a `draw` that paints one frame in big pixels). Deep Space is the only theme that doesn't use one.
+  3. Add an entry to `THEMES` in `js/app.js` (id, name, price, swatch class, music track, top-bar icon, tagline) and a matching `.sw-...` swatch gradient in `css/style.css`.
+  4. Optionally add a track to `TRACKS` in `js/audio.js` with its own step function.
 - **Change the music:** each track has its tempo and echo in `TRACKS` in `js/audio.js`, and its own chord progressions and patterns just above the `Audio8` class.
-- **Fonts:** loaded from Google Fonts (*Press Start 2P* and *VT323*, both OFL licensed). To work offline, download the two font files, add `@font-face` rules to `css/style.css`, and remove the Google Fonts `<link>` tags in `index.html`.
+- **Fonts:** loaded from Google Fonts (all OFL licensed): *Press Start 2P* and *VT323* (Deep Space), *Pixelify Sans* (Dreamy Day), *Silkscreen* (Phosphor) and *Jacquard 12* (Hapi Halloween). If a font looks too big or small, tune that theme's `--pf` / `--tf` / `--df` multipliers. To work offline, download the font files, add `@font-face` rules to `css/style.css`, and remove the Google Fonts `<link>` tags in `index.html`.
 
 ## Saved data (localStorage keys)
 
@@ -146,6 +149,7 @@ console.log(k.totalScore); // 150 + 1 * 500 = 650
 
 ## Changelog
 
+- **v1.3**: themes rebuilt with their own pixel-art scenes, fonts and UI (Dreamy Day, a handheld-style Phosphor), new locked **Hapi Halloween** theme (9,420 coins) with the Haunted Waltz music.
 - **v1.2**: Pi Coins and wallet, locked **Phosphor** theme (3,140 coins) with confirmation, a unique BGM per theme, a music track selector, new Dreamy Day music.
 - **v1.1**: new scoring system (speed tiers, combos, length bonus), 10-second survival clock for Zen, score breakdown on the results screen.
 - **v1.0**: Timer, Zen and The Pi modes, top-10 leaderboards, Deep Space and Dreamy Day themes, generative music.
@@ -153,4 +157,4 @@ console.log(k.totalScore); // 150 + 1 * 500 = 650
 ## Ideas for next
 
 - Install as a phone app (add a web app manifest + service worker for PWA)
-- More themes to buy with Pi Coins, daily challenge, sharing your score as an image
+- More themes to buy with Pi Coins, seasonal events, daily challenge, sharing your score as an image

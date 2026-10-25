@@ -44,9 +44,11 @@
     'deep-space': { name: 'DEEP SPACE', bpm: 76, echo: 0.75 },
     'dreamy-day': { name: 'DREAMY DAY', bpm: 92, echo: 0.75 },
     'phosphor':   { name: 'PHOSPHOR',   bpm: 118, echo: 0.5 },
+    'haunted':    { name: 'HAUNTED WALTZ', bpm: 126, echo: 0.75 },
   };
   CHORDS.m = [0, 3, 7];                // plain triads for PHOSPHOR
   CHORDS.maj = [0, 4, 7];
+  CHORDS.dim = [0, 3, 6, 9];
 
   // DREAMY DAY: C G Am F / F C G Em, major pentatonic music-box melody
   const DAY_PROGS = [
@@ -66,6 +68,11 @@
     [[45, 'm'], [50, 'm'], [52, 'maj'], [45, 'm']],
   ];
   const PHOS_LEAD = [69, 72, 74, 76, 79, 81];                  // A minor pentatonic A4..A5
+
+  // HAUNTED WALTZ: A harmonic minor in 3/4 (12 steps per bar): Am Am Dm Dm E E Am G#dim
+  const HAL_PROG = [[45, 'm'], [45, 'm'], [50, 'm'], [50, 'm'], [52, 'maj'], [52, 'maj'], [45, 'm'], [44, 'dim']];
+  const HAL_NAT = [69, 71, 72, 74, 76, 77, 79, 81, 83];          // A natural minor, A4..B5
+  const HAL_HARM = [69, 71, 72, 74, 76, 77, 80, 81, 83];         // harmonic minor (G# for the E and G#dim bars)
 
   class Audio8 {
     constructor() {
@@ -412,6 +419,7 @@
     _playStep(step, t) {
       if (this.track === 'dreamy-day') this._stepDreamyDay(step, t);
       else if (this.track === 'phosphor') this._stepPhosphor(step, t);
+      else if (this.track === 'haunted') this._stepHaunted(step, t);
       else this._stepDeepSpace(step, t);
     }
 
@@ -502,6 +510,72 @@
       if (s % 4 === 2 && Math.random() < 0.1 + this.intensity * 0.05) {   // sparkle
         const note = padRoot + 24 + tones[Math.floor(Math.random() * tones.length)];
         this._voice(out, { freq: midi(note), t, dur: 0.05, type: 'sine', vol: 0.045, a: 0.004, r: 1.4, delay: 0.6, verb: 0.5 });
+      }
+    }
+
+    /* ---------------------------------------------------- HAUNTED WALTZ ---- */
+    _stepHaunted(step, t) {
+      const s = step % 12;
+      const bar = Math.floor(step / 12);
+      const L = this.stepLen;
+      const out = this.musicBus;
+      const [root, type] = HAL_PROG[bar % HAL_PROG.length];
+      const tones = CHORDS[type];
+      const padRoot = root < 47 ? root + 12 : root;
+      let bass = 36 + (root % 12);
+      if (bass < 40) bass += 12;
+
+      if (s === 0) {                                   // oom: organ-ish bass on beat 1
+        this._voice(out, { freq: midi(bass), t, dur: L * 3.6, type: 'triangle', vol: 0.12, a: 0.01, r: 0.2, lp: 700 });
+      }
+      if (s === 4 || s === 8) {                        // pah-pah: plucked chord on beats 2 and 3
+        tones.forEach((iv) => {
+          this._voice(out, { freq: midi(padRoot + iv), t, dur: L * 2.2, wave: this.pulse25, vol: 0.026, a: 0.005, r: 0.15, lp: 1800, verb: 0.25 });
+        });
+      }
+      if (s === 0 && bar % 2 === 0) {                  // eerie organ drone (two detuned saws)
+        [0, 7].forEach((iv, k) => {
+          this._voice(out, { freq: midi(padRoot - 12 + iv), t, dur: L * 24, type: 'sawtooth', vol: 0.014, a: 0.8, r: 1.5, lp: 500, verb: 0.5, detune: k ? 9 : -9 });
+        });
+      }
+      if (s === 0 && bar % 4 === 0) {                  // church bell toll (inharmonic partials)
+        [[1, 0.05], [2.76, 0.025], [5.4, 0.012]].forEach((p) => {
+          this._voice(out, { freq: midi(57) * p[0], t, dur: 0.05, type: 'sine', vol: p[1], a: 0.004, r: 3.5, verb: 0.6 });
+        });
+      }
+
+      // music-box melody: random walk on the scale, snapping to chord tones on strong beats
+      const scale = root % 12 === 4 || root % 12 === 8 ? HAL_HARM : HAL_NAT;
+      const hit = { 0: 1, 4: 0.55, 8: 0.55, 6: 0.22, 10: 0.22 }[s];
+      if (hit && Math.random() < hit + this.intensity * 0.1) {
+        if (this._melo == null) this._melo = 4;
+        this._melo = Math.max(0, Math.min(scale.length - 1, this._melo + Math.floor(Math.random() * 5) - 2));
+        if (s === 0) {                                 // strong beat: nearest chord tone
+          const pcs = tones.map((iv) => (padRoot + iv) % 12);
+          let best = this._melo;
+          for (let d = 0; d < scale.length; d++) {
+            const up = this._melo + d, down = this._melo - d;
+            if (up < scale.length && pcs.includes(scale[up] % 12)) { best = up; break; }
+            if (down >= 0 && pcs.includes(scale[down] % 12)) { best = down; break; }
+          }
+          this._melo = best;
+        }
+        const note = scale[this._melo];
+        this._voice(out, { freq: midi(note), t, dur: L * 1.5, wave: this.pulse125, vol: 0.045, a: 0.004, r: 0.6, lp: 3800, delay: 0.75, verb: 0.35 });
+        this._voice(out, { freq: midi(note + 12), t, dur: 0.03, type: 'sine', vol: 0.012, a: 0.004, r: 0.9, verb: 0.5 });
+      }
+
+      if (s === 0 && bar % 8 === 5 && Math.random() < 0.5) {   // theremin-style wail
+        this._voice(out, { freq: midi(81), slideTo: midi(82.5), t, dur: L * 10, type: 'sine', vol: 0.02, a: 0.5, r: 0.8, delay: 0.75, verb: 0.6 });
+      }
+      if (s === 10 && Math.random() < 0.12) {                  // bat flutter
+        for (let i = 0; i < 3; i++) this._noise(out, t + i * 0.05, 0.03, 0.02, 5000, null);
+      }
+      if (s === 0 && bar % 8 === 0 && Math.random() < 0.6) {   // wind
+        this._noise(out, t, L * 20, 0.028, 200, 900);
+      }
+      if (s === 6 && bar % 4 === 2 && Math.random() < 0.3) {   // door creak
+        this._voice(out, { freq: 180, slideTo: 230, t, dur: 0.35, type: 'sawtooth', vol: 0.015, a: 0.05, r: 0.1, lp: 700 });
       }
     }
 

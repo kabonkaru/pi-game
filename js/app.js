@@ -16,7 +16,7 @@
     TIMER_SECONDS: 180,      // Timer mode length
     COINS_PER_SCORE: 0.01,   // PLACEHOLDER: Pi Coins earned per run = final score x this
     DEV_LOGO_COINS: true,    // DEV TEST: tap the logo 10 times = +100 Pi Coins (set to false before release!)
-    LOGO_TAPS: 1, LOGO_REWARD: 100, LOGO_WINDOW_MS: 2500,
+    LOGO_TAPS: 10, LOGO_REWARD: 100, LOGO_WINDOW_MS: 2500,
     DECIMALS: 1000,          // digits after "3."
     SHAKE: { key: 2, milestone: 6, wrong: 9, finish: 12 },   // pixels (inside the page only)
   };
@@ -26,9 +26,10 @@
 
   /* ------------------------ themes (each bundles a music track) ------------------------ */
   const THEMES = [
-    { id: 'dark',     name: 'DEEP SPACE', tag: 'DARK',      swatch: 'sw-dark',     bgm: 'deep-space', cost: 0,    icon: 'moon', meta: '#05041a' },
-    { id: 'light',    name: 'DREAMY DAY', tag: 'LIGHT',     swatch: 'sw-light',    bgm: 'dreamy-day', cost: 0,    icon: 'sun',  meta: '#cfe6ff' },
-    { id: 'terminal', name: 'PHOSPHOR',   tag: 'RETRO CRT', swatch: 'sw-terminal', bgm: 'phosphor',   cost: 3140, icon: 'term', meta: '#000a02' },
+    { id: 'dark',      name: 'DEEP SPACE',     tag: 'DARK',      swatch: 'sw-dark',      bgm: 'deep-space', cost: 0,    icon: 'moon',    meta: '#05041a', tagline: 'how many digits can you remember?' },
+    { id: 'light',     name: 'DREAMY DAY',     tag: 'LIGHT',     swatch: 'sw-light',     bgm: 'dreamy-day', cost: 0,    icon: 'sun',     meta: '#cfe6ff', tagline: 'sunny skies and a few digits of pi' },
+    { id: 'terminal',  name: 'PHOSPHOR',       tag: 'HANDHELD',  swatch: 'sw-terminal',  bgm: 'phosphor',   cost: 3140, icon: 'gb',      meta: '#9bbc0f', tagline: 'press start to remember pi' },
+    { id: 'halloween', name: 'HAPI HALLOWEEN', tag: 'SPOOKY',    swatch: 'sw-halloween', bgm: 'haunted',    cost: 9420, icon: 'pumpkin', meta: '#0b0218', tagline: 'HaPi Halloween, woo!' },
   ];
   const themeById = (id) => THEMES.find((t) => t.id === id);
   const isOwned = (t) => t.cost === 0 || wallet.owns(t.id);
@@ -420,6 +421,8 @@
   function applyTheme(id) {
     const t = themeById(id) || THEMES[0];
     document.documentElement.dataset.theme = t.id;
+    const tg = $('.tagline');
+    if (tg) tg.textContent = t.tagline;
     const meta = $('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', t.meta);
     const owned = THEMES.filter(isOwned);                     // the top button cycles the themes you own
@@ -483,7 +486,7 @@
         '<span class="swatch ' + t.swatch + '">' + (owned ? '' : '<span class="lock" data-icon="lock"></span>') + '</span>' +
         '<span class="t-name">' + t.name + '</span><span class="t-tag">' + t.tag + '</span>' +
         (owned ? '' : '<span class="t-price"><span data-icon="coin"></span><b>' + fmtCoins(t.cost) + '</b></span>') + '</button>';
-    }).join('') + skeleton + skeleton;
+    }).join('') + skeleton;
     fx.icons.mount(host);
   }
 

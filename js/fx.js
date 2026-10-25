@@ -106,6 +106,30 @@
       '#..#####.',
       '.........',
     ],
+    gb: [                         // handheld console
+      '#########',
+      '#.......#',
+      '#.#####.#',
+      '#.#...#.#',
+      '#.#####.#',
+      '#.......#',
+      '#.#...#.#',
+      '#.......#',
+      '#########',
+    ],
+    pumpkin: [
+      '.....##....',
+      '..#######..',
+      '.#########.',
+      '###.###.###',
+      '###.###.###',
+      '###########',
+      '##.#.#.#.##',
+      '###########',
+      '.#########.',
+      '..#######..',
+      '...#####...',
+    ],
     gear: grid(11, 11, (dx, dy) => {
       const d = Math.sqrt(dx * dx + dy * dy);
       const ring = d <= 3.7 && d >= 1.8;
@@ -233,8 +257,307 @@
   }
 
   /* ================================================= parallax background == */
+  /* ================================================ theme scenes (pixel art) ==
+     One low-res canvas (#scene) drawn in "big pixels". Deep Space keeps its own
+     stars/planet/moon layers; every other theme paints its own world here.     */
+  const rng = (a) => () => {
+    a |= 0; a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const wrap = (v, m) => ((v % m) + m) % m;
+  const rect = (g, c, x, y, w, h) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); };
+  const disc = (g, c, cx, cy, rx, ry) => {
+    ry = ry == null ? rx : ry; g.fillStyle = c; cx = Math.round(cx); cy = Math.round(cy);
+    rx = Math.round(rx); ry = Math.max(1, Math.round(ry));
+    for (let dy = -ry; dy <= ry; dy++) {
+      const k = Math.round(rx * Math.sqrt(Math.max(0, 1 - (dy * dy) / (ry * ry + 0.01))));
+      g.fillRect(cx - k, cy + dy, 2 * k + 1, 1);
+    }
+  };
+  const pline = (g, c, x0, y0, x1, y1) => {
+    g.fillStyle = c; x0 = Math.round(x0); y0 = Math.round(y0); x1 = Math.round(x1); y1 = Math.round(y1);
+    const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+    let err = dx + dy;
+    for (let n = 0; n < 400; n++) {
+      g.fillRect(x0, y0, 1, 1);
+      if (x0 === x1 && y0 === y1) break;
+      const e2 = 2 * err;
+      if (e2 >= dy) { err += dy; x0 += sx; }
+      if (e2 <= dx) { err += dx; y0 += sy; }
+    }
+  };
+  const ridgeY = (base, amp, f1, f2, off, ph, x) =>
+    Math.round(base + amp * (0.6 * Math.sin((x + off) * f1 + ph) + 0.4 * Math.sin((x + off) * f2 + ph * 1.7)));
+  const ridge = (g, c, w, h, base, amp, f1, f2, off, ph) => {
+    g.fillStyle = c;
+    for (let x = 0; x < w; x++) { const y = ridgeY(base, amp, f1, f2, off, ph, x); g.fillRect(x, y, 1, h - y); }
+  };
+  const sprite = (w, h, draw) => {
+    const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d')); return c;
+  };
+  const cloudSprite = (w, h, top, shade) => sprite(w, h, (g) => {
+    const b = h - 2;
+    disc(g, top, w * 0.3, b - h * 0.3, w * 0.2, h * 0.3);
+    disc(g, top, w * 0.52, b - h * 0.42, w * 0.24, h * 0.42);
+    disc(g, top, w * 0.76, b - h * 0.26, w * 0.18, h * 0.26);
+    rect(g, top, w * 0.12, b - 1, Math.round(w * 0.76), 3);
+    g.globalCompositeOperation = 'source-atop';
+    rect(g, shade, 0, h - 3, w, 3);
+  });
+  const sparkle = (g, c, x, y, a) => {
+    g.globalAlpha = a; g.fillStyle = c; x = Math.round(x); y = Math.round(y);
+    g.fillRect(x, y, 1, 1); g.fillRect(x - 1, y, 1, 1); g.fillRect(x + 1, y, 1, 1); g.fillRect(x, y - 1, 1, 1); g.fillRect(x, y + 1, 1, 1);
+    g.globalAlpha = 1;
+  };
+
+  const SCENES = {};
+
+  /* ---------------------------------------------------------- DREAMY DAY ---- */
+  SCENES.light = {
+    init(sc) {
+      const r = rng(11), w = sc.w, h = sc.h;
+      const c1 = cloudSprite(30, 12, '#ffffff', '#d8e6ff'), c2 = cloudSprite(20, 9, '#ffffff', '#e2ecff'), c3 = cloudSprite(40, 15, '#ffffff', '#cfdffc');
+      const balloon = sprite(13, 19, (g) => {
+        disc(g, '#ff8fb8', 6, 6, 6, 6);
+        g.globalCompositeOperation = 'source-atop';
+        rect(g, '#ffe066', 4, 0, 2, 13); rect(g, '#ffe066', 9, 0, 1, 13); rect(g, '#b79bff', 0, 0, 2, 13);
+        g.globalCompositeOperation = 'source-over';
+        pline(g, '#7a5a3a', 3, 11, 5, 15); pline(g, '#7a5a3a', 9, 11, 7, 15);
+        rect(g, '#b07a45', 4, 15, 5, 3); rect(g, '#7a4f2a', 4, 17, 5, 1);
+      });
+      return {
+        balloon,
+        clouds: Array.from({ length: 9 }, (_, i) => ({ s: [c2, c1, c3][i % 3], x: r() * (w + 60), y: 4 + r() * h * 0.42, v: 1.5 + r() * 3.5, d: 6 + (i % 3) * 8 })),
+        flowers: Array.from({ length: Math.ceil(w / 6) }, () => ({ x: r() * w, c: ['#ff8fb8', '#ffe066', '#ffffff', '#b79bff'][Math.floor(r() * 4)], ph: r() * 6 })),
+        birds: Array.from({ length: 4 }, () => ({ x: r() * w, y: h * (0.16 + r() * 0.3), v: 5 + r() * 5, ph: r() * 6 })),
+        sparks: Array.from({ length: 16 }, () => ({ x: r() * w, y: r() * h * 0.62, ph: r() * 6, f: 0.8 + r() * 1.5 })),
+      };
+    },
+    draw(sc, t, px, py) {
+      const g = sc.ctx, w = sc.w, h = sc.h, S = sc.state, ox = px * 3, oy = py * 1.5;
+      const sx = w * 0.8 - ox * 0.5, sy = h * 0.15 - oy * 0.5;
+      g.globalAlpha = 0.22; disc(g, '#fff4b0', sx, sy, 17); g.globalAlpha = 0.38; disc(g, '#fff4b0', sx, sy, 13); g.globalAlpha = 1;
+      for (let i = 0; i < 12; i++) {
+        const a = i * Math.PI / 6 + t * 0.15;
+        pline(g, '#ffe27a', sx + Math.cos(a) * 11, sy + Math.sin(a) * 11, sx + Math.cos(a) * 15, sy + Math.sin(a) * 15);
+      }
+      disc(g, '#ffd84d', sx, sy, 8); disc(g, '#fff0a0', sx - 2, sy - 2, 4);
+
+      for (const c of S.clouds) {
+        const cw = c.s.width, x = wrap(c.x + t * c.v - ox * c.d * 0.3, w + cw + 20) - cw;
+        g.globalAlpha = c.d > 14 ? 1 : 0.82;
+        g.drawImage(c.s, Math.round(x), Math.round(c.y - oy * c.d * 0.2));
+      }
+      g.globalAlpha = 1;
+      ridge(g, '#c8c4f5', w, h, h * 0.7, 7, 0.045, 0.11, ox * 1.2, 0);
+      const bx = wrap(t * 1.6 + w * 0.3, w + 40) - 20;
+      g.drawImage(S.balloon, Math.round(bx - ox), Math.round(h * 0.38 + Math.sin(t * 0.7) * 3 - oy));
+      ridge(g, '#aee8c8', w, h, h * 0.78, 6, 0.06, 0.15, ox * 2.4, 2);
+      ridge(g, '#8fdcab', w, h, h * 0.87, 5, 0.08, 0.2, ox * 4, 4);
+      for (const f of S.flowers) {
+        const y = ridgeY(h * 0.87, 5, 0.08, 0.2, ox * 4, 4, f.x), sw = Math.round(Math.sin(t * 1.5 + f.ph));
+        rect(g, '#4fb877', f.x, y - 3, 1, 3); rect(g, f.c, f.x + sw - (sw < 0 ? 0 : 0), y - 5, 2, 2);
+      }
+      for (const b of S.birds) {
+        const x = Math.round(wrap(b.x + t * b.v, w + 20) - 10), y = Math.round(b.y + Math.sin(t * 1.3 + b.ph) * 2);
+        const up = Math.sin(t * 9 + b.ph) > 0; g.fillStyle = '#4a5a8a';
+        const pts = up ? [[-2, -1], [-1, 0], [0, 0], [1, 0], [2, -1]] : [[-2, 1], [-1, 0], [0, 0], [1, 0], [2, 1]];
+        for (const p of pts) g.fillRect(x + p[0], y + p[1], 1, 1);
+      }
+      for (const s of S.sparks) { const a = Math.sin(t * s.f + s.ph); if (a > 0.82) sparkle(g, '#ffffff', s.x, s.y, (a - 0.82) * 5); }
+    },
+  };
+
+  /* ---------------------------------------------- PHOSPHOR (handheld LCD) ---- */
+  const GB = ['#0f380f', '#306230', '#8bac0f', '#9bbc0f'];
+  SCENES.terminal = {
+    init(sc) {
+      const r = rng(5), w = sc.w, h = sc.h;
+      const cloud = cloudSprite(26, 10, GB[2], GB[2]);
+      const pine = sprite(9, 15, (g) => {
+        for (let i = 0; i < 4; i++) rect(g, GB[1], 4 - i - 0, 1 + i * 3, 1 + i * 2 + 1, 3);
+        rect(g, GB[0], 4, 12, 1, 3);
+      });
+      const bush = sprite(13, 7, (g) => { disc(g, GB[1], 4, 4, 4, 3); disc(g, GB[1], 9, 4, 4, 3); rect(g, GB[1], 2, 4, 9, 3); rect(g, GB[0], 2, 6, 9, 1); });
+      const block = sprite(7, 7, (g) => { rect(g, GB[0], 0, 0, 7, 7); rect(g, GB[2], 1, 1, 5, 5); rect(g, GB[0], 3, 2, 1, 1); rect(g, GB[0], 3, 4, 1, 1); });
+      const runA = ['########', '.##..##.', '.##..##.', '.##..##.', '.#....#.', '##....##'];
+      const runB = ['########', '.##..##.', '.##..##.', '.##..##.', '..#..#..', '..#..#..'];
+      const mk = (rows) => sprite(8, 6, (g) => rows.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === '#') rect(g, GB[0], x, y, 1, 1); })));
+      return {
+        cloud, pine, bush, block, run: [mk(runA), mk(runB)],
+        clouds: Array.from({ length: 5 }, () => ({ x: r() * (w + 40), y: 6 + r() * h * 0.35, v: 1 + r() * 2 })),
+        deco: Array.from({ length: Math.ceil(w / 22) + 2 }, (_, i) => ({ x: i * 22 + r() * 12, k: r() < 0.55 ? 'pine' : 'bush' })),
+        obs: Array.from({ length: 12 }, (_, i) => 90 + i * (95 + (i * 37) % 40)),
+      };
+    },
+    draw(sc, t, px) {
+      const g = sc.ctx, w = sc.w, h = sc.h, S = sc.state, ox = t * 24, gy = h - 10;
+      for (let y = 0; y < 8; y++) {                         // LCD vignette: dithered top edge
+        g.fillStyle = GB[2];
+        for (let x = (y & 1); x < w; x += (y < 2 ? 1 : y < 5 ? 2 : 4)) { if (y > 5 && (x & 3) !== (y & 3) - 2) continue; g.fillRect(x, y, 1, 1); }
+      }
+      for (const c of S.clouds) g.drawImage(S.cloud, Math.round(wrap(c.x + t * c.v - px * 2, w + 50) - 26), Math.round(c.y));
+      ridge(g, GB[2], w, h, h * 0.62, 9, 0.05, 0.13, ox * 0.15 + px * 2, 1);
+      for (const d of S.deco) {
+        const x = wrap(d.x * 1 - ox * 0.5 - px * 4, w + 60) - 20, spr = d.k === 'pine' ? S.pine : S.bush;
+        g.drawImage(spr, Math.round(x), Math.round(gy - spr.height + 1));
+      }
+      rect(g, GB[1], 0, gy, w, h - gy); rect(g, GB[0], 0, gy, w, 1);
+      for (let x = -wrap(ox, 8); x < w; x += 8) { rect(g, GB[0], x, gy + 4, 1, 3); rect(g, GB[0], x + 4, gy + 7, 1, 3); }
+      rect(g, GB[0], 0, gy + 3, w, 1); rect(g, GB[0], 0, gy + 7, w, 1);
+      const rx = Math.round(w * 0.22); let lift = 0;
+      for (const o of S.obs) {
+        const x = wrap(o - ox, 1500) - 20;
+        if (x > -8 && x < w) g.drawImage(S.block, Math.round(x), gy - 6);
+        const dist = x - rx; if (dist > -8 && dist < 22) lift = Math.max(lift, 14 * (1 - Math.pow((dist - 7) / 15, 2)));
+      }
+      g.drawImage(S.run[Math.floor(t * 8) % 2], rx, Math.round(gy - 6 - Math.max(0, lift)));
+    },
+  };
+
+  /* ------------------------------------------------------- HAPI HALLOWEEN ---- */
+  const deadTree = (w, h, seed) => sprite(w, h, (g) => {
+    const r = rng(seed), c = '#0d0418';
+    const branch = (x, y, a, len, d) => {
+      if (d === 0 || len < 2.5) return;
+      const x2 = x + Math.cos(a) * len, y2 = y - Math.sin(a) * len;
+      pline(g, c, x, y, x2, y2); if (d > 3) pline(g, c, x + 1, y, x2 + 1, y2);
+      branch(x2, y2, a + 0.5 + r() * 0.4, len * 0.72, d - 1); branch(x2, y2, a - 0.5 - r() * 0.4, len * 0.72, d - 1);
+    };
+    branch(w / 2, h - 1, Math.PI / 2, h * 0.27, 6);
+  });
+  const pumpkin = (g, cx, by, r, lit, t, ph) => {
+    const ry = Math.round(r * 0.8), cy = by - ry, lr = Math.round(r * 0.62);
+    if (lit) {
+      const f = 0.14 + 0.07 * Math.sin(t * 9 + ph) * Math.sin(t * 5.3 + ph * 2);
+      g.globalAlpha = Math.max(0.05, f); disc(g, '#ff9a1f', cx, cy, r * 2.1, ry * 2.1); g.globalAlpha = 1;
+    }
+    for (const dx of [-0.42, 0.42]) disc(g, '#b34400', cx + dx * r, cy, lr + 1, ry);
+    disc(g, '#b34400', cx, cy, lr + 1, ry + 1);
+    for (const dx of [-0.42, 0.42]) disc(g, '#ff7a00', cx + dx * r, cy, lr, ry - 1);
+    disc(g, '#ff8f1f', cx, cy, lr, ry);
+    disc(g, '#ffb347', cx - r * 0.18, cy - ry * 0.45, Math.max(1, r * 0.16), Math.max(1, ry * 0.2));
+    pline(g, '#c24d00', cx - r * 0.3, cy - ry * 0.7, cx - r * 0.34, cy + ry * 0.7); pline(g, '#c24d00', cx + r * 0.3, cy - ry * 0.7, cx + r * 0.34, cy + ry * 0.7);
+    rect(g, '#2f6b24', cx - 1, cy - ry - 3, 3, 4); rect(g, '#4f9a38', cx, cy - ry - 3, 1, 3);
+    if (lit) {
+      const c = '#ffd23f', e = Math.max(2, Math.round(r * 0.2));
+      for (const ex of [-0.4, 0.4]) for (let i = 0; i < e; i++) rect(g, c, cx + ex * r - i, cy - ry * 0.35 + i, 1 + i * 2, 1);
+      rect(g, c, cx, cy + 1, 1, 1); rect(g, c, cx - 1, cy + 2, 3, 1);
+      const mw = Math.round(r * 1.0), my = cy + Math.round(ry * 0.42);
+      for (let i = 0; i < mw; i++) rect(g, c, cx - mw / 2 + i, my + (i % 4 < 2 ? 0 : 1), 1, 2);
+    }
+  };
+  const ghost = (g, x, y, t, a) => {
+    g.globalAlpha = a; x = Math.round(x); y = Math.round(y);
+    disc(g, '#efeaff', x, y, 6, 6); rect(g, '#efeaff', x - 6, y, 13, 9);
+    for (let i = 0; i < 13; i++) rect(g, '#efeaff', x - 6 + i, y + 9, 1, 1 + (Math.floor((i + Math.floor(t * 6)) / 2) % 2));
+    rect(g, '#d6cff2', x + 4, y - 2, 2, 11);
+    rect(g, '#1a0a2e', x - 3, y - 1, 2, 3); rect(g, '#1a0a2e', x + 1, y - 1, 2, 3); rect(g, '#1a0a2e', x - 1, y + 4, 3, 2);
+    g.globalAlpha = 1;
+  };
+  const bat = (g, x, y, t, ph) => {
+    x = Math.round(x); y = Math.round(y); g.fillStyle = '#0a0214';
+    g.fillRect(x - 1, y - 1, 3, 3); g.fillRect(x - 1, y - 2, 1, 1); g.fillRect(x + 1, y - 2, 1, 1);
+    const f = Math.sin(t * 14 + ph);
+    for (let k = 1; k <= 4; k++) {
+      const dy = Math.round(f * k * 0.7) + (k > 2 ? 1 : 0);
+      g.fillRect(x - 1 - k, y + dy, 1, 2); g.fillRect(x + 1 + k, y + dy, 1, 2);
+    }
+  };
+  const house = (g, x, y, t) => {
+    const D = '#12051f';
+    rect(g, D, x, y - 16, 26, 16);
+    for (let k = 0; k < 9; k++) rect(g, D, x - 2 + Math.round(k * 1.6), y - 17 - k, Math.round(30 - k * 3.2), 1);
+    rect(g, D, x + 19, y - 27, 7, 13); for (let k = 0; k < 4; k++) rect(g, D, x + 19 + k, y - 28 - k, 7 - k * 2, 1);
+    rect(g, D, x + 4, y - 27, 3, 6);
+    const wins = [[4, 12], [11, 12], [4, 6], [21, 22]];
+    wins.forEach((p, i) => {
+      const on = Math.sin(t * 2.3 + i * 2.1) > -0.55; if (!on) return;
+      rect(g, Math.sin(t * 11 + i) > 0.3 ? '#ff9d2b' : '#ffd23f', x + p[0], y - p[1], 3, 4);
+    });
+    rect(g, '#2a0f4a', x + 11, y - 6, 4, 6);
+  };
+  const tomb = (g, x, base, wd, ht, c) => {
+    rect(g, c, x, base - ht + Math.floor(wd / 2), wd, ht - Math.floor(wd / 2)); disc(g, c, x + (wd - 1) / 2, base - ht + Math.floor(wd / 2), Math.floor(wd / 2));
+    rect(g, '#2a1450', x + Math.floor(wd / 2), base - ht + 3, 1, 4); rect(g, '#2a1450', x + Math.floor(wd / 2) - 1, base - ht + 4, 3, 1);
+  };
+
+  SCENES.halloween = {
+    init(sc) {
+      const r = rng(31), w = sc.w, h = sc.h, gy = h - 7;
+      const n = Math.max(5, Math.min(12, Math.round(w / 24)));
+      return {
+        gy,
+        cloud: cloudSprite(36, 12, '#3b1a63', '#2a0f4a'), tree: deadTree(38, 50, 9), tree2: deadTree(30, 38, 4),
+        stars: Array.from({ length: 30 }, () => ({ x: r() * w, y: r() * h * 0.55, c: r() < 0.5 ? '#ffe9b0' : '#c9a6ff', ph: r() * 6 })),
+        clouds: Array.from({ length: 4 }, () => ({ x: r() * (w + 60), y: 4 + r() * h * 0.3, v: 1.5 + r() * 2.5 })),
+        pumps: Array.from({ length: n }, (_, i) => ({ x: (i + 0.5) * (w / n) + (r() - 0.5) * 8, r: 6 + Math.floor(r() * 9), lit: r() < 0.7, ph: r() * 6 })),
+        tombs: Array.from({ length: 5 }, () => ({ x: r() * w, ht: 8 + Math.floor(r() * 5), wd: 7 + 2 * Math.floor(r() * 2) })),
+        ghosts: Array.from({ length: 3 }, (_, i) => ({ x: r() * w, y: h * (0.22 + i * 0.13), v: 3 + r() * 3, ph: r() * 6 })),
+        bats: Array.from({ length: 5 }, () => ({ x: r() * w, y: h * (0.08 + r() * 0.3), v: 8 + r() * 8, ph: r() * 6, a: 3 + r() * 5 })),
+      };
+    },
+    draw(sc, t, px, py) {
+      const g = sc.ctx, w = sc.w, h = sc.h, S = sc.state, gy = S.gy, ox = px * 3, oy = py * 1.5;
+      for (const s of S.stars) { const a = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * 1.6 + s.ph)); g.globalAlpha = a; rect(g, s.c, s.x - ox * 0.3, s.y, 1, 1); }
+      g.globalAlpha = 1;
+      const mx = w * 0.7 - ox * 0.6, my = h * 0.2 - oy * 0.6, mr = Math.max(11, Math.min(20, w * 0.1));
+      g.globalAlpha = 0.14; disc(g, '#ff9a1f', mx, my, mr * 1.9); g.globalAlpha = 0.22; disc(g, '#ffb347', mx, my, mr * 1.45); g.globalAlpha = 1;
+      disc(g, '#ffb347', mx, my, mr); disc(g, '#ffd27a', mx - mr * 0.25, my - mr * 0.25, mr * 0.6);
+      disc(g, '#e8923a', mx + mr * 0.35, my + mr * 0.2, mr * 0.18); disc(g, '#e8923a', mx - mr * 0.3, my + mr * 0.45, mr * 0.12); disc(g, '#e8923a', mx + mr * 0.1, my - mr * 0.5, mr * 0.1);
+      for (const c of S.clouds) { g.globalAlpha = 0.9; g.drawImage(S.cloud, Math.round(wrap(c.x + t * c.v - ox * 1.2, w + 60) - 36), Math.round(c.y - oy)); }
+      g.globalAlpha = 1;
+      const fb = h * 0.7;
+      ridge(g, '#241046', w, h, fb, 6, 0.05, 0.13, ox * 1.2, 1);
+      const hx = Math.round(w * 0.12 - ox * 1.2); house(g, hx, ridgeY(fb, 6, 0.05, 0.13, ox * 1.2, 1, hx + 13) + 2, t);
+      for (const gh of S.ghosts) ghost(g, wrap(gh.x + t * gh.v, w + 30) - 15, gh.y + Math.sin(t * 1.4 + gh.ph) * 4, t, 0.78);
+      for (const b of S.bats) bat(g, wrap(b.x + t * b.v, w + 30) - 15, b.y + Math.sin(t * 2 + b.ph) * b.a, t, b.ph);
+      ridge(g, '#180a30', w, h, h * 0.8, 5, 0.07, 0.17, ox * 2.4, 3);
+      g.drawImage(S.tree, Math.round(w * 0.78 - ox * 2.4), Math.round(h * 0.8 - 44 - oy));
+      g.drawImage(S.tree2, Math.round(w * 0.02 - ox * 2.4), Math.round(h * 0.8 - 32 - oy));
+      for (const tb of S.tombs) tomb(g, Math.round(tb.x - ox * 3), Math.round(ridgeY(h * 0.8, 5, 0.07, 0.17, ox * 2.4, 3, tb.x) + 4), tb.wd, tb.ht, '#3a2468');
+      g.globalAlpha = 0.1;
+      for (let band = 0; band < 2; band++) for (let x = 0; x < w; x += 2) rect(g, '#c4a3ff', x, gy - 12 - band * 6 + Math.round(Math.sin((x + t * (6 + band * 4)) * 0.12) * 2), 2, 4 + band);
+      g.globalAlpha = 1;
+      rect(g, '#0a0414', 0, gy, w, h - gy);
+      for (const p of S.pumps) pumpkin(g, Math.round(p.x - ox * 5), gy + 2, p.r, p.lit, t, p.ph);
+      const wc = '#d9c9f5'; g.globalAlpha = 0.7;
+      for (const e of [[26, 0], [24, 9], [17, 17], [9, 24], [0, 26]]) pline(g, wc, 0, 0, e[0], e[1]);
+      for (const rr of [8, 15, 22]) for (let k = 0; k < 4; k++) { const a0 = k * Math.PI / 8, a1 = a0 + Math.PI / 8; pline(g, wc, Math.cos(a0) * rr, Math.sin(a0) * rr, Math.cos(a1) * rr * 0.96, Math.sin(a1) * rr * 0.96); }
+      const spx = 18, spy = 16 + Math.sin(t * 0.9) * 7; pline(g, wc, spx, 0, spx, spy); g.globalAlpha = 1;
+      disc(g, '#12051f', spx, spy, 2); for (const d of [-1, 1]) { pline(g, '#12051f', spx + d * 2, spy, spx + d * 4, spy - 2); pline(g, '#12051f', spx + d * 2, spy + 1, spx + d * 4, spy + 3); }
+      rect(g, '#ff7a00', spx, spy - 1, 1, 1);
+    },
+  };
+
+  class SceneBG {
+    constructor(canvas) { this.cv = canvas; this.ctx = canvas.getContext('2d'); this.id = null; this.state = null; this.last = -1e9; this.resize(); }
+    resize() {
+      const S = Math.max(3, Math.min(5, Math.round(Math.min(innerWidth, innerHeight) / 160)));
+      this.w = Math.ceil(innerWidth / S); this.h = Math.ceil(innerHeight / S);
+      this.cv.width = this.w; this.cv.height = this.h;
+      this.setTheme(this.id);
+    }
+    setTheme(id) {
+      this.id = SCENES[id] ? id : null;
+      this.state = this.id ? SCENES[this.id].init(this) : null;
+      this.last = -1e9;
+      this.ctx.clearRect(0, 0, this.w, this.h);
+    }
+    render(t, px, py, force) {
+      if (!this.id || (!force && t - this.last < 32)) return;
+      this.last = t; this.ctx.globalAlpha = 1; this.ctx.globalCompositeOperation = 'source-over';
+      this.ctx.clearRect(0, 0, this.w, this.h);
+      SCENES[this.id].draw(this, t / 1000, px, py);
+    }
+  }
+
   class Background {
     constructor() {
+      this.scene = new SceneBG(document.getElementById('scene'));
+      this.sceneId = null;
       this.cv = document.getElementById('stars');
       this.ctx = this.cv.getContext('2d');
       this.planet = document.getElementById('planet');
@@ -248,6 +571,7 @@
       this.readColors();
       this.resize();
       this.drawArt();
+      this.syncTheme();
 
       addEventListener('resize', () => { this.resize(); });
       addEventListener('pointermove', (e) => {
@@ -271,12 +595,21 @@
       drawMoon(this.moon, PALETTES[theme].moon);
     }
 
+    syncTheme() {                                  // non-space themes paint their own scene
+      const id = document.documentElement.dataset.theme;
+      this.sceneId = SCENES[id] ? id : null;
+      this.scene.setTheme(this.sceneId);
+      if (this.sceneId && this.reduce) this.scene.render(0, 0, 0, true);
+    }
+
     onTheme() {
       this.readColors();
       this.drawArt();
+      this.syncTheme();
     }
 
     resize() {
+      if (this.scene) { this.scene.resize(); if (this.sceneId && this.reduce) this.scene.render(0, 0, 0, true); }
       this.dpr = Math.min(devicePixelRatio || 1, 2);
       this.w = innerWidth;
       this.h = innerHeight;
@@ -348,6 +681,7 @@
       }
       this.px += (this.tx - this.px) * 0.05;
       this.py += (this.ty - this.py) * 0.05;
+      if (this.sceneId) { this.scene.render(t, this.px, this.py); return; }
       for (const el of this.els) {
         const d = parseFloat(el.dataset.depth) || 0;
         el.style.translate = (-this.px * d).toFixed(1) + 'px ' + (-this.py * d).toFixed(1) + 'px';
