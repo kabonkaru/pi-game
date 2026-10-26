@@ -213,40 +213,88 @@
       <h2 id="settings-title">SETTINGS</h2>
       <button class="icon-btn" id="settings-close" aria-label="Close settings">X</button>
     </div>
-
-    <div class="setting stack">
-      <div class="set-row">
-        <div><b>THEME</b><small>Locked themes cost Pi Coins</small></div>
-        <span class="swatch theme-prev" id="theme-prev"></span>
-      </div>
-      <label class="select"><span class="sr-only">Theme</span><select id="set-theme"></select></label>
+    <div class="modal-tabs tabs" role="tablist" aria-label="Settings sections">
+      <button class="tab" role="tab" id="stab-general" data-stab="general" aria-selected="true" aria-controls="spanel-general">GENERAL</button>
+      <button class="tab" role="tab" id="stab-about" data-stab="about" aria-selected="false" aria-controls="spanel-about">ABOUT US</button>
     </div>
 
-    <div class="setting stack">
-      <div class="set-row">
-        <div><b>MUSIC</b><small>Background track and volume</small></div>
-        <button class="switch" role="switch" id="set-music" aria-checked="true" aria-label="Music on or off"><span class="knob"></span><span class="sw-label">ON</span></button>
+    <div class="modal-body fade-scroll">
+      <div id="spanel-general" role="tabpanel" aria-labelledby="stab-general">
+        <button class="menu-row" id="open-themes">
+          <span><b>THEMES</b><small id="themes-current">DEEP SPACE</small></span><span class="chev" aria-hidden="true"></span>
+        </button>
+        <button class="menu-row" id="open-audio">
+          <span><b>AUDIO &amp; BGM</b><small id="audio-current">Music on - AUTO</small></span><span class="chev" aria-hidden="true"></span>
+        </button>
+        <div class="setting">
+          <div><b>SCREEN SHAKE</b><small>A little wobble inside the game</small></div>
+          <button class="switch" role="switch" id="set-shake" aria-checked="true" aria-label="Screen shake on or off"><span class="knob"></span><span class="sw-label">ON</span></button>
+        </div>
       </div>
-      <label class="select"><span class="sr-only">Background track</span><select id="set-bgm"></select></label>
-      <label class="range"><span>VOLUME</span><input type="range" id="set-music-vol" min="0" max="100" step="5"><output id="music-vol-out">70%</output></label>
-    </div>
 
-    <div class="setting stack">
-      <div class="set-row">
-        <div><b>SOUND FX</b><small>Blips, combos &amp; jingles</small></div>
-        <button class="switch" role="switch" id="set-sfx" aria-checked="true" aria-label="Sound effects on or off"><span class="knob"></span><span class="sw-label">ON</span></button>
+      <div id="spanel-about" class="about" role="tabpanel" aria-labelledby="stab-about" hidden>
+        <div class="about-hero">
+          <span class="about-pi" data-icon="pi"></span>
+          <span><b>PI GAME</b><small id="about-ver">v1.4.1</small></span>
+        </div>
+        <p>A tiny 8-bit game about one big number. Type as many digits of pi as you can, chase speed and combo bonuses, earn Pi Coins and unlock new worlds.</p>
+        <h3 class="modal-sub">YOUR DATA</h3>
+        <p>No accounts and no tracking scripts. Your scores, Pi Coins and settings are saved only in this browser.</p>
+        <h3 class="modal-sub">CREDITS</h3>
+        <p>Music and sound effects are synthesized live with the Web Audio API, so there are no audio files. Fonts: Press Start 2P, VT323, Pixelify Sans, Silkscreen and Jacquard 12, loaded from Google Fonts under the SIL Open Font License.</p>
+        <div id="about-made" hidden>
+          <h3 class="modal-sub">MADE BY</h3>
+          <p id="about-dev"></p>
+        </div>
+        <p id="about-repo-wrap" hidden><a id="about-repo" target="_blank" rel="noopener noreferrer">SOURCE CODE</a></p>
       </div>
-      <label class="range"><span>VOLUME</span><input type="range" id="set-sfx-vol" min="0" max="100" step="5"><output id="sfx-vol-out">80%</output></label>
-    </div>
-
-    <div class="setting">
-      <div><b>SCREEN SHAKE</b><small>A little wobble inside the game</small></div>
-      <button class="switch" role="switch" id="set-shake" aria-checked="true"><span class="knob"></span><span class="sw-label">ON</span></button>
     </div>
 
     <div class="modal-foot">
       <button class="btn small danger" id="btn-reset-scores">RESET SCORES</button>
-      <span class="ver">v1.4</span>
+      <span class="ver" id="app-ver">v1.4.1</span>
+    </div>
+  </dialog>
+
+  <!-- ===================== THEMES (sub-window) ===================== -->
+  <dialog id="themes-modal" class="modal" aria-labelledby="themes-title">
+    <div class="modal-head">
+      <button class="chip shiny" data-close="themes-modal">&lt; BACK</button>
+      <h2 id="themes-title">THEMES</h2>
+      <span class="coin-inline" aria-label="Your Pi Coins"><span data-icon="coin"></span><b id="themes-coins">0</b></span>
+    </div>
+    <div class="modal-body fade-scroll">
+      <p class="modal-note">Tap a theme to wear it. Locked themes cost Pi Coins.</p>
+      <div class="themes" id="theme-grid"></div>
+    </div>
+  </dialog>
+
+  <!-- ===================== AUDIO & BGM (sub-window) ===================== -->
+  <dialog id="audio-modal" class="modal" aria-labelledby="audio-title">
+    <div class="modal-head">
+      <button class="chip shiny" data-close="audio-modal">&lt; BACK</button>
+      <h2 id="audio-title">AUDIO &amp; BGM</h2>
+      <span aria-hidden="true"></span>
+    </div>
+    <div class="modal-body fade-scroll">
+      <div class="setting stack">
+        <div class="set-row">
+          <div><b>MUSIC</b><small>Mute or unmute the background music</small></div>
+          <button class="switch" role="switch" id="set-music" aria-checked="true" aria-label="Music on or off"><span class="knob"></span><span class="sw-label">ON</span></button>
+        </div>
+        <label class="range"><span>VOLUME</span><input type="range" id="set-music-vol" min="0" max="100" step="5"><output id="music-vol-out">70%</output></label>
+      </div>
+
+      <h3 class="modal-sub">BACKGROUND TRACK</h3>
+      <div class="bgm-list" id="bgm-list" role="radiogroup" aria-label="Background track"></div>
+
+      <div class="setting stack">
+        <div class="set-row">
+          <div><b>SOUND FX</b><small>Blips, combos &amp; jingles</small></div>
+          <button class="switch" role="switch" id="set-sfx" aria-checked="true" aria-label="Sound effects on or off"><span class="knob"></span><span class="sw-label">ON</span></button>
+        </div>
+        <label class="range"><span>VOLUME</span><input type="range" id="set-sfx-vol" min="0" max="100" step="5"><output id="sfx-vol-out">80%</output></label>
+      </div>
     </div>
   </dialog>
 
@@ -273,6 +321,7 @@
 
   <script src="js/pi.js"></script>
   <script src="js/score.js"></script>
+  <script src="js/gacha-data.js"></script>
   <script src="js/store.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/fx.js"></script>

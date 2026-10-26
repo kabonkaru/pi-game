@@ -104,11 +104,14 @@ For testing, **tapping the logo 10 times in a row** (from the menu) gives **+100
 
 ## Settings (gear icon)
 
-- **Theme:** a dropdown of every theme. Locked themes show their price; choosing one opens the purchase confirmation. The swatch next to it previews your current theme.
-- **Music:** an on/off (mute) toggle, a **background track** dropdown (*Auto* follows your theme, *None* is silent, or pick any track you own) and a volume slider.
-- **Sound FX:** an on/off (mute) toggle and a volume slider.
-- **Screen shake:** a small wobble of the *page content* (never the browser window). It starts **off** automatically if your OS asks for reduced motion.
-- Reset scores (your Pi Coins and unlocks are kept).
+- **General tab:**
+  - **Themes**: opens its own window with a card for every theme (swatch, price, lock). Tap an owned theme to wear it. Tapping a locked one opens the purchase confirmation.
+  - **Audio & BGM**: opens its own window with the music mute toggle and volume, the background-track list (*Auto* follows your theme, *None* is silent, or any track you own) and the sound-effects toggle and volume.
+  - **Screen shake**: a small wobble of the *page content* (never the browser window). It starts **off** automatically if your OS asks for reduced motion.
+  - Reset scores (your Pi Coins and unlocks are kept).
+- **About Us tab:** what the game is, a privacy note, credits, and the version. Fill in `ABOUT.developer` and `ABOUT.repo` in `CONFIG` (`js/app.js`) to show a "Made by" line and a source-code link.
+
+Windows never touch the screen edges, hide the native scrollbar, and fade at the top or bottom edge when there is more to scroll. `Esc` closes only the top-most window.
 
 ## Project layout
 
@@ -117,14 +120,16 @@ index.html        page + all screens
 css/style.css     themes (CSS variables), layout, shine effect, responsive rules
 js/pi.js          pi digits (computed with BigInt) + pure game rules   (unit-testable)
 js/score.js       scoring, combo and survival clock                   (unit-testable)
+js/gacha-data.js  data-only blueprint for the planned Gacha & Shop (not used yet)
 js/store.js       settings, leaderboards and Pi Coin wallet (localStorage)
 js/audio.js       Web Audio synth: SFX + three generative BGM tracks
 js/fx.js          pixel icons, Deep Space parallax, the pixel-art theme scenes, particles, shine/tilt, shake
 js/app.js         screens, game loop, input, results, theme shop, settings
 favicon.svg
+docs/GACHA_BLUEPRINT.md   plan for the upcoming Gacha & Shop update
 ```
 
-`js/` scripts load in the order `pi → score → store → audio → fx → app` (see the bottom of `index.html`).
+`js/` scripts load in the order `pi → score → gacha-data → store → audio → fx → app` (see the bottom of `index.html`).
 
 ## Customising
 
@@ -166,6 +171,7 @@ console.log(k.totalScore); // 150 + 1 * 500 = 650
 
 ## Changelog
 
+- **v1.4.1**: hotfix. Settings is now a short menu with a **Themes** window, an **Audio & BGM** window and an **About Us** tab (the dropdowns are gone). Fixed scrollbars flashing in during screen shake. Settings windows no longer reach the screen edges and use a soft scroll fade instead of a scrollbar. Added inert scaffolding and a [blueprint](docs/GACHA_BLUEPRINT.md) for the Gacha & Shop update.
 - **v1.4**: new clock rules (Zen resets to 10.0s on every correct digit; Timer is a 3:00 bank with speed-based time bonuses, capped at 3:00), Game Over tips and facts, a locked Chaos mode teaser, The Pi opens from the π logo, header theme toggle removed, Settings rebuilt with theme and track dropdowns and volume sliders.
 - **v1.3**: themes rebuilt with their own pixel-art scenes, fonts and UI (Dreamy Day, a handheld-style Phosphor), new locked **Hapi Halloween** theme (9,420 coins) with the Haunted Waltz music.
 - **v1.2**: Pi Coins and wallet, locked **Phosphor** theme (3,140 coins) with confirmation, a unique BGM per theme, a music track selector, new Dreamy Day music.
@@ -174,6 +180,7 @@ console.log(k.totalScore); // 150 + 1 * 500 = 650
 
 ## Ideas for next
 
+- **Gacha & Shop**: see [`docs/GACHA_BLUEPRINT.md`](docs/GACHA_BLUEPRINT.md)
 - Chaos mode (glitches, inverted controls, fading digits, extra lives)
 - Install as a phone app (add a web app manifest + service worker for PWA)
 - More themes to buy with Pi Coins, seasonal events, daily challenge, sharing your score as an image

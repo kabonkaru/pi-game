@@ -793,7 +793,11 @@
       frames.push({ transform: 'translate(' + ((Math.random() * 2 - 1) * px * k).toFixed(1) + 'px,' + ((Math.random() * 2 - 1) * px * k).toFixed(1) + 'px)' });
     }
     frames.push({ transform: 'translate(0,0)' });
-    el._shake = el.animate(frames, { duration: 70 + px * 12, easing: 'linear' });
+    const anim = (el._shake = el.animate(frames, { duration: 70 + px * 12, easing: 'linear' }));
+    // a moving element can briefly enlarge the page's scrollable area -> never let a scrollbar flash in
+    document.body.classList.add('is-shaking');
+    const done = () => { if (el._shake === anim) document.body.classList.remove('is-shaking'); };
+    anim.onfinish = done; anim.oncancel = done;
   }
 
   /** floating pixel text ("NICE!", "COMBO x20") that drifts up and fades */

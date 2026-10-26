@@ -13,6 +13,8 @@
 
   /* ------------------------------ config -------------------------------- */
   const CONFIG = {
+    VERSION: '1.4.1',
+    ABOUT: { developer: '', repo: '' },   // shown in Settings > About Us only when filled in
     COINS_PER_SCORE: 0.01,   // PLACEHOLDER: Pi Coins earned per run = final score x this
     DEV_LOGO_COINS: true,    // DEV TEST: tap the logo 10 times = +100 Pi Coins (set to false before release!)
     LOGO_TAPS: 10, LOGO_REWARD: 100, LOGO_WINDOW_MS: 2500,
@@ -25,10 +27,10 @@
 
   /* ------------------------ themes (each bundles a music track) ------------------------ */
   const THEMES = [
-    { id: 'dark',      name: 'DEEP SPACE',     tag: 'DARK',      swatch: 'sw-dark',      bgm: 'deep-space', cost: 0,    icon: 'moon',    meta: '#05041a', tagline: 'how many digits can you remember?' },
-    { id: 'light',     name: 'DREAMY DAY',     tag: 'LIGHT',     swatch: 'sw-light',     bgm: 'dreamy-day', cost: 0,    icon: 'sun',     meta: '#cfe6ff', tagline: 'sunny skies and a few digits of pi' },
-    { id: 'terminal',  name: 'PHOSPHOR',       tag: 'HANDHELD',  swatch: 'sw-terminal',  bgm: 'phosphor',   cost: 3140, icon: 'gb',      meta: '#9bbc0f', tagline: 'press start to remember pi' },
-    { id: 'halloween', name: 'HAPI HALLOWEEN', tag: 'SPOOKY',    swatch: 'sw-halloween', bgm: 'haunted',    cost: 9420, icon: 'pumpkin', meta: '#0b0218', tagline: 'HaPi Halloween, woo!' },
+    { id: 'dark',      name: 'DEEP SPACE',     tag: 'DARK',      swatch: 'sw-dark',      bgm: 'deep-space', cost: 0,    icon: 'moon',    gacha: { rarity: 'epic',      banner: 'standard' }, meta: '#05041a', tagline: 'how many digits can you remember?' },
+    { id: 'light',     name: 'DREAMY DAY',     tag: 'LIGHT',     swatch: 'sw-light',     bgm: 'dreamy-day', cost: 0,    icon: 'sun',     gacha: { rarity: 'legendary', banner: 'standard' }, meta: '#cfe6ff', tagline: 'sunny skies and a few digits of pi' },
+    { id: 'terminal',  name: 'PHOSPHOR',       tag: 'HANDHELD',  swatch: 'sw-terminal',  bgm: 'phosphor',   cost: 3140, icon: 'gb',      gacha: { rarity: 'mythic',    banner: 'standard' }, meta: '#9bbc0f', tagline: 'press start to remember pi' },
+    { id: 'halloween', name: 'HAPI HALLOWEEN', tag: 'SPOOKY',    swatch: 'sw-halloween', bgm: 'haunted',    cost: 9420, icon: 'pumpkin', gacha: { rarity: 'mythic',    banner: 'event-halloween' }, meta: '#0b0218', tagline: 'HaPi Halloween, woo!' },
   ];
   const themeById = (id) => THEMES.find((t) => t.id === id);
   const isOwned = (t) => t.cost === 0 || wallet.owns(t.id);
@@ -424,7 +426,7 @@
 
   function showBoard(mode) {
     state.boardTab = mode;
-    $$('.tab').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.tab === mode)));
+    $$('[data-tab]').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.tab === mode)));   // leaderboard tabs only (Settings tabs use data-stab)
     renderBoard($('#board-list'), mode, -1);
   }
 
@@ -476,7 +478,7 @@
     window.setTimeout(() => t.remove(), 2700);
   }
 
-  function refreshCoins() { $('#coin-count').textContent = fmtCoins(wallet.coins()); }
+  function refreshCoins() { $('#coin-count').textContent = fmtCoins(wallet.coins()); $('#themes-coins').textContent = fmtCoins(wallet.coins()); }
 
   function trackOwned(id) { const t = THEMES.find((x) => x.bgm === id); return !!t && isOwned(t); }
   function trackFor() {
@@ -487,23 +489,40 @@
   function applyMusic() { audio.setMusic(!!settings.get('music') && settings.get('bgm') !== 'none'); }
   function syncBgm() { audio.setTrack(trackFor()); applyMusic(); renderBgm(); }
 
-  function renderBgm() {                                      // background-track dropdown
-    const sel = $('#set-bgm');
-    if (!sel) return;
-    const pick = settings.get('bgm');
-    const opts = [['auto', 'AUTO (follows theme)'], ['none', 'NONE (silent)']].concat(
-      THEMES.map((t) => [t.bgm, audio.TRACKS[t.bgm].name + (isOwned(t) ? '' : '  [LOCKED]')]));
-    sel.innerHTML = opts.map((o) => '<option value="' + o[0] + '">' + o[1] + '</option>').join('');
-    sel.value = pick === 'auto' || pick === 'none' || (audio.TRACKS[pick] && trackOwned(pick)) ? pick : 'auto';
+  function updateAudioSummary() {
+    const pick = settings.get('bgm'), on = settings.get('music') && pick !== 'none';
+    $('#audio-current').textContent = (on ? 'Music on - ' : 'Music off - ') + (pick === 'none' ? 'NONE' : pick === 'auto' ? 'AUTO' : audio.TRACKS[trackFor()].name);
   }
 
-  function renderThemes() {                                   // theme dropdown (+ swatch preview)
-    const sel = $('#set-theme');
-    if (!sel) return;
-    sel.innerHTML = THEMES.map((t) => '<option value="' + t.id + '">' + t.name +
-      (isOwned(t) ? '' : '  [LOCKED - ' + fmtCoins(t.cost) + ' PI]') + '</option>').join('');
-    sel.value = currentTheme().id;
-    $('#theme-prev').className = 'swatch theme-prev ' + currentTheme().swatch;
+  function renderBgm() {                                      // "Audio & BGM" window: track list
+    const host = $('#bgm-list');
+    if (!host) return;
+    const pick = settings.get('bgm');
+    const chosen = pick === 'none' || (pick !== 'auto' && audio.TRACKS[pick] && trackOwned(pick)) ? pick : 'auto';
+    const rows = [{ id: 'auto', name: 'AUTO', sub: 'Follows your theme', locked: false }, { id: 'none', name: 'NONE', sub: 'Silent', locked: false }].concat(
+      THEMES.map((t) => ({ id: t.bgm, name: audio.TRACKS[t.bgm].name, sub: 'Bundled with ' + t.name, locked: !isOwned(t), theme: t.name })));
+    host.innerHTML = rows.map((r) =>
+      '<button class="bgm-opt' + (r.locked ? ' locked' : '') + '" role="radio" data-bgm="' + r.id + '" aria-checked="' + String(r.id === chosen) + '">' +
+      '<span><b>' + r.name + '</b><small>' + (r.locked ? 'Locked - unlock the ' + r.theme + ' theme' : r.sub) + '</small></span>' +
+      (r.locked ? '<span class="lock-ico" data-icon="lock"></span>' : '') + '</button>').join('');
+    fx.icons.mount(host);
+    updateAudioSummary();
+  }
+
+  function renderThemes() {                                   // "Themes" window: theme cards
+    const host = $('#theme-grid');
+    if (!host) return;
+    const cur = currentTheme().id;
+    const skeleton = '<div class="theme-card skeleton" aria-disabled="true"><span class="swatch"></span><span class="sk-line"></span><span class="sk-line short"></span><em>COMING SOON</em></div>';
+    host.innerHTML = THEMES.map((t) => {
+      const owned = isOwned(t);
+      return '<button class="theme-card' + (owned ? '' : ' locked') + '" data-theme-id="' + t.id + '" aria-pressed="' + String(owned && cur === t.id) + '">' +
+        '<span class="swatch ' + t.swatch + '">' + (owned ? '' : '<span class="lock" data-icon="lock"></span>') + '</span>' +
+        '<span class="t-name">' + t.name + '</span><span class="t-tag">' + t.tag + '</span>' +
+        (owned ? (cur === t.id ? '<span class="t-worn">WEARING</span>' : '') : '<span class="t-price"><span data-icon="coin"></span><b>' + fmtCoins(t.cost) + '</b></span>') + '</button>';
+    }).join('') + skeleton;
+    fx.icons.mount(host);
+    $('#themes-current').textContent = currentTheme().name;
   }
 
   const buy = { theme: null };
@@ -551,19 +570,19 @@
   function initShop() {
     wallet.onChange(() => { refreshCoins(); refreshConfirm(); });
 
-    $('#set-theme').addEventListener('change', (e) => {
-      const t = themeById(e.target.value);
+    $('#theme-grid').addEventListener('click', (e) => {
+      const card = e.target.closest('[data-theme-id]');
+      const t = card && themeById(card.dataset.themeId);
       if (!t) return;
-      if (isOwned(t)) { equipTheme(t.id); return; }
-      renderThemes();                                         // snap the dropdown back to the theme you're wearing
-      openConfirm(t);                                         // ...and offer to buy the locked one
+      if (isOwned(t)) { equipTheme(t.id); audio.sfx('toggle_on'); } else openConfirm(t);   // locked: buy it (confirm opens on top)
     });
-    $('#set-bgm').addEventListener('change', (e) => {
-      const id = e.target.value;
+    $('#bgm-list').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-bgm]');
+      if (!b) return;
+      const id = b.dataset.bgm;
       if (id !== 'auto' && id !== 'none' && !trackOwned(id)) {
         audio.sfx('reject');
         toast('Unlock the ' + THEMES.find((x) => x.bgm === id).name + ' theme to get this track');
-        renderBgm();
         return;
       }
       settings.set('bgm', id);
@@ -606,6 +625,42 @@
     }
   }
 
+  /* ---- modal helpers: sub-windows, tabs, scroll fade, About ---- */
+  function openModal(id) {
+    const d = $('#' + id);
+    if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
+    updateFades(d);
+    window.requestAnimationFrame(() => updateFades(d));
+  }
+  function selectTab(name) {
+    $$('[data-stab]').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.stab === name)));
+    $('#spanel-general').hidden = name !== 'general';
+    $('#spanel-about').hidden = name !== 'about';
+    const body = $('#settings .modal-body'); body.scrollTop = 0;
+    updateFades($('#settings'));
+  }
+  // soft top/bottom fade that tells you "there is more": --fade-top / --fade-bot are 0 at the ends of the scroll
+  function updateFades(root) { $$('.fade-scroll', root).forEach((b) => b._fade && b._fade()); }
+  function initFades() {
+    $$('.fade-scroll').forEach((b) => {
+      const upd = () => {
+        const max = b.scrollHeight - b.clientHeight;
+        b.style.setProperty('--fade-top', b.scrollTop > 2 ? '30px' : '0px');
+        b.style.setProperty('--fade-bot', max > 2 && b.scrollTop < max - 2 ? '30px' : '0px');
+      };
+      b._fade = upd;
+      b.addEventListener('scroll', upd, { passive: true });
+      if ('ResizeObserver' in window) new ResizeObserver(upd).observe(b);
+      upd();
+    });
+  }
+  function initAbout() {
+    const v = 'v' + CONFIG.VERSION;
+    $('#app-ver').textContent = v; $('#about-ver').textContent = v;
+    if (CONFIG.ABOUT.developer) { $('#about-dev').textContent = CONFIG.ABOUT.developer; $('#about-made').hidden = false; }
+    if (CONFIG.ABOUT.repo) { $('#about-repo').href = CONFIG.ABOUT.repo; $('#about-repo-wrap').hidden = false; }
+  }
+
   function initSettings() {
     const sw = { music: $('#set-music'), sfx: $('#set-sfx'), shake: $('#set-shake') };
     Object.keys(sw).forEach((key) => {
@@ -614,7 +669,7 @@
         const on = !settings.get(key);
         settings.set(key, on);
         setSwitch(sw[key], on);
-        if (key === 'music') { applyMusic(); $('#set-music-vol').disabled = !on; }
+        if (key === 'music') { applyMusic(); $('#set-music-vol').disabled = !on; updateAudioSummary(); }
         if (key === 'sfx') { audio.setSfx(on); $('#set-sfx-vol').disabled = !on; if (on) audio.sfx('toggle_on'); }
         if (key === 'shake' && on) shake(CONFIG.SHAKE.wrong);
         if (key === 'music' && on) audio.unlock();
@@ -633,11 +688,19 @@
     });
 
     $('#btn-settings').addEventListener('click', () => {
-      if (typeof el.settings.showModal === 'function') el.settings.showModal();
-      else el.settings.setAttribute('open', '');
+      selectTab('general');
+      openModal('settings');
     });
     $('#settings-close').addEventListener('click', () => el.settings.close());
-    el.settings.addEventListener('click', (e) => { if (e.target === el.settings) el.settings.close(); });
+    $$('dialog.modal').forEach((d) => {                       // click the dark backdrop to close just that window
+      if (d.id !== 'confirm') d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
+    });
+    $$('[data-close]').forEach((b) => b.addEventListener('click', () => $('#' + b.dataset.close).close()));
+    $('#open-themes').addEventListener('click', () => openModal('themes-modal'));
+    $('#open-audio').addEventListener('click', () => openModal('audio-modal'));
+    $$('[data-stab]').forEach((t) => t.addEventListener('click', () => selectTab(t.dataset.stab)));
+    initFades();
+    initAbout();
 
     $('#btn-reset-scores').addEventListener('click', (e) => {
       const b = e.currentTarget;
@@ -691,7 +754,7 @@
       if (start) startGame(start.dataset.start);
     });
     $('#btn-again').addEventListener('click', () => startGame(state.lastResult ? state.lastResult.mode : 'timer'));
-    $$('.tab').forEach((t) => t.addEventListener('click', () => showBoard(t.dataset.tab)));
+    $$('[data-tab]').forEach((t) => t.addEventListener('click', () => showBoard(t.dataset.tab)));
 
     // UI sounds: click on press, a soft tick on hover (mouse only)
     const clickable = '.btn, .chip, .menu-card, .icon-btn, .tab, .brand, .hero-pi, .switch, .coin-chip, .select select';
@@ -712,7 +775,7 @@
     document.addEventListener('keydown', (e) => {
       audio.unlock();
       if (e.ctrlKey || e.metaKey || e.altKey) return;
-      if (el.settings.open) return;
+      if (document.querySelector('dialog[open]')) return;     // any open window swallows the game keys
       if (e.key === 'Escape' && state.screen !== 'menu') { audio.sfx('back'); go('menu'); return; }
       if (state.screen !== 'game') return;
       if (e.key === 'Backspace' || e.key === 'Delete') {

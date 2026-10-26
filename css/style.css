@@ -683,3 +683,58 @@ button.hero-pi:focus-visible { outline: 4px solid var(--c-zen-a); outline-offset
 :root[data-theme="terminal"] .glitch::after { color: #306230; }
 :root[data-theme="halloween"] .menu-card.c-chaos { border-color: #ff7a00; box-shadow: 0 8px 0 var(--cS), 0 0 26px -2px rgba(255, 122, 0, .6), 0 0 56px -10px rgba(178, 75, 255, .55); }
 :root[data-theme="halloween"] .c-chaos .mc-badge { color: #ffb347; }
+
+/* ================= v1.4.1 hotfix: shake scrollbars, modal sizing + scroll fade, sub-windows ================= */
+[hidden] { display: none !important; }
+
+/* a shaken element must never add scrollbars: the game screen and any shake in flight lock the page scroll */
+body[data-screen="game"], body.is-shaking { overflow: hidden; }
+
+/* modals: never touch the screen edges, no native scrollbar; the header/footer stay put, only .modal-body scrolls */
+dialog.modal { overflow: hidden; max-height: min(80vh, 760px); max-height: min(80dvh, 760px); }
+dialog.modal[open] { display: flex; flex-direction: column; }
+.modal-head, .modal-tabs, .modal-foot { flex: none; }
+.modal-head h2 { text-align: center; flex: 1; }
+.modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; -ms-overflow-style: none;
+  transition: --fade-top .2s ease, --fade-bot .2s ease;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bot)), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bot)), transparent 100%); }
+.modal-body::-webkit-scrollbar { display: none; }
+@property --fade-top { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --fade-bot { syntax: "<length>"; inherits: false; initial-value: 0px; }
+
+.modal-tabs { padding: 12px 20px 10px; border-bottom: 4px solid var(--line-strong); }
+.modal-tabs .tab { flex: 1; padding: 10px 8px; }
+.modal-note { margin: 0; padding: 14px 20px 4px; color: var(--muted); font-size: calc(1.25rem * var(--tf, 1)); }
+.modal-body .themes { padding: 10px 20px 22px; }
+.modal-head .coin-inline { min-width: 64px; justify-content: flex-end; font-family: var(--font-pixel); font-size: calc(.55rem * var(--pf, 1)); }
+.modal-head > .chip { flex: none; }
+
+.menu-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; padding: 18px 20px; text-align: left;
+  background: transparent; color: var(--text); border-bottom: 2px dashed var(--line); transition: background .12s; }
+.menu-row:hover, .menu-row:focus-visible { background: var(--surface-2); }
+.menu-row b { font-family: var(--font-pixel); font-weight: normal; font-size: calc(.7rem * var(--pf, 1)); display: block; }
+.menu-row small { display: block; margin-top: 6px; color: var(--muted); font-size: calc(1.2rem * var(--tf, 1)); }
+.chev { width: 12px; height: 12px; flex: none; border-right: 4px solid currentColor; border-bottom: 4px solid currentColor; transform: rotate(-45deg); margin-right: 6px; }
+.t-worn { font-family: var(--font-pixel); font-size: calc(.45rem * var(--pf, 1)); color: var(--good); }
+.theme-card[aria-pressed="true"] { outline: 4px solid var(--c-zen-a); outline-offset: 2px; }
+
+.about p { margin: 0; padding: 4px 20px 10px; font-size: calc(1.3rem * var(--tf, 1)); line-height: 1.15; }
+.about .modal-sub { padding-top: 14px; }
+.about-hero { display: flex; align-items: center; gap: 14px; padding: 18px 20px 8px; }
+.about-hero b { font-family: var(--font-pixel); font-weight: normal; font-size: calc(.9rem * var(--pf, 1)); display: block; }
+.about-hero small { display: block; margin-top: 6px; color: var(--muted); font-size: calc(1.2rem * var(--tf, 1)); }
+.about-pi { width: 44px; height: 44px; flex: none; color: var(--pi-2); }
+.about-pi svg { display: block; width: 100%; height: 100%; }
+.about a { color: var(--c-zen-a); }
+
+/* ================= design tokens reserved for the Gacha & Shop update (unused until then) ================= */
+:root {
+  --rarity-common: #aab4c3;
+  --rarity-epic: #b366ff;
+  --rarity-legendary: #ffb938;
+  --rarity-mythic: #ff4d6d;
+  --rarity-godly: linear-gradient(135deg, #ffffff, #8be9ff 35%, #c084fc 65%, #000000);   /* "Singularity" */
+  --shop-rainbow: conic-gradient(from 0deg, #ff3b3b, #ffb13b, #f5ff3b, #3bff6a, #3bd4ff, #6b3bff, #ff3bd9, #ff3b3b);   /* rainbow outline of the shop icon */
+}
+.modal-head .coin-inline { color: var(--on-accent); }   /* readable on the gradient header */
