@@ -72,30 +72,41 @@ The results screen shows a random tip or fact picked by how many digits you reac
 
 Each mode has its own **top 10** leaderboard (name up to 12 characters, score, date as `MMM-DD-YYYY`), saved in your browser's `localStorage`.
 
-## Pi Coins
+## Pi Coins and the Shop
 
 **Pi Coin** is the in-game currency. Hover (or tap) the coin in the top bar to read its description.
 
-- You earn Pi Coins at the end of every run. Currently **1% of your final score** (a placeholder rule you can tune).
-- You spend them on themes. Each theme comes bundled with its own music track.
-- Coins and unlocks are saved in your browser's `localStorage` (this is a client-side game, so they are not tamper-proof).
+- You earn Pi Coins at the end of every run. Currently **1% of your final score** (a placeholder rule you can tune with `COINS_PER_SCORE`).
+- You spend them in the **Shop** (the rainbow-outlined chest icon in the top bar). A pull costs **100 Pi Coins**; you can do **x1, x5 or x10**.
+- A **duplicate** refunds **50 Pi Coins**. About 1 in 100 duplicates plays a "fake-out" upgrade animation before falling back to the normal refund.
+- Each pull plays a chest-opening sequence: tension, explosion, reveal. **Skip** is always available, and your coins and items are saved *before* it starts.
+- **Drop rates** and your **Collection** are one tap away inside the Shop.
+- Coins and your collection are saved in your browser's `localStorage` (this is a client-side game, so they are not tamper-proof).
+
+### Banners
+
+| Banner | Contents | Status |
+| --- | --- | --- |
+| **Cosmic Beginnings** | 5 Common plain colours, Epic Deep Space, Legendary Dreamy Day, Mythic Phosphor, Godly Singularity | live |
+| **Hapi Halloween** | Mythic Hapi Halloween | locked, coming soon |
+
+Rates: Common 62% (12.4% each), Epic 24%, Legendary 9%, Mythic 4%, Godly 1%. See [`docs/GACHA_BLUEPRINT.md`](docs/GACHA_BLUEPRINT.md) for the full design and what is still open.
 
 ### Themes
 
-Every theme has its own animated pixel-art world, fonts, UI shapes and music, so they are far more than colour swaps.
+Every theme has its own fonts, UI shape and music, and the bigger ones have an animated pixel-art world.
 
-| Theme | World and look | Music | Price |
+| Theme | Rarity | World and look | Music |
 | --- | --- | --- | --- |
-| **Deep Space** | stars, a ringed planet, a moon and shooting stars | Deep Space (slow, dreamy pads and bells) | free |
-| **Dreamy Day** | pixel sun, drifting clouds, layered hills with flowers, a hot-air balloon and birds; soft rounded UI | Dreamy Day (sunny music-box melody, bouncy bass) | free |
-| **Phosphor** | handheld console: four shades of green, LCD pixel grid, flat boxy UI, and a side-scrolling world where a little π runner hops over blocks | Phosphor (driving minor-key 8-bit with drums) | 3,140 Pi Coins |
-| **Hapi Halloween** | giant moon, ghosts, bats, a haunted house, dead trees, tombstones, a pumpkin patch, a cobweb with a dangling spider; gothic titles | Haunted Waltz (spooky 3/4 music box, organ drone, bell tolls) | 9,420 Pi Coins |
+| **Midnight** / **Daylight** | default (free) | plain dark / light gradient, follows your OS setting | Chill |
+| **Ruby, Ocean, Mint, Grape, Sunny** | Common | plain colour gradients (each is one hue) | Chill |
+| **Deep Space** | Epic | stars, a ringed planet, a moon and shooting stars | Deep Space |
+| **Dreamy Day** | Legendary | pixel sun, drifting clouds, layered hills with flowers, a hot-air balloon and birds; soft rounded UI | Dreamy Day |
+| **Phosphor** | Mythic | handheld console: four shades of green, LCD pixel grid, a side-scrolling world with a π runner | Phosphor |
+| **Hapi Halloween** | Mythic (event) | giant moon, ghosts, bats, a haunted house, pumpkins, cobwebs; gothic titles | Haunted Waltz |
+| **Singularity** | Godly | a **black hole that reacts to your typing**: the disk flares on every digit, spins faster and burns hotter as your combo climbs, and a wrong key sends a red shockwave | Event Horizon |
 
-Unlocking a locked theme asks for confirmation first, and shows your balance and how many coins you are short.
-
-### Developer cheat
-
-For testing, **tapping the logo 10 times in a row** (from the menu) gives **+100 Pi Coins**. It is controlled by `DEV_LOGO_COINS` in `CONFIG` at the top of `js/app.js`. **Set it to `false` before a public release.**
+**Existing players keep everything:** themes they already bought, plus Deep Space and Dreamy Day (they used to be free defaults).
 
 ## Controls
 
@@ -105,8 +116,8 @@ For testing, **tapping the logo 10 times in a row** (from the menu) gives **+100
 ## Settings (gear icon)
 
 - **General tab:**
-  - **Themes**: opens its own window with a card for every theme (swatch, price, lock). Tap an owned theme to wear it. Tapping a locked one opens the purchase confirmation.
-  - **Audio & BGM**: opens its own window with the music mute toggle and volume, the background-track list (*Auto* follows your theme, *None* is silent, or any track you own) and the sound-effects toggle and volume.
+  - **Themes**: opens its own window with a card for every theme (swatch, rarity, lock). Tap an owned theme to wear it. Tapping a locked one takes you to the Shop.
+  - **Audio & BGM**: opens its own window with the music mute toggle and volume, the background-track list (*Auto* follows your theme, *None* is silent, or any track you own; a track unlocks with the theme that bundles it, and Chill is always available) and the sound-effects toggle and volume.
   - **Screen shake**: a small wobble of the *page content* (never the browser window). It starts **off** automatically if your OS asks for reduced motion.
   - Reset scores (your Pi Coins and unlocks are kept).
 - **About Us tab:** what the game is, a privacy note, credits, and the version. Fill in `ABOUT.developer` and `ABOUT.repo` in `CONFIG` (`js/app.js`) to show a "Made by" line and a source-code link.
@@ -120,27 +131,28 @@ index.html        page + all screens
 css/style.css     themes (CSS variables), layout, shine effect, responsive rules
 js/pi.js          pi digits (computed with BigInt) + pure game rules   (unit-testable)
 js/score.js       scoring, combo and survival clock                   (unit-testable)
-js/gacha-data.js  data-only blueprint for the planned Gacha & Shop (not used yet)
+js/gacha-data.js  data only: shop items, banners, drop rates, costs
+js/gacha.js       pure pull logic: rolls, duplicates, refunds, fake-out  (unit-testable)
 js/store.js       settings, leaderboards and Pi Coin wallet (localStorage)
 js/audio.js       Web Audio synth: SFX + three generative BGM tracks
-js/fx.js          pixel icons, Deep Space parallax, the pixel-art theme scenes, particles, shine/tilt, shake
+js/fx.js          pixel icons, Deep Space parallax, the pixel-art theme scenes (incl. the reactive Singularity), particles, shine/tilt, shake
+js/shop.js        the Shop screen, drop rates, collection and the chest-opening sequence
 js/app.js         screens, game loop, input, results, theme shop, settings
 favicon.svg
-docs/GACHA_BLUEPRINT.md   plan for the upcoming Gacha & Shop update
+docs/GACHA_BLUEPRINT.md   how the Gacha & Shop works, decisions and open questions
 ```
 
-`js/` scripts load in the order `pi → score → gacha-data → store → audio → fx → app` (see the bottom of `index.html`).
+`js/` scripts load in the order `pi → score → gacha-data → gacha → store → audio → fx → shop → app` (see the bottom of `index.html`).
 
 ## Customising
 
 - **Scoring and clocks** (base points, speed and combo tiers, decay window, Zen's `ZEN_MS`, Timer's `TIMER_MS` cap and the `TIME_ADD` bonus table, length bonus): the `SCORING` block at the top of `js/score.js`.
 - **Game constants** (Timer length, shake strength, coins per score, dev cheat): `CONFIG` at the top of `js/app.js`.
-- **Themes and prices:** the `THEMES` list in `js/app.js`.
+- **Shop numbers** (pull cost, x1/x5/x10, refund, fake-out chance, drop rates, banners, items): `js/gacha-data.js`. **Themes:** the `THEMES` list in `js/app.js`.
 - **Add a theme:**
-  1. Copy a `:root[data-theme="..."]` block in `css/style.css`, rename it and set the colours and fonts (`--font-pixel`, `--font-body`, `--font-display`, and the size multipliers `--pf`, `--tf`, `--df`).
-  2. Add a scene to `SCENES` in `js/fx.js` (an `init` that builds sprites/positions and a `draw` that paints one frame in big pixels). Deep Space is the only theme that doesn't use one.
-  3. Add an entry to `THEMES` in `js/app.js` (id, name, price, swatch class, music track, top-bar icon, tagline) and a matching `.sw-...` swatch gradient in `css/style.css`.
-  4. Optionally add a track to `TRACKS` in `js/audio.js` with its own step function.
+  1. Add a `:root[data-theme="..."]` block in `css/style.css` (a plain colour needs only `--h` and `--s`; see the token list in the blueprint) and a `.sw-...` swatch.
+  2. Add it to `THEMES` in `js/app.js`, and to `ITEMS` and a banner `pool` in `js/gacha-data.js`.
+  3. Optionally add a scene to `SCENES` in `js/fx.js` and a track to `TRACKS` in `js/audio.js`.
 - **Change the music:** each track has its tempo and echo in `TRACKS` in `js/audio.js`, and its own chord progressions and patterns just above the `Audio8` class.
 - **Fonts:** loaded from Google Fonts (all OFL licensed): *Press Start 2P* and *VT323* (Deep Space), *Pixelify Sans* (Dreamy Day), *Silkscreen* (Phosphor) and *Jacquard 12* (Hapi Halloween). If a font looks too big or small, tune that theme's `--pf` / `--tf` / `--df` multipliers. To work offline, download the font files, add `@font-face` rules to `css/style.css`, and remove the Google Fonts `<link>` tags in `index.html`.
 
@@ -150,7 +162,7 @@ docs/GACHA_BLUEPRINT.md   plan for the upcoming Gacha & Shop update
 | --- | --- |
 | `pigame.settings.v1` | music/sfx/shake switches, volumes, theme, music track |
 | `pigame.scores.v2` | the two top-10 leaderboards (v1.1 reset the boards because the scoring changed; old `pigame.scores.v1` data is left untouched) |
-| `pigame.wallet.v1` | Pi Coin balance and unlocked themes |
+| `pigame.wallet.v1` | Pi Coin balance, your collection (`inv`: theme id to count) and pull count, written in one go so a pull is atomic |
 
 ## Testing the rules in Node
 
@@ -171,6 +183,7 @@ console.log(k.totalScore); // 150 + 1 * 500 = 650
 
 ## Changelog
 
+- **v1.5**: the **Gacha & Shop**: rainbow shop icon, Cosmic Beginnings banner (x1/x5/x10 pulls, duplicate refunds, fake-out), drop rates and collection windows, a chest-opening sequence with shop music. New themes: plain Midnight/Daylight defaults, five Common colours and the Godly **Singularity** (a black hole that reacts to your typing). New Chill, Shop and Event Horizon tracks. Direct theme buying is replaced by pulls; existing players keep everything. Hapi Halloween moves to a locked event banner.
 - **v1.4.1**: hotfix. Settings is now a short menu with a **Themes** window, an **Audio & BGM** window and an **About Us** tab (the dropdowns are gone). Fixed scrollbars flashing in during screen shake. Settings windows no longer reach the screen edges and use a soft scroll fade instead of a scrollbar. Added inert scaffolding and a [blueprint](docs/GACHA_BLUEPRINT.md) for the Gacha & Shop update.
 - **v1.4**: new clock rules (Zen resets to 10.0s on every correct digit; Timer is a 3:00 bank with speed-based time bonuses, capped at 3:00), Game Over tips and facts, a locked Chaos mode teaser, The Pi opens from the π logo, header theme toggle removed, Settings rebuilt with theme and track dropdowns and volume sliders.
 - **v1.3**: themes rebuilt with their own pixel-art scenes, fonts and UI (Dreamy Day, a handheld-style Phosphor), new locked **Hapi Halloween** theme (9,420 coins) with the Haunted Waltz music.
@@ -180,7 +193,7 @@ console.log(k.totalScore); // 150 + 1 * 500 = 650
 
 ## Ideas for next
 
-- **Gacha & Shop**: see [`docs/GACHA_BLUEPRINT.md`](docs/GACHA_BLUEPRINT.md)
+- The Hapi Halloween event banner, a pity counter, more themes for the pool (see [`docs/GACHA_BLUEPRINT.md`](docs/GACHA_BLUEPRINT.md))
 - Chaos mode (glitches, inverted controls, fading digits, extra lives)
 - Install as a phone app (add a web app manifest + service worker for PWA)
 - More themes to buy with Pi Coins, seasonal events, daily challenge, sharing your score as an image

@@ -13,7 +13,7 @@
 
   /* ------------------------------ config -------------------------------- */
   const CONFIG = {
-    VERSION: '1.4.1',
+    VERSION: '1.5.0',
     ABOUT: { developer: '', repo: '' },   // shown in Settings > About Us only when filled in
     COINS_PER_SCORE: 0.01,   // PLACEHOLDER: Pi Coins earned per run = final score x this
     DEV_LOGO_COINS: true,    // DEV TEST: tap the logo 10 times = +100 Pi Coins (set to false before release!)
@@ -27,13 +27,21 @@
 
   /* ------------------------ themes (each bundles a music track) ------------------------ */
   const THEMES = [
-    { id: 'dark',      name: 'DEEP SPACE',     tag: 'DARK',      swatch: 'sw-dark',      bgm: 'deep-space', cost: 0,    icon: 'moon',    gacha: { rarity: 'epic',      banner: 'standard' }, meta: '#05041a', tagline: 'how many digits can you remember?' },
-    { id: 'light',     name: 'DREAMY DAY',     tag: 'LIGHT',     swatch: 'sw-light',     bgm: 'dreamy-day', cost: 0,    icon: 'sun',     gacha: { rarity: 'legendary', banner: 'standard' }, meta: '#cfe6ff', tagline: 'sunny skies and a few digits of pi' },
-    { id: 'terminal',  name: 'PHOSPHOR',       tag: 'HANDHELD',  swatch: 'sw-terminal',  bgm: 'phosphor',   cost: 3140, icon: 'gb',      gacha: { rarity: 'mythic',    banner: 'standard' }, meta: '#9bbc0f', tagline: 'press start to remember pi' },
-    { id: 'halloween', name: 'HAPI HALLOWEEN', tag: 'SPOOKY',    swatch: 'sw-halloween', bgm: 'haunted',    cost: 9420, icon: 'pumpkin', gacha: { rarity: 'mythic',    banner: 'event-halloween' }, meta: '#0b0218', tagline: 'HaPi Halloween, woo!' },
+    { id: 'default-dark',  name: 'MIDNIGHT',       tag: 'DEFAULT',   rarity: 'default',   swatch: 'sw-default-dark',  bgm: 'chill', free: true, meta: '#10131c', tagline: 'how many digits can you remember?' },
+    { id: 'default-light', name: 'DAYLIGHT',       tag: 'DEFAULT',   rarity: 'default',   swatch: 'sw-default-light', bgm: 'chill', free: true, meta: '#eef3fb', tagline: 'how many digits can you remember?' },
+    { id: 'plain-ruby',    name: 'RUBY',           tag: 'COMMON',    rarity: 'common',    swatch: 'sw-plain-ruby',    bgm: 'chill', meta: '#1a080e', tagline: 'seeing red? keep typing' },
+    { id: 'plain-ocean',   name: 'OCEAN',          tag: 'COMMON',    rarity: 'common',    swatch: 'sw-plain-ocean',   bgm: 'chill', meta: '#071a24', tagline: 'dive into the digits' },
+    { id: 'plain-mint',    name: 'MINT',           tag: 'COMMON',    rarity: 'common',    swatch: 'sw-plain-mint',    bgm: 'chill', meta: '#06231a', tagline: 'cool head, fresh digits' },
+    { id: 'plain-grape',   name: 'GRAPE',          tag: 'COMMON',    rarity: 'common',    swatch: 'sw-plain-grape',   bgm: 'chill', meta: '#140a24', tagline: 'sweet digits ahead' },
+    { id: 'plain-sun',     name: 'SUNNY',          tag: 'COMMON',    rarity: 'common',    swatch: 'sw-plain-sun',     bgm: 'chill', meta: '#241c06', tagline: 'sunny side up' },
+    { id: 'dark',          name: 'DEEP SPACE',     tag: 'EPIC',      rarity: 'epic',      swatch: 'sw-dark',          bgm: 'deep-space', meta: '#05041a', tagline: 'how many digits can you remember?' },
+    { id: 'light',         name: 'DREAMY DAY',     tag: 'LEGENDARY', rarity: 'legendary', swatch: 'sw-light',         bgm: 'dreamy-day', meta: '#cfe6ff', tagline: 'sunny skies and a few digits of pi' },
+    { id: 'terminal',      name: 'PHOSPHOR',       tag: 'MYTHIC',    rarity: 'mythic',    swatch: 'sw-terminal',      bgm: 'phosphor',   meta: '#9bbc0f', tagline: 'press start to remember pi' },
+    { id: 'halloween',     name: 'HAPI HALLOWEEN', tag: 'MYTHIC',    rarity: 'mythic',    swatch: 'sw-halloween',     bgm: 'haunted',    meta: '#0b0218', tagline: 'HaPi Halloween, woo!' },
+    { id: 'singularity',   name: 'SINGULARITY',    tag: 'GODLY',     rarity: 'godly',     swatch: 'sw-singularity',   bgm: 'singularity', meta: '#000000', tagline: 'stare into the void' },
   ];
   const themeById = (id) => THEMES.find((t) => t.id === id);
-  const isOwned = (t) => t.cost === 0 || wallet.owns(t.id);
+  const isOwned = (t) => !!t.free || wallet.owns(t.id);
   const currentTheme = () => themeById(document.documentElement.dataset.theme) || THEMES[0];
   const fmtCoins = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
@@ -82,6 +90,7 @@
 
   /* ------------------------------ screens -------------------------------- */
   function go(name) {
+    const prev = state.screen;
     state.round++;                            // cancels any pending "show result"
     $$('.screen').forEach((s) => s.classList.toggle('is-active', s.dataset.screen === name));
     state.screen = name;
@@ -89,6 +98,8 @@
     window.scrollTo(0, 0);
     if (name === 'menu') refreshMenu();
     if (name === 'board') showBoard(state.boardTab);
+    if (name === 'shop') { audio.setTrack('shop'); PiGame.shop.render(); }   // the shop has its own music
+    else if (prev === 'shop') syncBgm();
   }
 
   function refreshMenu() {
@@ -207,6 +218,10 @@
     }
 
     audio.setIntensity(Math.min(1, k.currentCombo / 60));
+    if (background) {                                                          // Singularity reacts to your typing
+      if (hit && hit.isNew) background.react(eng.score % 10 === 0 ? 'milestone' : 'key', k.currentCombo);
+      else if (ev === 'wrong' || ev === 'wrong_over') background.react('wrong');
+    }
     render(ev === 'ok' || ev === 'warmup_ok' || ev === 'warmup_done' || ev === 'complete');
     if (hit && hit.isNew) {                   // speed-tier popup
       el.tier.classList.remove('pop'); void el.tier.offsetWidth; el.tier.classList.add('pop');
@@ -272,6 +287,7 @@
       eng.finish(reason);
       audio.sfx('over'); flash('bad'); lcdFlash('bad');
       shake(CONFIG.SHAKE.finish);
+      if (background) background.react('over');
     } else if (eng.reason === 'wrong') {
       window.setTimeout(() => audio.sfx('over'), 350);
     }
@@ -480,10 +496,11 @@
 
   function refreshCoins() { $('#coin-count').textContent = fmtCoins(wallet.coins()); $('#themes-coins').textContent = fmtCoins(wallet.coins()); }
 
-  function trackOwned(id) { const t = THEMES.find((x) => x.bgm === id); return !!t && isOwned(t); }
+  const trackOwners = (id) => THEMES.filter((x) => x.bgm === id);
+  function trackOwned(id) { return trackOwners(id).some(isOwned); }
   function trackFor() {
     const pick = settings.get('bgm');
-    if (pick !== 'auto' && pick !== 'none' && audio.TRACKS[pick] && trackOwned(pick)) return pick;
+    if (pick !== 'auto' && pick !== 'none' && audio.TRACKS[pick] && !audio.TRACKS[pick].hidden && trackOwned(pick)) return pick;
     return currentTheme().bgm;                                // AUTO: the track bundled with the theme
   }
   function applyMusic() { audio.setMusic(!!settings.get('music') && settings.get('bgm') !== 'none'); }
@@ -498,12 +515,17 @@
     const host = $('#bgm-list');
     if (!host) return;
     const pick = settings.get('bgm');
-    const chosen = pick === 'none' || (pick !== 'auto' && audio.TRACKS[pick] && trackOwned(pick)) ? pick : 'auto';
+    const chosen = pick === 'none' || (pick !== 'auto' && audio.TRACKS[pick] && !audio.TRACKS[pick].hidden && trackOwned(pick)) ? pick : 'auto';
     const rows = [{ id: 'auto', name: 'AUTO', sub: 'Follows your theme', locked: false }, { id: 'none', name: 'NONE', sub: 'Silent', locked: false }].concat(
-      THEMES.map((t) => ({ id: t.bgm, name: audio.TRACKS[t.bgm].name, sub: 'Bundled with ' + t.name, locked: !isOwned(t), theme: t.name })));
+      Object.keys(audio.TRACKS).filter((id) => !audio.TRACKS[id].hidden)
+        .sort((a, b) => THEMES.findIndex((t) => t.bgm === a) - THEMES.findIndex((t) => t.bgm === b)).map((id) => {   // same order as the themes (default music first)
+        const owners = trackOwners(id);
+        return { id, name: audio.TRACKS[id].name, locked: !owners.some(isOwned),
+                 sub: owners.some((t) => t.free) ? 'Default music' : 'Bundled with ' + owners.map((t) => t.name).join(' / ') };
+      }));
     host.innerHTML = rows.map((r) =>
       '<button class="bgm-opt' + (r.locked ? ' locked' : '') + '" role="radio" data-bgm="' + r.id + '" aria-checked="' + String(r.id === chosen) + '">' +
-      '<span><b>' + r.name + '</b><small>' + (r.locked ? 'Locked - unlock the ' + r.theme + ' theme' : r.sub) + '</small></span>' +
+      '<span><b>' + r.name + '</b><small>' + (r.locked ? 'Locked - find it in the Shop' : r.sub) + '</small></span>' +
       (r.locked ? '<span class="lock-ico" data-icon="lock"></span>' : '') + '</button>').join('');
     fx.icons.mount(host);
     updateAudioSummary();
@@ -513,68 +535,27 @@
     const host = $('#theme-grid');
     if (!host) return;
     const cur = currentTheme().id;
-    const skeleton = '<div class="theme-card skeleton" aria-disabled="true"><span class="swatch"></span><span class="sk-line"></span><span class="sk-line short"></span><em>COMING SOON</em></div>';
     host.innerHTML = THEMES.map((t) => {
       const owned = isOwned(t);
-      return '<button class="theme-card' + (owned ? '' : ' locked') + '" data-theme-id="' + t.id + '" aria-pressed="' + String(owned && cur === t.id) + '">' +
+      return '<button class="theme-card rarity-' + t.rarity + (owned ? '' : ' locked') + '" data-theme-id="' + t.id + '" aria-pressed="' + String(owned && cur === t.id) + '">' +
         '<span class="swatch ' + t.swatch + '">' + (owned ? '' : '<span class="lock" data-icon="lock"></span>') + '</span>' +
         '<span class="t-name">' + t.name + '</span><span class="t-tag">' + t.tag + '</span>' +
-        (owned ? (cur === t.id ? '<span class="t-worn">WEARING</span>' : '') : '<span class="t-price"><span data-icon="coin"></span><b>' + fmtCoins(t.cost) + '</b></span>') + '</button>';
-    }).join('') + skeleton;
+        (owned ? (cur === t.id ? '<span class="t-worn">WEARING</span>' : '') : '<span class="t-price">FIND IN SHOP</span>') + '</button>';
+    }).join('');
     fx.icons.mount(host);
     $('#themes-current').textContent = currentTheme().name;
   }
 
-  const buy = { theme: null };
-  function refreshConfirm() {
-    const th = buy.theme;
-    if (!th) return;
-    const have = wallet.coins(), need = th.cost - have;
-    const msg = $('#confirm-msg'), ok = $('#confirm-ok');
-    $('#confirm-cost').textContent = fmtCoins(th.cost);
-    $('#confirm-have').textContent = fmtCoins(have);
-    if (need > 0) {
-      msg.textContent = 'Not enough Pi Coins - you need ' + fmtCoins(need) + ' more.';
-      msg.className = 'c-msg bad';
-      ok.disabled = true; ok.textContent = 'NOT ENOUGH';
-    } else {
-      msg.textContent = 'Spend ' + fmtCoins(th.cost) + ' Pi Coins? It is yours forever.';
-      msg.className = 'c-msg';
-      ok.disabled = false; ok.textContent = 'UNLOCK';
-    }
-  }
-  function openConfirm(theme) {
-    buy.theme = theme;
-    $('#confirm-swatch').className = 'swatch ' + theme.swatch;
-    $('#confirm-name').textContent = theme.name + ' + ' + audio.TRACKS[theme.bgm].name + ' music';
-    refreshConfirm();
-    const dlg = $('#confirm');
-    if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
-  }
-  function closeConfirm() {
-    const dlg = $('#confirm');
-    if (typeof dlg.close === 'function') dlg.close(); else dlg.removeAttribute('open');
-    buy.theme = null;
-  }
-  function doUnlock() {
-    const th = buy.theme;
-    if (!th) return;
-    if (!wallet.unlock(th.id, th.cost)) { audio.sfx('reject'); refreshConfirm(); return; }   // not enough coins
-    closeConfirm();
-    audio.sfx('unlock');
-    particles.burst(innerWidth / 2, innerHeight / 3, { n: 60, speed: 6, size: 6, life: 60, colors: ['#ffe066', '#39ff14', '#ffffff'] });
-    toast(th.name + ' UNLOCKED!');
-    equipTheme(th.id);                                        // wear it right away (its music follows in AUTO)
-  }
-
   function initShop() {
-    wallet.onChange(() => { refreshCoins(); refreshConfirm(); });
+    wallet.onChange(() => refreshCoins());
 
     $('#theme-grid').addEventListener('click', (e) => {
       const card = e.target.closest('[data-theme-id]');
       const t = card && themeById(card.dataset.themeId);
       if (!t) return;
-      if (isOwned(t)) { equipTheme(t.id); audio.sfx('toggle_on'); } else openConfirm(t);   // locked: buy it (confirm opens on top)
+      if (isOwned(t)) { equipTheme(t.id); audio.sfx('toggle_on'); return; }
+      audio.sfx('reject'); toast(t.name + ' comes from the Shop');          // locked: send them to the shop
+      $$('dialog[open]').forEach((d) => d.close()); go('shop');
     });
     $('#bgm-list').addEventListener('click', (e) => {
       const b = e.target.closest('[data-bgm]');
@@ -582,18 +563,18 @@
       const id = b.dataset.bgm;
       if (id !== 'auto' && id !== 'none' && !trackOwned(id)) {
         audio.sfx('reject');
-        toast('Unlock the ' + THEMES.find((x) => x.bgm === id).name + ' theme to get this track');
+        toast('Find ' + trackOwners(id).map((t) => t.name).join(' / ') + ' in the Shop to get this track');
         return;
       }
       settings.set('bgm', id);
       syncBgm();
     });
 
-    $('#confirm-ok').addEventListener('click', doUnlock);
-    $('#confirm-cancel').addEventListener('click', closeConfirm);
-    $('#confirm-close').addEventListener('click', closeConfirm);
-    $('#confirm').addEventListener('click', (e) => { if (e.target === $('#confirm')) closeConfirm(); });
-    $('#confirm').addEventListener('cancel', () => { buy.theme = null; });   // Esc key
+    PiGame.shop.init({
+      fmtCoins, themeById, toast, go, equipTheme, openModal,
+      mountIcons: (scope) => fx.icons.mount(scope),
+      refreshAll: () => { refreshCoins(); renderThemes(); renderBgm(); },
+    });
 
     // coin chip: hover on desktop, tap-to-toggle on phones
     const btn = $('#btn-coin'), tip = $('#coin-tip');
@@ -693,7 +674,7 @@
     });
     $('#settings-close').addEventListener('click', () => el.settings.close());
     $$('dialog.modal').forEach((d) => {                       // click the dark backdrop to close just that window
-      if (d.id !== 'confirm') d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
+      d.addEventListener('click', (e) => { if (e.target === d) d.close(); });
     });
     $$('[data-close]').forEach((b) => b.addEventListener('click', () => $('#' + b.dataset.close).close()));
     $('#open-themes').addEventListener('click', () => openModal('themes-modal'));
@@ -775,7 +756,7 @@
     document.addEventListener('keydown', (e) => {
       audio.unlock();
       if (e.ctrlKey || e.metaKey || e.altKey) return;
-      if (document.querySelector('dialog[open]')) return;     // any open window swallows the game keys
+      if (document.querySelector('dialog[open]') || PiGame.shop.isOpen()) return;     // any open window swallows the game keys
       if (e.key === 'Escape' && state.screen !== 'menu') { audio.sfx('back'); go('menu'); return; }
       if (state.screen !== 'game') return;
       if (e.key === 'Backspace' || e.key === 'Delete') {
@@ -811,7 +792,7 @@
     buildGuide();
     initSettings();
     const saved = themeById(document.documentElement.dataset.theme || settings.get('theme'));
-    const start = saved && isOwned(saved) ? saved.id : 'dark';   // never start in a theme you haven't unlocked
+    const start = saved && isOwned(saved) ? saved.id : 'default-dark';   // never start in a theme you haven't unlocked
     if (settings.get('theme') !== start) settings.set('theme', start);
     applyTheme(start);
     renderThemes();
@@ -829,4 +810,11 @@
 
   // tiny hook for automated tests / debugging (harmless in production)
   window.__piGame = { state, go, startGame, onDigit, PI };
+  if (CONFIG.DEV_LOGO_COINS) {                    // DEV tools (console): __piGame.dev.coins(1000), .grant('singularity'), .grantAll()
+    window.__piGame.dev = {
+      coins: (n) => wallet.add(n),
+      grant: (id) => { wallet.grant(id); renderThemes(); renderBgm(); },
+      grantAll: () => { THEMES.forEach((t) => { if (!t.free && !wallet.owns(t.id)) wallet.grant(t.id); }); renderThemes(); renderBgm(); },
+    };
+  }
 })();

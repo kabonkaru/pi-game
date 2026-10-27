@@ -106,6 +106,19 @@
       '#..#####.',
       '.........',
     ],
+    chest: [                      // treasure chest (the shop)
+      '..#########..',
+      '.###########.',
+      '#############',
+      '#############',
+      '.............',
+      '#############',
+      '#####...#####',
+      '#####.#.#####',
+      '#############',
+      '#############',
+      '#############',
+    ],
     gb: [                         // handheld console
       '#########',
       '#.......#',
@@ -532,6 +545,85 @@
     },
   };
 
+
+  /* ---------------------------------------------------------- SINGULARITY ---- */
+  // A black hole that reacts to the game: every correct digit makes the disk flare, a high combo spins it
+  // faster and burns it hotter (orange -> white -> ice blue), a wrong key sends a red shockwave + glitch.
+  const rgb3 = (c) => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
+  const heatMix = (c1, c2, k) => { const a = rgb3(c1), b = rgb3(c2); return 'rgb(' + a.map((v, i) => Math.round(v + (b[i] - v) * k)).join(',') + ')'; };
+  SCENES.singularity = {
+    init(sc) {
+      const r = rng(77), w = sc.w, h = sc.h, R = Math.max(8, Math.floor(Math.min(w, h) * 0.1)), maxR = Math.hypot(w, h) * 0.6;
+      return {
+        R, maxR, last: 0, energy: 0, spin: 1, heat: 0, combo: 0, shock: null, shockColor: '#ff4d6d', glitch: 0,
+        stars: Array.from({ length: 170 }, () => ({ a: r() * 6.283, r: R * 1.6 + r() * maxR, z: 0.4 + r() * 0.6 })),
+        disk: Array.from({ length: 300 }, () => ({ a: r() * 6.283, k: 1.35 + r() * 1.5, j: r() })),
+      };
+    },
+    react(S, kind, v) {
+      if (kind === 'key') { S.energy = Math.min(1, S.energy + 0.2); S.combo = v || 0; }
+      else if (kind === 'wrong') { S.shock = 0; S.shockColor = '#ff4d6d'; S.glitch = 0.5; S.energy = 0; S.combo = 0; }
+      else if (kind === 'milestone') { S.shock = 0; S.shockColor = '#8be9ff'; S.energy = 1; }
+      else if (kind === 'over') { S.energy = 0; S.combo = 0; }
+    },
+    draw(sc, t, px, py) {
+      const g = sc.ctx, w = sc.w, h = sc.h, S = sc.state, R = S.R, dt = Math.min(0.1, S.last ? t - S.last : 0.033);
+      S.last = t;
+      S.energy = Math.max(0, S.energy - dt * 1.6);
+      S.glitch = Math.max(0, S.glitch - dt);
+      S.spin += ((1 + Math.min(3.2, S.combo / 22) + S.energy * 1.2) - S.spin) * Math.min(1, dt * 2.5);
+      S.heat += ((Math.min(1, S.combo / 70) + S.energy * 0.35) - S.heat) * Math.min(1, dt * 2);
+      const heat = Math.min(1, S.heat), cx = w * 0.5 - px * 2, cy = h * 0.3 - py * 1.2;     // sits behind the LCD so you can watch it while typing
+      const inner = heatMix('#ffd9a0', '#ffffff', heat), midc = heatMix('#ff8a3d', '#9be7ff', heat), outer = heatMix('#8a2be2', '#5b6cff', heat);
+
+      for (const s of S.stars) {                                                   // starfield spiralling in
+        s.a += (0.05 + 9 / (s.r + 8)) * S.spin * dt; s.r -= (0.8 + S.energy * 3) * dt * (60 / (s.r + 30));
+        if (s.r < R * 1.15) { s.r = S.maxR; s.a = Math.random() * 6.283; }
+        g.globalAlpha = s.z * Math.min(1, (s.r - R) / (R * 2));
+        rect(g, s.r < R * 3 ? midc : '#cfd8ff', cx + Math.cos(s.a) * s.r, cy + Math.sin(s.a) * s.r * 0.78, 1, 1);
+      }
+      g.globalAlpha = 1;
+      const diskPass = (back) => {                                                  // back half behind the hole, front half over it
+        for (const p of S.disk) {
+          p.a += (0.9 / p.k) * S.spin * dt;
+          const sn = Math.sin(p.a); if ((sn < 0) !== back) continue;
+          const r = R * p.k, dop = 0.5 + 0.5 * Math.cos(p.a + 0.6);                // bright on the side coming toward us
+          g.globalAlpha = Math.min(1, (0.25 + 0.75 * dop) * (0.55 + S.energy * 0.6));
+          rect(g, p.k < 1.9 ? (p.j < 0.5 ? inner : midc) : outer, cx + Math.cos(p.a) * r, cy + sn * r * 0.26, 1, 1);
+        }
+        g.globalAlpha = 1;
+      };
+      diskPass(true);
+      for (let i = 0; i < 52; i++) {                                                // lensed halo arcs over and under the hole
+        const f = (i / 51) * Math.PI, fl = 0.55 + 0.45 * Math.sin(t * 3 + i * 0.6 + S.energy * 6);
+        g.globalAlpha = (0.35 + 0.5 * fl) * (0.7 + S.energy * 0.3);
+        rect(g, i % 3 ? midc : inner, cx + Math.cos(f) * R * 1.6, cy - Math.sin(f) * R * 1.5, 1, 1);
+        g.globalAlpha *= 0.55; rect(g, midc, cx + Math.cos(f) * R * 1.45, cy + Math.sin(f) * R * 0.95, 1, 1);
+      }
+      g.globalAlpha = 1;
+      g.globalAlpha = 0.28; disc(g, '#5b6cff', cx, cy, R * 1.5, R * 1.5); g.globalAlpha = 1;      // faint glow, then the horizon itself
+      disc(g, '#000000', cx, cy, R);
+      for (let i = 0; i < 90; i++) { const a = i / 90 * 6.283; g.globalAlpha = 0.5 + 0.4 * S.energy; rect(g, '#e8f6ff', cx + Math.cos(a) * (R + 1), cy + Math.sin(a) * (R + 1), 1, 1); }   // photon ring
+      g.globalAlpha = 1;
+      diskPass(false);
+
+      if (S.shock !== null) {                                                       // shockwave ring
+        S.shock += dt * 70; const a = Math.max(0, 1 - S.shock / (Math.hypot(w, h) * 0.5));
+        if (a <= 0) S.shock = null; else {
+          g.globalAlpha = a * 0.8;
+          for (let i = 0; i < 160; i++) { const an = i / 160 * 6.283; rect(g, S.shockColor, cx + Math.cos(an) * S.shock, cy + Math.sin(an) * S.shock * 0.85, 1, 1); }
+          g.globalAlpha = 1;
+        }
+      }
+      if (S.glitch > 0) {                                                           // digital tearing on a wrong key
+        for (let i = 0; i < 5; i++) {
+          const y = Math.floor(Math.random() * (h - 6)), bh = 2 + Math.floor(Math.random() * 5), dx = Math.round((Math.random() * 2 - 1) * 8 * S.glitch * 2);
+          g.drawImage(sc.cv, 0, y, w, bh, dx, y, w, bh);
+        }
+      }
+    },
+  };
+
   class SceneBG {
     constructor(canvas) { this.cv = canvas; this.ctx = canvas.getContext('2d'); this.id = null; this.state = null; this.last = -1e9; this.resize(); }
     resize() {
@@ -545,6 +637,10 @@
       this.state = this.id ? SCENES[this.id].init(this) : null;
       this.last = -1e9;
       this.ctx.clearRect(0, 0, this.w, this.h);
+    }
+    react(kind, v) {                               // the game pokes the scene (singularity reacts to typing)
+      const s = this.id && SCENES[this.id];
+      if (s && s.react && this.state) s.react(this.state, kind, v);
     }
     render(t, px, py, force) {
       if (!this.id || (!force && t - this.last < 32)) return;
@@ -594,6 +690,8 @@
       drawPlanet(this.planet, PALETTES[theme].planet);
       drawMoon(this.moon, PALETTES[theme].moon);
     }
+
+    react(kind, v) { this.scene.react(kind, v); }
 
     syncTheme() {                                  // non-space themes paint their own scene
       const id = document.documentElement.dataset.theme;

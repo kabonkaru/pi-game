@@ -52,7 +52,7 @@
       music: true,
       sfx: true,
       shake: !media('(prefers-reduced-motion: reduce)'),
-      theme: media('(prefers-color-scheme: light)') ? 'light' : 'dark',
+      theme: media('(prefers-color-scheme: light)') ? 'default-light' : 'default-dark',
       bgm: 'auto',               // 'auto' = follow the theme, 'none' = silent, or a track id
       musicVol: 70,              // 0-100
       sfxVol: 80,
@@ -115,13 +115,33 @@
     },
   };
 
-  /* ------------------------------ Pi Coins -------------------------------- */
+  /* ------------------------------ Pi Coins + collection --------------------- */
+  const MIGRATION = 2;               // bump when the wallet shape changes
+  function cleanInv(obj) {
+    const out = {};
+    if (obj && typeof obj === 'object') {
+      Object.keys(obj).forEach((id) => {
+        const n = obj[id];
+        if (/^[a-z0-9-]{1,32}$/.test(id) && Number.isInteger(n) && n > 0 && n < 1e6) out[id] = n;
+      });
+    }
+    return out;
+  }
   function loadWallet() {
     const raw = read(KEY_WALLET) || {};
     const coins = Number.isInteger(raw.coins) && raw.coins >= 0 ? Math.min(raw.coins, MAX_COINS) : 0;
-    const owned = (Array.isArray(raw.owned) ? raw.owned : [])
-      .filter((id) => typeof id === 'string' && id.length <= 32).slice(0, 50);
-    return { coins, owned };
+    const legacy = (Array.isArray(raw.owned) ? raw.owned : []).filter((id) => typeof id === 'string' && id.length <= 32).slice(0, 50);
+    const inv = cleanInv(raw.inv);
+    const pulls = Number.isInteger(raw.pulls) && raw.pulls >= 0 ? raw.pulls : 0;
+    const w = { coins, inv, pulls, mig: MIGRATION };
+    if (raw.mig !== MIGRATION) {
+      // one-time move to the collection: nothing a player owns is ever taken away
+      legacy.forEach((id) => { if (!w.inv[id]) w.inv[id] = 1; });                       // themes bought with coins before the shop
+      const returning = !!(read(KEY_SETTINGS) || read(KEY_SCORES)) || coins > 0 || legacy.length > 0;
+      if (returning) ['dark', 'light'].forEach((id) => { if (!w.inv[id]) w.inv[id] = 1; });   // Deep Space + Dreamy Day were free defaults
+      write(KEY_WALLET, w);
+    }
+    return w;
   }
   let walletCache = loadWallet();
   const walletListeners = [];
@@ -132,7 +152,10 @@
 
   const wallet = {
     coins() { return walletCache.coins; },
-    owns(id) { return walletCache.owned.indexOf(id) >= 0; },
+    pulls() { return walletCache.pulls; },
+    inventory() { return Object.assign({}, walletCache.inv); },
+    count(id) { return walletCache.inv[id] || 0; },
+    owns(id) { return (walletCache.inv[id] || 0) > 0; },
     onChange(fn) { walletListeners.push(fn); },
     add(n) {
       n = Math.floor(n);
@@ -141,23 +164,18 @@
       saveWallet();
       return walletCache.coins;
     },
-    /** returns false (and changes nothing) if you can't afford it */
-    spend(n) {
-      n = Math.floor(n);
-      if (!(n >= 0) || n > walletCache.coins) return false;
-      walletCache.coins -= n;
-      saveWallet();
-      return true;
-    },
-    /** atomic purchase: pays and marks `id` as owned. false = not enough coins */
-    unlock(id, cost) {
-      if (this.owns(id)) return true;
+    /** one atomic write: pay for the pulls, keep the new items, refund the duplicates. false = can't afford it */
+    commitPull(cost, added, refund, nPulls) {
+      cost = Math.floor(cost); refund = Math.floor(refund || 0);
       if (!(cost >= 0) || cost > walletCache.coins) return false;
-      walletCache.coins -= cost;
-      walletCache.owned.push(id);
+      walletCache.coins = Math.min(MAX_COINS, walletCache.coins - cost + refund);
+      Object.keys(added || {}).forEach((id) => { walletCache.inv[id] = (walletCache.inv[id] || 0) + 1; });
+      walletCache.pulls += nPulls || 0;
       saveWallet();
       return true;
     },
+    /** dev helper (used by the DEV tools only) */
+    grant(id) { walletCache.inv[id] = (walletCache.inv[id] || 0) + 1; saveWallet(); },
   };
 
   const api = { settings, scores, wallet, fmtDate, cleanName };

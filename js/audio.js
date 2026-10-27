@@ -45,7 +45,14 @@
     'dreamy-day': { name: 'DREAMY DAY', bpm: 92, echo: 0.75 },
     'phosphor':   { name: 'PHOSPHOR',   bpm: 118, echo: 0.5 },
     'haunted':    { name: 'HAUNTED WALTZ', bpm: 126, echo: 0.75 },
+    'chill':      { name: 'CHILL',         bpm: 72,  echo: 0.75 },                  // default for plain themes
+    'singularity': { name: 'EVENT HORIZON', bpm: 60, echo: 0.75 },
+    'shop':       { name: 'SHOP',          bpm: 104, echo: 0.75, hidden: true },   // plays in the shop only (not in the picker)
   };
+  CHORDS.m7 = CHORDS.m7 || [0, 3, 7, 10];
+  CHORDS.dom7 = [0, 4, 7, 10];
+  CHORDS.m9 = [0, 3, 7, 10, 14];
+  CHORDS.maj9 = [0, 4, 7, 11, 14];
   CHORDS.m = [0, 3, 7];                // plain triads for PHOSPHOR
   CHORDS.maj = [0, 4, 7];
   CHORDS.dim = [0, 3, 6, 9];
@@ -73,6 +80,15 @@
   const HAL_PROG = [[45, 'm'], [45, 'm'], [50, 'm'], [50, 'm'], [52, 'maj'], [52, 'maj'], [45, 'm'], [44, 'dim']];
   const HAL_NAT = [69, 71, 72, 74, 76, 77, 79, 81, 83];          // A natural minor, A4..B5
   const HAL_HARM = [69, 71, 72, 74, 76, 77, 80, 81, 83];         // harmonic minor (G# for the E and G#dim bars)
+
+  // CHILL (lo-fi): Dm9 G7 Cmaj7 Am7 / Fmaj7 Dm7 G7 Cmaj7
+  const CHILL_PROG = [[50, 'm9'], [43, 'dom7'], [48, 'maj7'], [45, 'm7'], [41, 'maj7'], [50, 'm7'], [43, 'dom7'], [48, 'maj7']];
+  const CHILL_PENT = [62, 65, 67, 69, 72, 74, 77];                // D minor pentatonic-ish, D4..F5
+  // SHOP: bright and a little mysterious. Cmaj7 Am7 Fmaj7 G7
+  const SHOP_PROG = [[48, 'maj7'], [45, 'm7'], [41, 'maj7'], [43, 'dom7']];
+  const SHOP_PENT = [72, 74, 76, 79, 81, 84];
+  // EVENT HORIZON: a slow drone around D, stacked fifths
+  const HORIZON_PING = [74, 77, 81, 86, 88];
 
   class Audio8 {
     constructor() {
@@ -218,6 +234,12 @@
     setSfxVolume(v) {
       this.sfxVol = Math.max(0, Math.min(100, v));
       if (this.ctx && this.sfxOn) this.sfxBus.gain.setTargetAtTime(this._sfxLevel(), this.ctx.currentTime, 0.02);
+    }
+
+    /** lower the music while something dramatic happens (the chest opening) */
+    duck(on) {
+      if (!this.ctx || !this.timer) return;
+      this.musicBus.gain.setTargetAtTime(on ? this._musicLevel() * 0.22 : this._musicLevel(), this.ctx.currentTime, 0.12);
     }
 
     setMusic(on) {
@@ -374,6 +396,35 @@
           arp([60, 64, 67, 72, 76, 79, 84, 88, 91, 96], 0.07, 'square', 0.09);
           arp([48, 52, 55, 60, 64, 67, 72, 76, 79, 84], 0.07, 'triangle', 0.1);
           break;
+        case 'pull_tick': {                          // chest build-up: pitch climbs with o.n (0..1)
+          const n = o.n || 0;
+          this._voice(out, { freq: midi(60 + Math.round(n * 19)), t, dur: 0.05, wave: this.pulse25, vol: 0.06 + n * 0.05, r: 0.04 });
+          break;
+        }
+        case 'pull_rumble':
+          this._noise(out, t, 1.0, 0.1, 40, 500);
+          this._voice(out, { freq: 50, slideTo: 90, t, dur: 1.0, type: 'sine', vol: 0.1, a: 0.1, r: 0.2 });
+          break;
+        case 'pull_boom': {                          // the explosion; bigger for higher rarities
+          const k = { common: 0.6, epic: 0.75, legendary: 0.9, mythic: 1.05, godly: 1.3 }[o.rarity] || 0.7;
+          this._voice(out, { freq: 140, slideTo: 32, t, dur: 0.45, type: 'sine', vol: 0.2 * k, r: 0.2 });
+          this._noise(out, t, 0.4, 0.14 * k, 200, 5000);
+          this._voice(out, { freq: midi(48), slideTo: midi(96), t, dur: 0.25, type: 'sawtooth', vol: 0.05 * k, r: 0.15, lp: 3000 });
+          break;
+        }
+        case 'pull_reveal': {                        // rarity stinger
+          const r = o.rarity || 'common';
+          if (r === 'common') arp([72, 76], 0.08, 'triangle', 0.09, 0.2);
+          else if (r === 'epic') arp([64, 69, 73, 76], 0.08, 'triangle', 0.1, 0.25);
+          else if (r === 'legendary') { arp([60, 64, 67, 72, 76, 79], 0.07, 'square', 0.08, 0.3); arp([48, 55, 60], 0.14, 'triangle', 0.1, 0.5); }
+          else if (r === 'mythic') { arp([57, 60, 64, 69, 72, 76, 81], 0.065, 'square', 0.08, 0.35); arp([45, 52, 57, 64], 0.12, 'sawtooth', 0.04, 0.6); }
+          else { arp([48, 55, 60, 67, 72, 79, 84, 91, 96], 0.085, 'sine', 0.1, 0.7); arp([36, 43, 48], 0.25, 'sawtooth', 0.05, 1.2); this._noise(out, t, 1.2, 0.05, 100, 900); }
+          break;
+        }
+        case 'fakeout_up': arp([60, 64, 67, 71, 74, 78, 81, 85], 0.07, 'square', 0.08, 0.2); break;
+        case 'fakeout_drop':                         // sad trombone
+          [58, 57, 56, 54].forEach((n, i) => this._voice(out, { freq: midi(n), t: t + i * 0.22, dur: i === 3 ? 0.7 : 0.2, type: 'sawtooth', vol: 0.07, a: 0.02, r: 0.12, lp: 900 }));
+          break;
         case 'coin':
           this._voice(out, { freq: midi(83), t, dur: 0.07, wave: this.pulse25, vol: 0.11, r: 0.05 });
           this._voice(out, { freq: midi(88), t: t + 0.07, dur: 0.22, wave: this.pulse25, vol: 0.11, r: 0.2 });
@@ -434,6 +485,9 @@
       if (this.track === 'dreamy-day') this._stepDreamyDay(step, t);
       else if (this.track === 'phosphor') this._stepPhosphor(step, t);
       else if (this.track === 'haunted') this._stepHaunted(step, t);
+      else if (this.track === 'chill') this._stepChill(step, t);
+      else if (this.track === 'shop') this._stepShop(step, t);
+      else if (this.track === 'singularity') this._stepHorizon(step, t);
       else this._stepDeepSpace(step, t);
     }
 
@@ -525,6 +579,75 @@
         const note = padRoot + 24 + tones[Math.floor(Math.random() * tones.length)];
         this._voice(out, { freq: midi(note), t, dur: 0.05, type: 'sine', vol: 0.045, a: 0.004, r: 1.4, delay: 0.6, verb: 0.5 });
       }
+    }
+
+    /* ------------------------------------------------------------ CHILL ---- */
+    _stepChill(step, t) {
+      const s = step % 16, bar = Math.floor(step / 16), L = this.stepLen, out = this.musicBus;
+      const [root, type] = CHILL_PROG[bar % CHILL_PROG.length];
+      const tones = CHORDS[type];
+      const padRoot = root < 47 ? root + 12 : root;
+      let bass = 36 + (root % 12); if (bass < 38) bass += 12;
+      const swing = s % 4 === 2 ? L * 0.3 : 0;                                    // lazy lo-fi swing on the off-8ths
+      if (s === 0 || s === 10) {                                                  // soft electric-piano chord, gently strummed
+        tones.forEach((iv, i) => this._voice(out, { freq: midi(padRoot + iv), t: t + i * 0.014, dur: L * (s === 0 ? 9 : 5), type: 'triangle', vol: 0.026, a: 0.02, r: 0.7, lp: 1500, verb: 0.35 }));
+      }
+      if (s === 0 || s === 8) this._voice(out, { freq: midi(bass), t, dur: L * 3, type: 'sine', vol: 0.1, a: 0.01, r: 0.2, lp: 500 });
+      if (s === 14 && bar % 2 === 1) this._voice(out, { freq: midi(bass + 7), t, dur: L * 1.5, type: 'sine', vol: 0.06, a: 0.01, r: 0.15, lp: 500 });
+      if (s === 0 || s === 10) this._voice(out, { freq: 115, slideTo: 48, t, dur: 0.12, type: 'sine', vol: 0.06, r: 0.05 });   // soft kick
+      if (s === 8) this._noise(out, t, 0.09, 0.03, 1400, 6000);                                                           // rim/snare
+      if (s % 2 === 0) this._noise(out, t + swing, 0.03, s % 4 === 0 ? 0.008 : 0.005, 8000, null);                        // hat
+      if (Math.random() < 0.12) this._noise(out, t, 0.01, 0.004, 3000, null);                                              // vinyl crackle
+      if (s % 2 === 0 && Math.random() < 0.22) {                                                                          // sparse melody
+        const note = CHILL_PENT[Math.floor(Math.random() * CHILL_PENT.length)];
+        this._voice(out, { freq: midi(note), t: t + swing, dur: L * 2, type: 'sine', vol: 0.035, a: 0.01, r: 0.6, lp: 2400, delay: 0.7, verb: 0.4 });
+      }
+    }
+
+    /* ------------------------------------------------------------- SHOP ---- */
+    _stepShop(step, t) {
+      const s = step % 16, bar = Math.floor(step / 16), L = this.stepLen, out = this.musicBus;
+      const [root, type] = SHOP_PROG[bar % SHOP_PROG.length];
+      const tones = CHORDS[type];
+      const padRoot = root < 47 ? root + 12 : root;
+      let bass = 36 + (root % 12); if (bass < 40) bass += 12;
+      if ([0, 3, 6, 8, 11, 14].includes(s)) {                                     // bouncy bass: root / fifth
+        this._voice(out, { freq: midi(bass + (s === 6 || s === 14 ? 7 : 0)), t, dur: L * 1.5, wave: this.pulse25, vol: 0.06, a: 0.004, r: 0.08, lp: 900 });
+      }
+      if (s === 0 || s === 8) this._voice(out, { freq: 140, slideTo: 50, t, dur: 0.1, type: 'sine', vol: 0.08, r: 0.04 });
+      if (s === 4 || s === 12) this._noise(out, t, 0.08, 0.04, 1500, 7000);
+      if (s % 2 === 0) this._noise(out, t, 0.02, 0.008, 9000, null);
+      if (Math.random() < 0.8) {                                                  // twinkling arpeggio
+        const pool = tones.map((iv) => padRoot + 12 + iv);
+        const note = pool[[0, 1, 2, 3, 2, 1, 3, 2][s % 8] % pool.length] + (s % 8 > 5 ? 12 : 0);
+        this._voice(out, { freq: midi(note), t, dur: L * 0.9, wave: this.pulse125, vol: 0.026 + this.intensity * 0.01, a: 0.003, r: 0.08, lp: 3200, delay: 0.5, verb: 0.2 });
+      }
+      if (s % 4 === 0 && Math.random() < 0.4) {                                   // glockenspiel
+        const note = SHOP_PENT[Math.floor(Math.random() * SHOP_PENT.length)];
+        this._voice(out, { freq: midi(note), t, dur: 0.03, type: 'sine', vol: 0.05, a: 0.003, r: 1.0, delay: 0.5, verb: 0.4 });
+        this._voice(out, { freq: midi(note + 12), t, dur: 0.02, type: 'sine', vol: 0.014, a: 0.003, r: 0.6, verb: 0.4 });
+      }
+      if (s === 15 && Math.random() < 0.3) this._voice(out, { freq: midi(96), t, dur: 0.03, type: 'sine', vol: 0.03, a: 0.002, r: 0.5, verb: 0.5 });   // coin glint
+    }
+
+    /* ----------------------------------------------------- EVENT HORIZON ---- */
+    _stepHorizon(step, t) {
+      const s = step % 16, bar = Math.floor(step / 16), L = this.stepLen, out = this.musicBus;
+      if (s === 0 && bar % 4 === 0) {                                              // deep drone + stacked fifths
+        [[26, 0.05, 'sine'], [26, 0.02, 'sawtooth'], [33, 0.025, 'sine']].forEach((v, k) => {
+          this._voice(out, { freq: midi(v[0]), t, dur: L * 62, type: v[2], vol: v[1], a: 2.5, r: 3, lp: v[2] === 'sawtooth' ? 260 : 900, detune: k === 1 ? 7 : 0, verb: 0.5 });
+        });
+        [57, 64, 71].forEach((n, k) => this._voice(out, { freq: midi(n), t: t + k * 0.8, dur: L * 56, type: 'sine', vol: 0.016, a: 3, r: 3, lp: 2200, verb: 0.7, detune: k * 4 - 4 }));
+      }
+      if (s === 0 || s === 6) {                                                    // heartbeat of the singularity
+        this._voice(out, { freq: 90, slideTo: 38, t, dur: 0.18, type: 'sine', vol: s === 0 ? 0.09 : 0.055, r: 0.1, lp: 300 });
+      }
+      if (s === 0 && bar % 2 === 0) this._noise(out, t, L * 15, 0.012, 80, 500);   // distant wind of the accretion disk
+      if (s % 4 === 2 && Math.random() < 0.16 + this.intensity * 0.1) {            // pings falling toward the horizon
+        const note = HORIZON_PING[Math.floor(Math.random() * HORIZON_PING.length)];
+        this._voice(out, { freq: midi(note), slideTo: midi(note - 1), t, dur: 0.05, type: 'sine', vol: 0.03, a: 0.01, r: 2.2, delay: 0.75, verb: 0.7 });
+      }
+      if (s === 8 && bar % 8 === 5) this._voice(out, { freq: midi(62), slideTo: midi(50), t, dur: L * 7, type: 'sine', vol: 0.03, a: 0.4, r: 1.2, verb: 0.6 });   // time dilation
     }
 
     /* ---------------------------------------------------- HAUNTED WALTZ ---- */
