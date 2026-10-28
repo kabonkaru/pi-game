@@ -33,8 +33,8 @@
     'plain-sun':   { rarity: 'common',    name: 'SUNNY' },
     'dark':        { rarity: 'epic',      name: 'DEEP SPACE' },
     'light':       { rarity: 'legendary', name: 'DREAMY DAY' },
-    'terminal':    { rarity: 'mythic',    name: 'PHOSPHOR' },
-    'singularity': { rarity: 'godly',     name: 'SINGULARITY' },
+    'singularity': { rarity: 'mythic',     name: 'SINGULARITY' },
+    'terminal':    { rarity: 'godly',    name: 'PHOSPHOR' },
     'halloween':   { rarity: 'mythic',    name: 'HAPI HALLOWEEN' },
   };
 
@@ -42,15 +42,15 @@
     standard: {
       id: 'standard', name: 'COSMIC BEGINNINGS', status: 'live',
       blurb: 'Plain colours, deep space, sunny days, a handheld and a black hole.',
-      pool: ['plain-ruby', 'plain-ocean', 'plain-mint', 'plain-grape', 'plain-sun', 'dark', 'light', 'terminal', 'singularity'],
-      featured: ['singularity'],
+      pool: ['plain-ruby', 'plain-ocean', 'plain-mint', 'plain-grape', 'plain-sun', 'dark', 'light', 'singularity', 'terminal',],
+      featured: ['terminal'],
       rates: { common: 62, epic: 24, legendary: 9, mythic: 4, godly: 1 },     // percent per rarity (sums to 100)
     },
     'event-halloween': {
-      id: 'event-halloween', name: 'HAPI HALLOWEEN', status: 'coming-soon',     // shows as LOCKED in the shop
+      id: 'event-halloween', name: 'HAPI HALLOWEEN', status: 'live',     // "coming-soon" = locked "live" = unlock 
       blurb: 'A limited spooky event. Coming soon!',
-      pool: ['halloween'], featured: ['halloween'],
-      rates: { mythic: 100 },
+      pool: ['plain-ruby', 'plain-ocean', 'plain-mint', 'plain-grape', 'plain-sun', 'halloween'], featured: ['halloween'],
+      rates: { common: 99, mythic: 1 },
     },
   };
 

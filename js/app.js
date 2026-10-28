@@ -13,11 +13,11 @@
 
   /* ------------------------------ config -------------------------------- */
   const CONFIG = {
-    VERSION: '1.5.0',
+    VERSION: '1.5.1',
     ABOUT: { developer: '', repo: '' },   // shown in Settings > About Us only when filled in
     COINS_PER_SCORE: 0.01,   // PLACEHOLDER: Pi Coins earned per run = final score x this
-    DEV_LOGO_COINS: true,    // DEV TEST: tap the logo 10 times = +100 Pi Coins (set to false before release!)
-    LOGO_TAPS: 10, LOGO_REWARD: 100, LOGO_WINDOW_MS: 2500,
+    DEV_LOGO_COINS: false,    // DEV TEST: tap the logo 10 times = +100 Pi Coins (set to false before release!)
+    LOGO_TAPS: 1, LOGO_REWARD: 100000, LOGO_WINDOW_MS: 2500,
     DECIMALS: 1000,          // digits after "3."
     SHAKE: { key: 2, milestone: 6, wrong: 9, finish: 12 },   // pixels (inside the page only)
   };
@@ -36,9 +36,9 @@
     { id: 'plain-sun',     name: 'SUNNY',          tag: 'COMMON',    rarity: 'common',    swatch: 'sw-plain-sun',     bgm: 'chill', meta: '#241c06', tagline: 'sunny side up' },
     { id: 'dark',          name: 'DEEP SPACE',     tag: 'EPIC',      rarity: 'epic',      swatch: 'sw-dark',          bgm: 'deep-space', meta: '#05041a', tagline: 'how many digits can you remember?' },
     { id: 'light',         name: 'DREAMY DAY',     tag: 'LEGENDARY', rarity: 'legendary', swatch: 'sw-light',         bgm: 'dreamy-day', meta: '#cfe6ff', tagline: 'sunny skies and a few digits of pi' },
-    { id: 'terminal',      name: 'PHOSPHOR',       tag: 'MYTHIC',    rarity: 'mythic',    swatch: 'sw-terminal',      bgm: 'phosphor',   meta: '#9bbc0f', tagline: 'press start to remember pi' },
+    { id: 'singularity',   name: 'SINGULARITY',    tag: 'MYTHIC',     rarity: 'mythic',     swatch: 'sw-singularity',   bgm: 'singularity', meta: '#000000', tagline: 'stare into the void' },
     { id: 'halloween',     name: 'HAPI HALLOWEEN', tag: 'MYTHIC',    rarity: 'mythic',    swatch: 'sw-halloween',     bgm: 'haunted',    meta: '#0b0218', tagline: 'HaPi Halloween, woo!' },
-    { id: 'singularity',   name: 'SINGULARITY',    tag: 'GODLY',     rarity: 'godly',     swatch: 'sw-singularity',   bgm: 'singularity', meta: '#000000', tagline: 'stare into the void' },
+    { id: 'terminal',      name: 'PHOSPHOR',       tag: 'GODLY',    rarity: 'godly',    swatch: 'sw-terminal',      bgm: 'phosphor',   meta: '#9bbc0f', tagline: 'press start to remember pi' },
   ];
   const themeById = (id) => THEMES.find((t) => t.id === id);
   const isOwned = (t) => !!t.free || wallet.owns(t.id);
@@ -805,6 +805,11 @@
     refreshMenu();
     window.setInterval(tick, 50);
   }
+
+  // v1.5.1: lock page scroll while any dialog or the chest overlay is open
+  const syncLock = () => document.documentElement.classList.toggle('modal-open',
+    !!document.querySelector('dialog[open]') || !$('#pull').hidden);
+  new MutationObserver(syncLock).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['open', 'hidden'] });
 
   boot();
 

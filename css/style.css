@@ -919,3 +919,47 @@ body[data-screen="game"] .shop-btn { display: none; }
 /* Singularity: let the black hole show through the LCD so you can watch it react while you type */
 :root[data-theme="singularity"] .lcd { background: rgba(2, 1, 10, .4); }
 :root[data-theme="singularity"] .lcd-text { text-shadow: 0 0 6px #000, 0 0 2px #000, var(--lcd-glow); }
+
+/* ===== v1.5.1: window + scroll hotfix (appended; later rules win) ===== */
+/* scroll: reserve the scrollbar gutter, no overflow-adding entry animation, lock the page behind windows */
+html { scrollbar-gutter: stable; overscroll-behavior-y: contain; scrollbar-color: var(--line) var(--bg-a); }
+html.modal-open, html.modal-open body { overflow: hidden; }
+#stage { overflow-x: clip; }
+@keyframes screenIn { from { opacity: 0; } to { opacity: 1; } }
+.digits { overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+
+/* game screen scrolls instead of clipping the keypad on short phones */
+body[data-screen="game"]:not(.is-shaking) { overflow-y: auto; }
+body[data-screen="game"] #app { height: auto; min-height: 100dvh; }
+@media (orientation: portrait) { .keypad { min-height: 268px; grid-template-rows: repeat(5, minmax(44px, 1fr)); } }
+
+/* ONE window design for every theme: panels, dialogs, shop, leaderboard, results.
+   Themes change only colours and fonts here; the game screen (keys, LCD, menu cards) keeps its theme shape. */
+:root[data-theme] :is(.panel, .modal, .theme-card, .bgm-opt, .setting, .digits, .select select, .r-tip, .theme-prev, .toast, .coin-tip, .banner, .board, .sum-window) { border-radius: 0; }
+:root[data-theme] :is(.panel, .modal, .digits, .select select, .board) { border-width: 4px; }
+:root[data-theme] .r-tip { border-style: dashed; }
+:root[data-theme] :is(.panel, .modal) { --df: 1.2; box-shadow: 0 8px 0 var(--shadow-solid), 0 24px 50px -16px var(--shadow); }
+:root[data-theme] .panel::before { content: none; }
+:root[data-theme] :is(.panel, .modal, .sum-window) :is(.btn, .chip, .tab, .icon-btn, .switch) { border-radius: 0; border-width: 4px; }
+:root[data-theme] :is(.panel, .modal, .sum-window) :is(.btn:not(.btn-primary), .chip, .tab:not([aria-selected="true"]), .icon-btn) { box-shadow: 0 4px 0 var(--btn-shadow); }
+:root[data-theme] :is(.panel, .modal, .sum-window) :is(.btn, .chip, .tab, .icon-btn):active { transform: translateY(3px); box-shadow: 0 1px 0 var(--btn-shadow); }
+
+/* pull summary: fixed-size window, title + buttons pinned, only the one-column result list scrolls */
+.pull-summary { padding: 12px; }
+.sum-window { display: flex; flex-direction: column; align-items: center; gap: 12px; width: min(440px, 94vw); height: min(640px, 88dvh);
+  padding: 18px 16px; background: #12091f; border: 4px solid var(--line-strong, #000); box-shadow: 0 8px 0 #000; }
+.sum-window h2 { flex: none; }
+.sum-window .sum-note, .sum-window .btn-row { flex: none; margin: 0; }
+.sum-grid { display: flex; flex-direction: column; gap: 8px; width: 100%; max-height: none; flex: 1 1 auto; min-height: 0; padding: 2px; overflow-y: auto; overscroll-behavior: contain; }
+.sum-grid .pc.mini { width: auto; grid-template-columns: 56px 1fr auto; grid-template-areas: "sw rar tag" "sw name tag";
+  align-items: center; column-gap: 10px; row-gap: 2px; padding: 8px 10px; text-align: left; }
+.sum-grid .pc.mini .pc-sw { grid-area: sw; height: 40px; }
+.sum-grid .pc.mini .pc-rar { grid-area: rar; }
+.sum-grid .pc.mini .pc-name { grid-area: name; }
+.sum-grid .pc.mini .pc-tag { grid-area: tag; flex-direction: column; gap: 2px; }
+
+/* PHOSPHOR: good/bad were the same dark green, so errors get a shape signal (inverse bar, ! prefix, blink) */
+:root[data-theme="terminal"] .hint.bad { background: var(--text); color: var(--bg-a); padding: 0 8px; }
+:root[data-theme="terminal"] .hint.bad::before { content: "! "; }
+:root[data-theme="terminal"] .hint.warn::before { content: "* "; }
+:root[data-theme="terminal"] .meter i.low { animation: blink .5s steps(2) infinite; }

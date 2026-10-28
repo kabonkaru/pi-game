@@ -669,7 +669,14 @@
       this.drawArt();
       this.syncTheme();
 
-      addEventListener('resize', () => { this.resize(); });
+      let rt = 0, lw = innerWidth, lh = innerHeight;      // v1.5.1: debounce; ignore the mobile URL bar (small height-only change)
+      addEventListener('resize', () => {
+        clearTimeout(rt);
+        rt = setTimeout(() => {
+          if (innerWidth === lw && Math.abs(innerHeight - lh) < 120) return;
+          lw = innerWidth; lh = innerHeight; this.resize();
+        }, 200);
+      });
       addEventListener('pointermove', (e) => {
         this.tx = (e.clientX / innerWidth) * 2 - 1;
         this.ty = (e.clientY / innerHeight) * 2 - 1;
