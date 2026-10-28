@@ -48,7 +48,7 @@
     },
     'event-halloween': {
       id: 'event-halloween', name: 'HAPI HALLOWEEN', status: 'live',     // "coming-soon" = locked "live" = unlock 
-      blurb: 'A limited spooky event. Coming soon!',
+      blurb: 'A limited spooky event. Plain colours and the HaPi Halloween theme.',
       pool: ['plain-ruby', 'plain-ocean', 'plain-mint', 'plain-grape', 'plain-sun', 'halloween'], featured: ['halloween'],
       rates: { common: 99, mythic: 1 },
     },

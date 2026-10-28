@@ -2,7 +2,15 @@
 
 All notable changes to the Pi Game project will be documented in this file.
 
-## [1.5.1] - 2026-10-28
+## [1.5.2]
+- Replaced the logo-tap dev shortcut with console cheats: coins(n), unlockall(true|false), totalreset().
+- Added a "Made with AI" credit (Claude, Gemini, GitHub Copilot) to About Us.
+- Removed the rainbow outline from the Shop button; added hover tooltips on the Shop and Settings icons.
+- Fixed the Pi Coin tooltip wording; made the pull-results window border visible.
+- Music and SFX volume sliders now go up to 200%, with a safety limiter.
+- Updated the Halloween banner text and the gacha test to the current roster; docs updated.
+
+## [1.5.1]
 - Fixed background page scrolling while dialogs or chest overlay pulls are active.
 - Synchronized version tags across application files.
 

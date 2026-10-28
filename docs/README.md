@@ -147,7 +147,7 @@ docs/GACHA_BLUEPRINT.md   how the Gacha & Shop works, decisions and open questio
 ## Customising
 
 - **Scoring and clocks** (base points, speed and combo tiers, decay window, Zen's `ZEN_MS`, Timer's `TIMER_MS` cap and the `TIME_ADD` bonus table, length bonus): the `SCORING` block at the top of `js/score.js`.
-- **Game constants** (Timer length, shake strength, coins per score, dev cheat): `CONFIG` at the top of `js/app.js`.
+- **Game constants** (Timer length, shake strength, coins per score): `CONFIG` at the top of `js/app.js`.
 - **Shop numbers** (pull cost, x1/x5/x10, refund, fake-out chance, drop rates, banners, items): `js/gacha-data.js`. **Themes:** the `THEMES` list in `js/app.js`.
 - **Add a theme:**
   1. Add a `:root[data-theme="..."]` block in `css/style.css` (a plain colour needs only `--h` and `--s`; see the token list in the blueprint) and a `.sw-...` swatch.

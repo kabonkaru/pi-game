@@ -72,12 +72,12 @@
           </button>
           <div class="coin-tip" id="coin-tip" role="tooltip">
             <b>PI COIN</b>
-            <span>The currency of Pi Game. Earn them by playing, spend them on themes and their music.</span>
+            <span>The currency of Pi Game. Earn them by playing, spend them on Shop pulls to unlock themes and their music.</span>
             <em>because a coin made of pi.. uhh coin is circle yeah..</em>
           </div>
         </div>
-        <button class="icon-btn shop-btn" id="btn-shop" aria-label="Open the shop"><span data-icon="chest"></span></button>
-        <button class="icon-btn shiny" id="btn-settings" aria-label="Settings"><span data-icon="gear"></span></button>
+        <button class="icon-btn shop-btn" id="btn-shop" aria-label="Open the shop" data-tip="SHOP"><span data-icon="chest"></span></button>
+        <button class="icon-btn shiny" id="btn-settings" aria-label="Settings" data-tip="SETTINGS"><span data-icon="gear"></span></button>
       </div>
     </header>
 
@@ -255,13 +255,15 @@
       <div id="spanel-about" class="about" role="tabpanel" aria-labelledby="stab-about" hidden>
         <div class="about-hero">
           <span class="about-pi" data-icon="pi"></span>
-          <span><b>PI GAME</b><small id="about-ver">v1.5.1</small></span>
+          <span><b>PI GAME</b><small id="about-ver">v1.5.2</small></span>
         </div>
         <p>A tiny 8-bit game about one big number. Type as many digits of pi as you can, chase speed and combo bonuses, earn Pi Coins and unlock new worlds.</p>
         <h3 class="modal-sub">YOUR DATA</h3>
         <p>No accounts and no tracking scripts. Your scores, Pi Coins and settings are saved only in this browser.</p>
         <h3 class="modal-sub">CREDITS</h3>
         <p>Music and sound effects are synthesized live with the Web Audio API, so there are no audio files. Fonts: Press Start 2P, VT323, Pixelify Sans, Silkscreen and Jacquard 12, loaded from Google Fonts under the SIL Open Font License.</p>
+        <h3 class="modal-sub">MADE WITH AI</h3>
+        <p>This game was built with the help of AI tools: Claude (Anthropic), Gemini (Google) and GitHub Copilot.</p>
         <div id="about-made" hidden>
           <h3 class="modal-sub">MADE BY</h3>
           <p id="about-dev"></p>
@@ -272,7 +274,7 @@
 
     <div class="modal-foot">
       <button class="btn small danger" id="btn-reset-scores">RESET SCORES</button>
-      <span class="ver" id="app-ver">v1.5.1</span>
+      <span class="ver" id="app-ver">v1.5.2</span>
     </div>
   </dialog>
 
@@ -302,7 +304,7 @@
           <div><b>MUSIC</b><small>Mute or unmute the background music</small></div>
           <button class="switch" role="switch" id="set-music" aria-checked="true" aria-label="Music on or off"><span class="knob"></span><span class="sw-label">ON</span></button>
         </div>
-        <label class="range"><span>VOLUME</span><input type="range" id="set-music-vol" min="0" max="100" step="5"><output id="music-vol-out">70%</output></label>
+        <label class="range"><span>VOLUME</span><input type="range" id="set-music-vol" min="0" max="200" step="5"><output id="music-vol-out">70%</output></label>
       </div>
 
       <h3 class="modal-sub">BACKGROUND TRACK</h3>
@@ -313,7 +315,7 @@
           <div><b>SOUND FX</b><small>Blips, combos &amp; jingles</small></div>
           <button class="switch" role="switch" id="set-sfx" aria-checked="true" aria-label="Sound effects on or off"><span class="knob"></span><span class="sw-label">ON</span></button>
         </div>
-        <label class="range"><span>VOLUME</span><input type="range" id="set-sfx-vol" min="0" max="100" step="5"><output id="sfx-vol-out">80%</output></label>
+        <label class="range"><span>VOLUME</span><input type="range" id="set-sfx-vol" min="0" max="200" step="5"><output id="sfx-vol-out">80%</output></label>
       </div>
     </div>
   </dialog>

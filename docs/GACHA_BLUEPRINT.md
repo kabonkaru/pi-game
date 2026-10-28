@@ -67,9 +67,9 @@ A theme is a `:root[data-theme="id"]` block that defines **all** of these (see D
 3. If it has a scene, add it to `SCENES` in `js/fx.js`; if it has a track, add it to `TRACKS` in `js/audio.js`.
 4. Run the Node tests (`gachatest.js`) to confirm the roster and rates still sum to 100.
 
-## 6. Dev tools
+## 6. Console cheats
 
-While `DEV_LOGO_COINS` is `true` in `CONFIG` (`js/app.js`): tap the logo 10 times for coins, and in the console use `__piGame.dev.coins(1000)`, `__piGame.dev.grant('singularity')`, `__piGame.dev.grantAll()`. **Set it to `false` before a public release.**
+Type these in the browser console (local data only): `coins(251)` adds Pi Coins, `unlockall(true)` unlocks every theme (`unlockall(false)` relocks all, coins kept), `totalreset()` asks for confirmation, then deletes scores, Pi Coins and the theme collection.
 
 ## 7. Still open
 
