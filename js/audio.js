@@ -129,7 +129,10 @@
       comp.attack.value = 0.004;
       comp.release.value = 0.2;
       this.master.connect(comp);
-      comp.connect(c.destination);
+      const lim = c.createDynamicsCompressor();             // v1.5.2: safety limiter so 200% volume cannot clip
+      lim.threshold.value = -3; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.001; lim.release.value = 0.1;
+      comp.connect(lim);
+      lim.connect(c.destination);
 
       this.sfxBus = c.createGain();
       this.sfxBus.gain.value = this.sfxOn ? this._sfxLevel() : 0;
@@ -224,15 +227,15 @@
     }
 
     /* ------------------------------------------------------- settings ----- */
-    _musicLevel() { const v = this.musicVol / 100; return 1.2 * v * v; }     // squared = feels linear to the ear
-    _sfxLevel() { const v = this.sfxVol / 100; return 1.33 * v * v; }
+    _musicLevel() { const v = this.musicVol / 100; return v <= 1 ? 1.2 * v * v : 1.2 * v; }     // squared = feels linear to the ear
+    _sfxLevel() { const v = this.sfxVol / 100; return v <= 1 ? 1.33 * v * v : 1.33 * v; }
 
     setMusicVolume(v) {
-      this.musicVol = Math.max(0, Math.min(100, v));
+      this.musicVol = Math.max(0, Math.min(200, v));
       if (this.ctx && this.timer) this.musicBus.gain.setTargetAtTime(this._musicLevel(), this.ctx.currentTime, 0.05);
     }
     setSfxVolume(v) {
-      this.sfxVol = Math.max(0, Math.min(100, v));
+      this.sfxVol = Math.max(0, Math.min(200, v));
       if (this.ctx && this.sfxOn) this.sfxBus.gain.setTargetAtTime(this._sfxLevel(), this.ctx.currentTime, 0.02);
     }
 

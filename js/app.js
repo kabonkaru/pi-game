@@ -13,11 +13,9 @@
 
   /* ------------------------------ config -------------------------------- */
   const CONFIG = {
-    VERSION: '1.5.1',
+    VERSION: '1.5.2',
     ABOUT: { developer: '', repo: '' },   // shown in Settings > About Us only when filled in
     COINS_PER_SCORE: 0.01,   // PLACEHOLDER: Pi Coins earned per run = final score x this
-    DEV_LOGO_COINS: false,    // DEV TEST: tap the logo 10 times = +100 Pi Coins (set to false before release!)
-    LOGO_TAPS: 1, LOGO_REWARD: 100000, LOGO_WINDOW_MS: 2500,
     DECIMALS: 1000,          // digits after "3."
     SHAKE: { key: 2, milestone: 6, wrong: 9, finish: 12 },   // pixels (inside the page only)
   };
@@ -588,22 +586,6 @@
     btn.addEventListener('click', () => showTip(!tip.classList.contains('show')));
     document.addEventListener('pointerdown', (e) => { if (!e.target.closest('#coin-wrap')) showTip(false); });
 
-    // DEV: tap the logo 10 times in a row for free Pi Coins
-    if (CONFIG.DEV_LOGO_COINS) {
-      const logo = $('.brand');
-      let taps = 0, last = 0;
-      logo.addEventListener('click', () => {
-        const now = performance.now();
-        taps = now - last > CONFIG.LOGO_WINDOW_MS ? 1 : taps + 1;
-        last = now;
-        if (taps < CONFIG.LOGO_TAPS) return;
-        taps = 0;
-        wallet.add(CONFIG.LOGO_REWARD);
-        audio.sfx('coin');
-        toast('+' + CONFIG.LOGO_REWARD + ' PI COINS (DEV)');
-        burstFrom(btn, { n: 28, speed: 4.5, colors: ['#ffe066', '#fff6b0', '#ffffff'] });
-      });
-    }
   }
 
   /* ---- modal helpers: sub-windows, tabs, scroll fade, About ---- */
@@ -798,6 +780,7 @@
     renderThemes();
     initShop();
     refreshCoins();
+    initTips();
     syncBgm();
     const keys = bindKeypad();
     bindGlobal(keys);
@@ -815,11 +798,54 @@
 
   // tiny hook for automated tests / debugging (harmless in production)
   window.__piGame = { state, go, startGame, onDigit, PI };
-  if (CONFIG.DEV_LOGO_COINS) {                    // DEV tools (console): __piGame.dev.coins(1000), .grant('singularity'), .grantAll()
-    window.__piGame.dev = {
-      coins: (n) => wallet.add(n),
-      grant: (id) => { wallet.grant(id); renderThemes(); renderBgm(); },
-      grantAll: () => { THEMES.forEach((t) => { if (!t.free && !wallet.owns(t.id)) wallet.grant(t.id); }); renderThemes(); renderBgm(); },
+  installCheats();
+
+  /* ---- console cheats (v1.5.2): type these in the browser console ---- */
+  function installCheats() {
+    const K = { scores: 'pigame.scores.v2', wallet: 'pigame.wallet.v1', settings: 'pigame.settings.v1' };
+    window.coins = (n) => {                                   // coins(251) = +251 Pi Coins
+      n = Math.floor(Number(n));
+      if (!(n > 0)) return 'coins(n): n must be a positive number';
+      wallet.add(n); refreshCoins(); audio.sfx('coin');
+      return '+' + fmtCoins(n) + ' Pi Coins. Balance: ' + fmtCoins(wallet.coins());
     };
+    window.unlockall = (on) => {                              // unlockall(true) = every theme; unlockall(false) = relock all (coins kept)
+      if (on === false) {
+        const w = JSON.parse(localStorage.getItem(K.wallet) || '{}');
+        w.inv = {}; localStorage.setItem(K.wallet, JSON.stringify(w)); location.reload();
+        return 'relocking all themes...';
+      }
+      let n = 0;
+      THEMES.forEach((t) => { if (!t.free && !wallet.owns(t.id)) { wallet.grant(t.id); n++; } });
+      renderThemes(); renderBgm();
+      return n ? 'Unlocked ' + n + ' theme(s).' : 'Everything was already unlocked.';
+    };
+    window.totalreset = () => {                               // totalreset() = delete scores, Pi Coins and the theme collection
+      if (!window.confirm('Delete ALL Pi Game data (scores, Pi Coins and theme collection)?')) return 'cancelled';
+      localStorage.setItem(K.scores, '{}');
+      localStorage.setItem(K.wallet, JSON.stringify({ coins: 0, inv: {}, pulls: 0, mig: 2 }));   // mig:2 so the old free-theme migration does not re-run
+      const s = JSON.parse(localStorage.getItem(K.settings) || '{}'); s.theme = 'default-dark'; s.bgm = 'auto';
+      localStorage.setItem(K.settings, JSON.stringify(s)); location.reload();
+      return 'resetting...';
+    };
+  }
+
+  /* ---- one shared tooltip for [data-tip] (desktop hover only) ---- */
+  function initTips() {
+    const tip = document.createElement('div');
+    tip.className = 'tip'; tip.setAttribute('role', 'tooltip'); tip.hidden = true;
+    document.body.appendChild(tip);
+    const hide = () => { tip.hidden = true; };
+    document.addEventListener('pointerover', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      const t = e.target.closest && e.target.closest('[data-tip]');
+      if (!t) { hide(); return; }
+      tip.textContent = t.dataset.tip; tip.hidden = false;
+      const r = t.getBoundingClientRect(), w = tip.offsetWidth;
+      tip.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
+      tip.style.top = (r.bottom + 10) + 'px';
+    });
+    document.addEventListener('pointerout', (e) => { if (!e.relatedTarget) hide(); });
+    document.addEventListener('pointerdown', hide);
   }
 })();

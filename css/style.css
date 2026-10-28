@@ -963,3 +963,11 @@ body[data-screen="game"] #app { height: auto; min-height: 100dvh; }
 :root[data-theme="terminal"] .hint.bad::before { content: "! "; }
 :root[data-theme="terminal"] .hint.warn::before { content: "* "; }
 :root[data-theme="terminal"] .meter i.low { animation: blink .5s steps(2) infinite; }
+
+/* ===== v1.5.2: shop icon, tooltip, pull window border ===== */
+.shop-btn { border: 4px solid var(--line-strong); background: var(--btn-bg); box-shadow: 0 4px 0 var(--btn-shadow); }
+.shop-btn::before, .shop-btn::after { display: none; }
+.shop-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--btn-shadow); }
+.tip { position: fixed; z-index: 500; pointer-events: none; white-space: nowrap; padding: 8px 10px; background: var(--surface-solid); color: var(--text);
+  border: 4px solid var(--line-strong); box-shadow: 0 4px 0 var(--shadow-solid); font-family: var(--font-pixel); font-size: calc(.55rem * var(--pf, 1)); }
+.sum-window { border-color: var(--line); }

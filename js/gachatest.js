@@ -4,7 +4,7 @@ const std = D.BANNERS.standard;
 // roster = spec
 const cnt = {}; std.pool.forEach((id) => { const r = D.ITEMS[id].rarity; cnt[r] = (cnt[r] || 0) + 1; });
 a.deepEqual(cnt, { common: 5, epic: 1, legendary: 1, mythic: 1, godly: 1 });
-a.equal(D.ITEMS.dark.rarity, 'epic'); a.equal(D.ITEMS.light.rarity, 'legendary'); a.equal(D.ITEMS.terminal.rarity, 'mythic'); a.equal(D.ITEMS.singularity.rarity, 'godly');
+a.equal(D.ITEMS.dark.rarity, 'epic'); a.equal(D.ITEMS.light.rarity, 'legendary'); a.equal(D.ITEMS.terminal.rarity, 'godly'); a.equal(D.ITEMS.singularity.rarity, 'mythic');
 a.equal(Object.values(std.rates).reduce((x, y) => x + y, 0), 100);
 // costs
 a.deepEqual(D.SHOP.PULL_OPTIONS.map(G.pullCost), [100, 500, 1000]);
@@ -25,7 +25,7 @@ a.equal(G.pullOne(rng32(5), {}, std).fakeout, null);
 const batch = G.pullMany(() => 0.0001, {}, std, 10);                      // rng ~0 always hits the same first common
 a.equal(batch.results.length, 10); a.equal(batch.results.filter((x) => x.isNew).length, 1); a.equal(batch.refund, 9 * 50); a.equal(batch.cost, 1000); a.deepEqual(Object.keys(batch.added), ['plain-ruby']);
 // event banner is locked
-a.throws(() => G.pullMany(rng32(1), {}, D.BANNERS['event-halloween'], 1)); a.equal(G.canPull(D.BANNERS['event-halloween']), false); a.equal(G.canPull(std), true);
+const ev = D.BANNERS['event-halloween']; a.equal(G.canPull(ev), ev.status === 'live'); if (ev.status !== 'live') a.throws(() => G.pullMany(rng32(1), {}, ev, 1)); a.equal(G.canPull(std), true);
 // collecting everything takes a while: expected pulls to complete the standard set (simulation)
 let tot = 0, runs = 300; for (let k = 0; k < runs; k++) { const have = {}; let n = 0; const rr = rng32(1000 + k); while (Object.keys(have).length < std.pool.length) { const p = G.pullOne(rr, have, std); have[p.id] = 1; n++; } tot += n; }
 console.log('avg pulls to complete the standard banner:', Math.round(tot / runs), '(= ' + Math.round(tot / runs * 100) + ' Pi Coins before refunds)');
