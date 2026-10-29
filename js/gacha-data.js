@@ -33,9 +33,16 @@
     'plain-sun':   { rarity: 'common',    name: 'SUNNY' },
     'dark':        { rarity: 'epic',      name: 'DEEP SPACE' },
     'light':       { rarity: 'legendary', name: 'DREAMY DAY' },
-    'singularity': { rarity: 'mythic',     name: 'SINGULARITY' },
-    'terminal':    { rarity: 'godly',    name: 'PHOSPHOR' },
+    'singularity': { rarity: 'godly',     name: 'SINGULARITY' },
+    'terminal':    { rarity: 'mythic',    name: 'PHOSPHOR' },
     'halloween':   { rarity: 'mythic',    name: 'HAPI HALLOWEEN' },
+    'hw-pumpkin': { rarity: 'common', name: 'PUMPKIN' },
+    'hw-witch': { rarity: 'common', name: 'WITCHING HOUR' },
+    'hw-slime': { rarity: 'common', name: 'TOXIC SLIME' },
+    'hw-blood': { rarity: 'common', name: 'BLOOD MOON' },
+    'hw-fog': { rarity: 'common', name: 'GRAVEYARD FOG' },
+    'hw-backrooms': { rarity: 'legendary', name: 'THE BACKROOMS' },
+    'hw-eldritch': { rarity: 'godly', name: 'ELDRITCH SKY' },
   };
 
   const BANNERS = {
@@ -43,14 +50,14 @@
       id: 'standard', name: 'COSMIC BEGINNINGS', status: 'live',
       blurb: 'Plain colours, deep space, sunny days, a handheld and a black hole.',
       pool: ['plain-ruby', 'plain-ocean', 'plain-mint', 'plain-grape', 'plain-sun', 'dark', 'light', 'singularity', 'terminal',],
-      featured: ['terminal'],
+      featured: ['singularity'],
       rates: { common: 62, epic: 24, legendary: 9, mythic: 4, godly: 1 },     // percent per rarity (sums to 100)
     },
     'event-halloween': {
-      id: 'event-halloween', name: 'HAPI HALLOWEEN', status: 'live',     // "coming-soon" = locked "live" = unlock 
-      blurb: 'A limited spooky event. Plain colours and the HaPi Halloween theme.',
-      pool: ['plain-ruby', 'plain-ocean', 'plain-mint', 'plain-grape', 'plain-sun', 'halloween'], featured: ['halloween'],
-      rates: { common: 99, mythic: 1 },
+      id: 'event-halloween', name: 'PI FRIGHT!', status: 'live',     // "coming-soon" = locked, "live" = open
+      blurb: "Ha'Pi' Halloween!! Creep through the yellow Backrooms, summon the Hapi Halloween night and dare an Eldritch pull. Spooky themes with their own haunted music!",
+      pool: ['hw-pumpkin', 'hw-witch', 'hw-slime', 'hw-blood', 'hw-fog', 'hw-backrooms', 'halloween', 'hw-eldritch'], featured: ['hw-eldritch'],
+      rates: { common: 60, legendary: 25, mythic: 12, godly: 3 },      // placeholder: tune in the balance pass
     },
   };
 

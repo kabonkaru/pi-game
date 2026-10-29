@@ -13,7 +13,7 @@
 
   /* ------------------------------ config -------------------------------- */
   const CONFIG = {
-    VERSION: '1.5.2',
+    VERSION: '1.5.3',
     ABOUT: { developer: '', repo: '' },   // shown in Settings > About Us only when filled in
     COINS_PER_SCORE: 0.01,   // PLACEHOLDER: Pi Coins earned per run = final score x this
     DECIMALS: 1000,          // digits after "3."
@@ -34,9 +34,16 @@
     { id: 'plain-sun',     name: 'SUNNY',          tag: 'COMMON',    rarity: 'common',    swatch: 'sw-plain-sun',     bgm: 'chill', meta: '#241c06', tagline: 'sunny side up' },
     { id: 'dark',          name: 'DEEP SPACE',     tag: 'EPIC',      rarity: 'epic',      swatch: 'sw-dark',          bgm: 'deep-space', meta: '#05041a', tagline: 'how many digits can you remember?' },
     { id: 'light',         name: 'DREAMY DAY',     tag: 'LEGENDARY', rarity: 'legendary', swatch: 'sw-light',         bgm: 'dreamy-day', meta: '#cfe6ff', tagline: 'sunny skies and a few digits of pi' },
-    { id: 'singularity',   name: 'SINGULARITY',    tag: 'MYTHIC',     rarity: 'mythic',     swatch: 'sw-singularity',   bgm: 'singularity', meta: '#000000', tagline: 'stare into the void' },
+    { id: 'singularity',   name: 'SINGULARITY',    tag: 'GODLY', rarity: 'godly',     swatch: 'sw-singularity',   bgm: 'singularity', meta: '#000000', tagline: 'stare into the void' },
     { id: 'halloween',     name: 'HAPI HALLOWEEN', tag: 'MYTHIC',    rarity: 'mythic',    swatch: 'sw-halloween',     bgm: 'haunted',    meta: '#0b0218', tagline: 'HaPi Halloween, woo!' },
-    { id: 'terminal',      name: 'PHOSPHOR',       tag: 'GODLY',    rarity: 'godly',    swatch: 'sw-terminal',      bgm: 'phosphor',   meta: '#9bbc0f', tagline: 'press start to remember pi' },
+    { id: 'terminal',      name: 'PHOSPHOR',       tag: 'MYTHIC', rarity: 'mythic',    swatch: 'sw-terminal',      bgm: 'phosphor',   meta: '#9bbc0f', tagline: 'press start to remember pi' },
+    { id: 'hw-pumpkin', name: 'PUMPKIN', tag: 'COMMON', rarity: 'common', swatch: 'sw-hw-pumpkin', bgm: 'haunted', meta: '#1e0f02', tagline: 'trick or type!' },
+    { id: 'hw-witch', name: 'WITCHING HOUR', tag: 'COMMON', rarity: 'common', swatch: 'sw-hw-witch', bgm: 'haunted', meta: '#150a22', tagline: 'midnight digits brew best' },
+    { id: 'hw-slime', name: 'TOXIC SLIME', tag: 'COMMON', rarity: 'common', swatch: 'sw-hw-slime', bgm: 'haunted', meta: '#0d1a05', tagline: 'slime time, keep typing' },
+    { id: 'hw-blood', name: 'BLOOD MOON', tag: 'COMMON', rarity: 'common', swatch: 'sw-hw-blood', bgm: 'haunted', meta: '#1c060a', tagline: 'the moon is watching' },
+    { id: 'hw-fog', name: 'GRAVEYARD FOG', tag: 'COMMON', rarity: 'common', swatch: 'sw-hw-fog', bgm: 'haunted', meta: '#0c1517', tagline: 'something is out there' },
+    { id: 'hw-backrooms', name: 'THE BACKROOMS', tag: 'LEGENDARY', rarity: 'legendary', swatch: 'sw-hw-backrooms', bgm: 'haunted', meta: '#8a7430', tagline: 'you noclipped out of reality' },
+    { id: 'hw-eldritch', name: 'ELDRITCH SKY', tag: 'GODLY', rarity: 'godly', swatch: 'sw-hw-eldritch', bgm: 'haunted', meta: '#05020a', tagline: 'it knows your digits' },
   ];
   const themeById = (id) => THEMES.find((t) => t.id === id);
   const isOwned = (t) => !!t.free || wallet.owns(t.id);

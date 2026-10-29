@@ -88,7 +88,7 @@ Each mode has its own **top 10** leaderboard (name up to 12 characters, score, d
 | Banner | Contents | Status |
 | --- | --- | --- |
 | **Cosmic Beginnings** | 5 Common plain colours, Epic Deep Space, Legendary Dreamy Day, Mythic Phosphor, Godly Singularity | live |
-| **Hapi Halloween** | Mythic Hapi Halloween | locked, coming soon |
+| **Pi Fright!** (Halloween event) | 5 Common Halloween colours, Legendary The Backrooms, Mythic Hapi Halloween, Godly Eldritch Sky | live |
 
 Rates: Common 62% (12.4% each), Epic 24%, Legendary 9%, Mythic 4%, Godly 1%. See [`docs/GACHA_BLUEPRINT.md`](docs/GACHA_BLUEPRINT.md) for the full design and what is still open.
 

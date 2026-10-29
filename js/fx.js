@@ -624,6 +624,61 @@
     },
   };
 
+  /* ---------------------------------------------- THE BACKROOMS (Pi Fright!) ---- */
+  SCENES['hw-backrooms'] = {
+    init() { return {}; },
+    draw(sc, t, px, py) {
+      const g = sc.ctx, w = sc.w, h = sc.h, vx = w / 2 - px * 3, vy = h * 0.46 - py * 2, hw = w * 0.42, ch = h * 0.34, fh = h * 0.3;
+      const R = (c, x, y, ww, hh) => rect(g, c, x, y, Math.max(1, Math.round(ww)), Math.max(1, Math.round(hh)));
+      R('#bfa94f', 0, 0, w, h);                                                       // wallpaper
+      for (let y = 0; y < h; y++) {                                                   // ceiling tiles + carpet rushing toward you
+        const up = y < vy, s = Math.abs(y - vy) / (up ? ch : fh); if (s < 0.01) continue;
+        const z = 1 / s, half = hw * s, x0 = Math.max(0, vx - half), x1 = Math.min(w, vx + half), st = Math.floor((z + t * 0.8) * 1.5) % 2 === 0;
+        R(up ? (st ? '#e4daa0' : '#d8cd8e') : (st ? '#8a7430' : '#7c6828'), x0, y, x1 - x0, 1);
+      }
+      const s0 = 1 / 9; R('#14110a', vx - hw * s0, vy - ch * s0, hw * s0 * 2, (ch + fh) * s0);   // the dark end of the hall
+      for (let k = 0; k < 8; k++) {                                                   // wall seams + fluorescent panels
+        const z = (((k - t * 0.8) % 8) + 8) % 8 + 0.8, s = 1 / z, ty = vy - ch * s, by = vy + fh * s;
+        g.globalAlpha = Math.min(1, 1.6 / z + 0.15);
+        R('#8f7b34', vx - hw * s, ty, 1, by - ty); R('#8f7b34', vx + hw * s, ty, 1, by - ty);
+        if (k % 3 !== 0 || Math.sin(t * 37 + k) > -0.85) R('#fffbd6', vx - hw * s * 0.35, ty + 1, hw * s * 0.7, 2 * s + 1);
+      }
+      g.globalAlpha = 1;
+      if (Math.sin(t * 0.23) > 0.93) { R('#000', vx - 1, vy + fh * s0 - 9, 3, 9); R('#000', vx - 1, vy + fh * s0 - 11, 3, 2); }   // rarely: someone at the far end
+      if (Math.sin(t * 53) > 0.97) { g.globalAlpha = 0.14; R('#000', 0, 0, w, h); g.globalAlpha = 1; }                          // lights buzz
+    },
+  };
+
+  /* ---------------------------------------------- ELDRITCH SKY (Pi Fright!) ---- */
+  SCENES['hw-eldritch'] = {
+    init(sc) {
+      const r = rng(66), w = sc.w, h = sc.h;
+      return {
+        stars: Array.from({ length: 90 }, () => ({ x: r() * w, y: r() * h * 0.8, ph: r() * 6, c: r() < 0.3 ? '#d9a6ff' : '#ffffff' })),
+        tent: Array.from({ length: 9 }, (_, i) => ({ x: (i + 0.5) * w / 9 + (r() - 0.5) * 8, len: h * (0.16 + r() * 0.2), ph: r() * 6, a: 4 + r() * 5 })),
+      };
+    },
+    draw(sc, t, px, py) {
+      const g = sc.ctx, w = sc.w, h = sc.h, S = sc.state, cx = w / 2, cy = h * 0.2, R = Math.min(w, h * 0.8) * 0.18, pulse = 0.5 + 0.5 * Math.sin(t * 0.8);
+      for (const s of S.stars) { g.globalAlpha = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * 1.3 + s.ph)); rect(g, s.c, s.x, s.y, 1, 1); }
+      g.globalAlpha = 0.16 + 0.1 * pulse; disc(g, '#7a1fa0', cx, cy, R * 2.2, R * 1.6);
+      g.globalAlpha = 0.3; disc(g, '#3a0a55', cx, cy, R * 1.55, R * 1.1); g.globalAlpha = 1;
+      disc(g, '#efe6ff', cx, cy, R * 1.35, R * 0.75);                                 // the eye follows your pointer
+      const ix = cx + px * R * 0.55, iy = cy + py * R * 0.3;
+      disc(g, '#9a1fd0', ix, iy, R * 0.62, R * 0.62); disc(g, '#ff4d9a', ix, iy, R * 0.42, R * 0.42);
+      disc(g, '#000', ix, iy, R * (0.12 + 0.1 * pulse), R * 0.58); rect(g, '#ffffff', ix - R * 0.2, iy - R * 0.3, 2, 2);
+      const blink = Math.max(0, Math.sin(t * 0.5) * 8 - 7);                           // rare slow blink
+      if (blink > 0) rect(g, '#0a0414', cx - R * 1.4, cy - R * 0.8, Math.round(R * 2.8), Math.round(R * 1.6 * Math.min(1, blink)));
+      for (const T of S.tent) {                                                       // tentacles creeping up from below
+        for (let k = 0; k < T.len; k += 2) {
+          const x = T.x + Math.sin(t * 1.2 + T.ph + k * 0.09) * T.a * (k / T.len + 0.2);
+          rect(g, k < T.len * 0.85 ? '#1b0a2a' : '#2a0f40', x, h - k, k > T.len * 0.6 ? 2 : 3, 2);
+          if (k % 12 === 0) rect(g, '#7a1fa0', x + 1, h - k, 1, 1);
+        }
+      }
+    },
+  };
+
   class SceneBG {
     constructor(canvas) { this.cv = canvas; this.ctx = canvas.getContext('2d'); this.id = null; this.state = null; this.last = -1e9; this.resize(); }
     resize() {

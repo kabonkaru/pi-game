@@ -741,7 +741,7 @@ dialog.modal[open] { display: flex; flex-direction: column; }
 
 /* ================= v1.5: themes for the Shop (defaults, plain colours, Singularity) ================= */
 /* plain themes: every token comes from one hue (--h) + saturation (--s), so a new colour is two lines */
-:root[data-theme^="plain-"], :root[data-theme="default-dark"] {
+:root[data-theme^="plain-"], :root[data-theme^="hw-"], :root[data-theme="default-dark"] {
   --h: 225; --s: 24%;
   color-scheme: dark;
   --bg-a: hsl(var(--h) var(--s) 6%); --bg-b: hsl(var(--h) var(--s) 11%); --bg-c: hsl(calc(var(--h) + 16) var(--s) 18%);
@@ -971,3 +971,21 @@ body[data-screen="game"] #app { height: auto; min-height: 100dvh; }
 .tip { position: fixed; z-index: 500; pointer-events: none; white-space: nowrap; padding: 8px 10px; background: var(--surface-solid); color: var(--text);
   border: 4px solid var(--line-strong); box-shadow: 0 4px 0 var(--shadow-solid); font-family: var(--font-pixel); font-size: calc(.55rem * var(--pf, 1)); }
 .sum-window { border-color: var(--line); }
+
+/* ===== v1.5.3: Pi Fright! (Halloween banner) themes ===== */
+:root[data-theme="hw-pumpkin"] { --h: 26; --s: 80%; }
+:root[data-theme="hw-witch"] { --h: 280; --s: 55%; }
+:root[data-theme="hw-slime"] { --h: 100; --s: 70%; }
+:root[data-theme="hw-blood"] { --h: 355; --s: 70%; }
+:root[data-theme="hw-fog"] { --h: 185; --s: 25%; }
+:root[data-theme="hw-backrooms"] { --h: 52; --s: 55%; }
+:root[data-theme="hw-eldritch"] { --h: 290; --s: 55%; }
+.sw-hw-pumpkin, .sw-hw-witch, .sw-hw-slime, .sw-hw-blood, .sw-hw-fog { background: linear-gradient(135deg, hsl(var(--h) 55% 10%), hsl(var(--h) 55% 24%) 55%, hsl(var(--h) 80% 58%)); }
+.sw-hw-pumpkin { --h: 26; }
+.sw-hw-witch { --h: 280; }
+.sw-hw-slime { --h: 100; }
+.sw-hw-blood { --h: 355; }
+.sw-hw-fog { --h: 185; }
+.sw-hw-backrooms { background: linear-gradient(180deg, #e4daa0 0 30%, #bfa94f 30% 62%, #8a7430 62%); }
+.sw-hw-eldritch { background: radial-gradient(circle at 50% 48%, #000 0 9%, #ff4d9a 10% 14%, #efe6ff 15% 30%, #7a1fa0 31% 45%, transparent 47%), linear-gradient(#05020a, #240a3a); }
+:root[data-theme="hw-backrooms"] :is(.tagline, .pi-hint, .hint) { color: #fffbd6; text-shadow: 2px 2px 0 #1b1608; opacity: 1; }

@@ -2,6 +2,13 @@
 
 All notable changes to the Pi Game project will be documented in this file.
 
+## [1.5.3]
+- Opened the Halloween banner, renamed "Pi Fright!", with a new description.
+- Added 5 Common Halloween themes (Pumpkin, Witching Hour, Toxic Slime, Blood Moon, Graveyard Fog) using the Haunted Waltz music.
+- Added The Backrooms (Legendary) and Eldritch Sky (Godly), both with animated pixel scenes.
+- Rank change: Singularity is now Godly and Phosphor is Mythic; Singularity is the featured item in Cosmic Beginnings.
+- Added LICENSE.md (MIT); updated README, GACHA_BLUEPRINT and the gacha test.
+
 ## [1.5.2]
 - Replaced the logo-tap dev shortcut with console cheats: coins(n), unlockall(true|false), totalreset().
 - Added a "Made with AI" credit (Claude, Gemini, GitHub Copilot) to About Us.
