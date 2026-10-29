@@ -200,7 +200,7 @@ console.log(k.totalScore); // 150 + 1 * 500 = 650
 
 ## Changelog
 
-Full history lives in [`CHANGELOG.md`](CHANGELOG.md).
+Full history lives in [`docs/CHANGELOG.md`](docs/CHANGELOG.md).
 
 - **v1.5**: the **Gacha & Shop**: rainbow shop icon, Cosmic Beginnings banner (x1/x5/x10 pulls, duplicate refunds, fake-out), drop rates and collection windows, a chest-opening sequence with shop music. New themes: plain Midnight/Daylight defaults, five Common colours and the Godly **Singularity** (a black hole that reacts to your typing). New Chill, Shop and Event Horizon tracks. Direct theme buying is replaced by pulls; existing players keep everything. Hapi Halloween moves to a locked event banner.
 - **v1.4.1**: hotfix. Settings is now a short menu with a **Themes** window, an **Audio & BGM** window and an **About Us** tab (the dropdowns are gone). Fixed scrollbars flashing in during screen shake. Settings windows no longer reach the screen edges and use a soft scroll fade instead of a scrollbar. Added inert scaffolding and a [blueprint](docs/GACHA_BLUEPRINT.md) for the Gacha & Shop update.
