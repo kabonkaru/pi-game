@@ -90,7 +90,7 @@ Each mode has its own **top 10** leaderboard (name up to 12 characters, score, d
 | **Cosmic Beginnings** | 5 Common plain colours, Epic Deep Space, Legendary Dreamy Day, Mythic Phosphor, Godly Singularity | live |
 | **Pi Fright!** (Halloween event) | 5 Common Halloween colours, Legendary The Backrooms, Mythic Hapi Halloween, Godly Eldritch Sky | live |
 
-Rates: Common 62% (12.4% each), Epic 24%, Legendary 9%, Mythic 4%, Godly 1%. See [`docs/GACHA_BLUEPRINT.md`](docs/GACHA_BLUEPRINT.md) for the full design and what is still open.
+Rates: Common 62% (12.4% each), Epic 24%, Legendary 9%, Mythic 4%, Godly 1%. See [`docs/GACHA_BLUEPRINT.md`](GACHA_BLUEPRINT.md) for the full design and what is still open.
 
 ### Themes
 
@@ -184,7 +184,7 @@ console.log(k.totalScore); // 150 + 1 * 500 = 650
 ## Changelog
 
 - **v1.5**: the **Gacha & Shop**: rainbow shop icon, Cosmic Beginnings banner (x1/x5/x10 pulls, duplicate refunds, fake-out), drop rates and collection windows, a chest-opening sequence with shop music. New themes: plain Midnight/Daylight defaults, five Common colours and the Godly **Singularity** (a black hole that reacts to your typing). New Chill, Shop and Event Horizon tracks. Direct theme buying is replaced by pulls; existing players keep everything. Hapi Halloween moves to a locked event banner.
-- **v1.4.1**: hotfix. Settings is now a short menu with a **Themes** window, an **Audio & BGM** window and an **About Us** tab (the dropdowns are gone). Fixed scrollbars flashing in during screen shake. Settings windows no longer reach the screen edges and use a soft scroll fade instead of a scrollbar. Added inert scaffolding and a [blueprint](docs/GACHA_BLUEPRINT.md) for the Gacha & Shop update.
+- **v1.4.1**: hotfix. Settings is now a short menu with a **Themes** window, an **Audio & BGM** window and an **About Us** tab (the dropdowns are gone). Fixed scrollbars flashing in during screen shake. Settings windows no longer reach the screen edges and use a soft scroll fade instead of a scrollbar. Added inert scaffolding and a [blueprint](GACHA_BLUEPRINT.md) for the Gacha & Shop update.
 - **v1.4**: new clock rules (Zen resets to 10.0s on every correct digit; Timer is a 3:00 bank with speed-based time bonuses, capped at 3:00), Game Over tips and facts, a locked Chaos mode teaser, The Pi opens from the π logo, header theme toggle removed, Settings rebuilt with theme and track dropdowns and volume sliders.
 - **v1.3**: themes rebuilt with their own pixel-art scenes, fonts and UI (Dreamy Day, a handheld-style Phosphor), new locked **Hapi Halloween** theme (9,420 coins) with the Haunted Waltz music.
 - **v1.2**: Pi Coins and wallet, locked **Phosphor** theme (3,140 coins) with confirmation, a unique BGM per theme, a music track selector, new Dreamy Day music.
@@ -193,7 +193,7 @@ console.log(k.totalScore); // 150 + 1 * 500 = 650
 
 ## Ideas for next
 
-- The Hapi Halloween event banner, a pity counter, more themes for the pool (see [`docs/GACHA_BLUEPRINT.md`](docs/GACHA_BLUEPRINT.md))
+- The Hapi Halloween event banner, a pity counter, more themes for the pool (see [`docs/GACHA_BLUEPRINT.md`](GACHA_BLUEPRINT.md))
 - Chaos mode (glitches, inverted controls, fading digits, extra lives)
 - Install as a phone app (add a web app manifest + service worker for PWA)
 - More themes to buy with Pi Coins, seasonal events, daily challenge, sharing your score as an image
