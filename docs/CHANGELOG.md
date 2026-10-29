@@ -2,6 +2,11 @@
 
 All notable changes to the Pi Game project will be documented in this file.
 
+## [1.5.4]
+- Pi Fright!: added Haunted Manor (Epic) and Cursed Carnival (Mythic), both with animated scenes; the banner now has 10 themes.
+- Cosmic Beginnings: added Neon Grid (Epic), Deep Sea (Legendary) and Aurora (Mythic), all with animated scenes.
+- Updated banner descriptions, rates, README themes table, GACHA_BLUEPRINT and the gacha test.
+
 ## [1.5.3]
 - Opened the Halloween banner, renamed "Pi Fright!", with a new description.
 - Added 5 Common Halloween themes (Pumpkin, Witching Hour, Toxic Slime, Blood Moon, Graveyard Fog) using the Haunted Waltz music.

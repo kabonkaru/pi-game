@@ -16,21 +16,21 @@
 
 ## 2. Banners and items
 
-**Cosmic Beginnings** (live): 5 Common plain colours (Ruby, Ocean, Mint, Grape, Sunny) with the Chill track, **Epic** Deep Space, **Legendary** Dreamy Day, **Mythic** Phosphor, **Godly** Singularity (a black hole that reacts to your typing).
+**Cosmic Beginnings** (live): 5 Common plain colours (Ruby, Ocean, Mint, Grape, Sunny) with the Chill track, **Epic** Deep Space and Neon Grid, **Legendary** Dreamy Day and Deep Sea, **Mythic** Phosphor and Aurora, **Godly** Singularity (a black hole that reacts to your typing).
 
-**Pi Fright!** (Halloween event, live): 5 Common Halloween colours (Pumpkin, Witching Hour, Toxic Slime, Blood Moon, Graveyard Fog), Legendary The Backrooms, Mythic Hapi Halloween, Godly Eldritch Sky, all with the Haunted Waltz track. To close it, set its `status` to `'coming-soon'` in `js/gacha-data.js`.
+**Pi Fright!** (Halloween event, live): 5 Common Halloween colours (Pumpkin, Witching Hour, Toxic Slime, Blood Moon, Graveyard Fog), Epic Haunted Manor, Legendary The Backrooms, Mythic Hapi Halloween and Cursed Carnival, Godly Eldritch Sky, all with the Haunted Waltz track. To close it, set its `status` to `'coming-soon'` in `js/gacha-data.js`.
 
 ### Drop rates (`BANNERS.*.rates`)
 
 | Rarity | Rate | Items |
 | --- | --- | --- |
 | Common | 62% (12.4% each) | 5 |
-| Epic | 24% | 1 |
-| Legendary | 9% | 1 |
-| Mythic | 4% | 1 |
+| Epic | 24% | 2 |
+| Legendary | 9% | 2 |
+| Mythic | 4% | 2 |
 | Godly | 1% | 1 |
 
-The Shop's **Drop rates** window shows these live. Completing the 9-item banner takes about **100 pulls** on average (about 10,000 Pi Coins before duplicate refunds). At about 65 Pi Coins per typical run, tune `COINS_PER_SCORE` or the rates if that feels too slow.
+The Shop's **Drop rates** window shows these live. Completing the 12-item banner takes about **127 pulls** on average (about 12,700 Pi Coins before duplicate refunds). At about 65 Pi Coins per typical run, tune `COINS_PER_SCORE` or the rates if that feels too slow.
 
 ## 3. Decisions made (change them in one place)
 

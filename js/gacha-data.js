@@ -43,21 +43,26 @@
     'hw-fog': { rarity: 'common', name: 'GRAVEYARD FOG' },
     'hw-backrooms': { rarity: 'legendary', name: 'THE BACKROOMS' },
     'hw-eldritch': { rarity: 'godly', name: 'ELDRITCH SKY' },
+    'hw-manor': { rarity: 'epic', name: 'HAUNTED MANOR' },
+    'hw-carnival': { rarity: 'mythic', name: 'CURSED CARNIVAL' },
+    'ex-neon': { rarity: 'epic', name: 'NEON GRID' },
+    'ex-sea': { rarity: 'legendary', name: 'DEEP SEA' },
+    'ex-aurora': { rarity: 'mythic', name: 'AURORA' },
   };
 
   const BANNERS = {
     standard: {
       id: 'standard', name: 'COSMIC BEGINNINGS', status: 'live',
-      blurb: 'Plain colours, deep space, sunny days, a handheld and a black hole.',
-      pool: ['plain-ruby', 'plain-ocean', 'plain-mint', 'plain-grape', 'plain-sun', 'dark', 'light', 'singularity', 'terminal',],
+      blurb: 'Plain colours, neon grids, deep seas, auroras, deep space, sunny days, a handheld and a black hole.',
+      pool: ['plain-ruby', 'plain-ocean', 'plain-mint', 'plain-grape', 'plain-sun', 'dark', 'light', 'singularity', 'terminal', 'ex-neon', 'ex-sea', 'ex-aurora'],
       featured: ['singularity'],
       rates: { common: 62, epic: 24, legendary: 9, mythic: 4, godly: 1 },     // percent per rarity (sums to 100)
     },
     'event-halloween': {
       id: 'event-halloween', name: 'PI FRIGHT!', status: 'live',     // "coming-soon" = locked, "live" = open
-      blurb: "Ha'Pi' Halloween!! Creep through the yellow Backrooms, summon the Hapi Halloween night and dare an Eldritch pull. Spooky themes with their own haunted music!",
-      pool: ['hw-pumpkin', 'hw-witch', 'hw-slime', 'hw-blood', 'hw-fog', 'hw-backrooms', 'halloween', 'hw-eldritch'], featured: ['hw-eldritch'],
-      rates: { common: 60, legendary: 25, mythic: 12, godly: 3 },      // placeholder: tune in the balance pass
+      blurb: "Ha'Pi' Halloween!! Haunt the Manor, ride the Cursed Carnival, creep through the yellow Backrooms and dare an Eldritch pull. Spooky themes with their own haunted music!",
+      pool: ['hw-pumpkin', 'hw-witch', 'hw-slime', 'hw-blood', 'hw-fog', 'hw-manor', 'hw-backrooms', 'halloween', 'hw-carnival', 'hw-eldritch'], featured: ['hw-eldritch'],
+      rates: { common: 55, epic: 22, legendary: 12, mythic: 8, godly: 3 },      // placeholder: tune in the balance pass
     },
   };
 

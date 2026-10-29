@@ -679,6 +679,142 @@
     },
   };
 
+  /* ------------------------------------------------ HAUNTED MANOR (Pi Fright!) ---- */
+  SCENES['hw-manor'] = {
+    init(sc) { const r = rng(9); return { dust: Array.from({ length: 30 }, () => ({ x: r() * sc.w, y: r() * sc.h, v: 1 + r() * 2, ph: r() * 6 })) }; },
+    draw(sc, t, px, py) {
+      const g = sc.ctx, w = sc.w, h = sc.h, S = sc.state, fy = Math.round(h * 0.8), ox = px * 2;
+      const R = (c, x, y, ww, hh) => rect(g, c, x, y, Math.max(1, Math.round(ww)), Math.max(1, Math.round(hh)));
+      R('#1a0f12', 0, 0, w, h);
+      for (let x = 0; x < w; x += 8) R('#22141a', x, 0, 3, fy);                                      // wallpaper stripes
+      R('#0e0709', 0, fy, w, h - fy);
+      for (let x = 0; x < w; x += 14) R('#1a0d11', x, fy, 1, h - fy);                                // floorboards
+      const ww = Math.max(26, Math.round(w * 0.16)), wx = Math.round(w * 0.62 - ox), wy = Math.round(h * 0.12), wh = Math.round(h * 0.5);
+      const flash = Math.sin(t * 0.9) > 0.985 || Math.sin(t * 7.3) > 0.995, sky = flash ? '#cfe0ff' : '#0b1030';
+      R('#05060f', wx - 2, wy, ww + 4, wh + 2); disc(g, '#05060f', wx + ww / 2, wy, ww / 2 + 2);   // arched window, lightning
+      R(sky, wx, wy + 2, ww, wh - 2); disc(g, sky, wx + ww / 2, wy + 2, ww / 2);
+      disc(g, '#f5ecc8', wx + ww * 0.65, wy + wh * 0.22, 4);
+      R('#05060f', wx + ww / 2 - 1, wy, 2, wh); R('#05060f', wx, wy + wh * 0.45, ww, 2);
+      g.globalAlpha = flash ? 0.25 : 0.1;
+      for (let y = fy; y < h; y++) { const k = (y - fy) / (h - fy); R('#bcd0ff', wx - k * 10, y, ww + k * 20, 1); }   // moonlight on the floor
+      g.globalAlpha = 1;
+      [0.14, 0.4].forEach((fx) => {                                                                  // portraits whose eyes follow you
+        const x = Math.round(w * fx - ox), y = Math.round(h * 0.2), pw = Math.max(18, Math.round(w * 0.1));
+        R('#3a2410', x - 2, y - 2, pw + 4, 30); R('#0f080b', x, y, pw, 26);
+        disc(g, '#241418', x + pw / 2, y + 11, 5, 6); R('#241418', x + pw / 2 - 6, y + 17, 12, 9);
+        for (const e of [-3, 3]) { R('#efe6ff', x + pw / 2 + e - 1, y + 9, 3, 2); R('#ff3b3b', x + pw / 2 + e + Math.round(px * 1.2), y + 9 + Math.round(py * 0.6), 1, 1); }
+      });
+      for (let i = 0; i < 3; i++) {                                                                  // candles
+        const cx = Math.round(w * 0.86 + (i - 1) * 9 - ox * 1.5), by = fy - 12 - (i === 1 ? 4 : 0), f = 2 + Math.round(Math.sin(t * 11 + i * 2));
+        R('#d8cfa8', cx, by, 3, 12); g.globalAlpha = 0.2; disc(g, '#ff9d2b', cx + 1, by - 3, 9); g.globalAlpha = 1;
+        R('#ffb347', cx, by - f - 2, 3, f + 2); R('#fff0a0', cx + 1, by - f - 1, 1, 2);
+      }
+      ghost(g, wrap(t * 5 + 20, w + 40) - 20, h * 0.46 + Math.sin(t * 1.2) * 5, t, 0.45);
+      g.globalAlpha = 0.45; for (const d of S.dust) rect(g, '#cdb88a', wrap(d.x + Math.sin(t * 0.6 + d.ph) * 4, w), wrap(d.y - t * d.v, h), 1, 1);
+      g.globalAlpha = 1;
+    },
+  };
+
+  /* ---------------------------------------------- CURSED CARNIVAL (Pi Fright!) ---- */
+  SCENES['hw-carnival'] = {
+    init(sc) { const r = rng(21); return { stars: Array.from({ length: 50 }, () => ({ x: r() * sc.w, y: r() * sc.h * 0.6, ph: r() * 6 })) }; },
+    draw(sc, t, px, py) {
+      const g = sc.ctx, w = sc.w, h = sc.h, S = sc.state, ox = px * 3, gy = Math.round(h * 0.84), cols = ['#ff4d9a', '#ffd23f', '#4df5d2', '#b366ff'];
+      for (const s of S.stars) { g.globalAlpha = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * 1.5 + s.ph)); rect(g, '#ffe9f5', s.x, s.y, 1, 1); }
+      g.globalAlpha = 1; disc(g, '#ffd6f2', w * 0.2 - ox * 0.4, h * 0.16, Math.max(8, w * 0.05));
+      ridge(g, '#2a0f3a', w, h, h * 0.74, 5, 0.05, 0.13, ox * 1.2, 2);
+      const fx = Math.round(w * 0.7 - ox * 2), fc = Math.round(h * 0.5), FR = Math.round(Math.min(w, h) * 0.22);   // ferris wheel
+      pline(g, '#3a1a52', fx, fc, fx - FR * 0.55, gy); pline(g, '#3a1a52', fx, fc, fx + FR * 0.55, gy);
+      for (let k = 0; k < 72; k++) { const a = k / 72 * 6.283; rect(g, '#4a2a66', fx + Math.cos(a) * FR, fc + Math.sin(a) * FR, 1, 1); }
+      for (let i = 0; i < 12; i++) {
+        const a = i * Math.PI / 6 + t * 0.25, x2 = fx + Math.cos(a) * FR, y2 = fc + Math.sin(a) * FR;
+        pline(g, '#4a2a66', fx, fc, x2, y2); g.globalAlpha = 0.25; disc(g, cols[i % 4], x2, y2 + 2, 4); g.globalAlpha = 1; rect(g, cols[i % 4], x2 - 1, y2, 3, 3);
+      }
+      const tx = Math.round(w * 0.2 - ox * 3), tw = Math.round(w * 0.3);                                         // striped tent
+      for (let x = 0; x < tw; x += 4) rect(g, x % 8 ? '#d9c9f5' : '#b3245a', tx + x, gy - 18, 4, 18);
+      for (let k = 0; k < 14; k++) rect(g, '#b3245a', tx + k * tw / 28, gy - 18 - k, Math.round(tw - k * tw / 14), 1);
+      rect(g, '#ffd23f', tx + tw / 2, gy - 36, 1, 6);
+      for (let x = 0; x < w; x += 6) { const y = Math.round(h * 0.62 + Math.sin(x * 0.08) * 4); g.globalAlpha = 0.6 + 0.4 * Math.sin(t * 6 + x); rect(g, cols[((x / 6) | 0) % 4], x, y, 2, 2); }   // string lights
+      g.globalAlpha = 1; rect(g, '#120620', 0, gy, w, h - gy);
+      const by = h * 0.55 - ((t * 5) % (h * 0.5)), bx = w * 0.46 + Math.sin(t * 0.8) * 4;                       // a red balloon drifting up
+      pline(g, '#d9c9f5', bx, by + 5, bx + 1, by + 16); disc(g, '#e0264a', bx, by, 3, 4);
+      g.globalAlpha = 0.12; for (let x = 0; x < w; x += 2) rect(g, '#d9b3ff', x, gy - 5 + Math.round(Math.sin((x + t * 8) * 0.1) * 2), 2, 5); g.globalAlpha = 1;
+    },
+  };
+
+  /* ------------------------------------------------------------ NEON GRID ---- */
+  SCENES['ex-neon'] = {
+    init(sc) { const r = rng(4); return { stars: Array.from({ length: 40 }, () => ({ x: r() * sc.w, y: r() * sc.h * 0.45, ph: r() * 6 })) }; },
+    draw(sc, t, px, py) {
+      const g = sc.ctx, w = sc.w, h = sc.h, S = sc.state, hy = Math.round(h * 0.58 - py * 2), vx = w / 2 - px * 4;
+      for (let y = 0; y < hy; y += 2) rect(g, mix('#12002e', '#ff3d9a', Math.pow(y / hy, 2.2)), 0, y, w, 2);
+      for (const s of S.stars) { g.globalAlpha = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * 2 + s.ph)); rect(g, '#ffffff', s.x, s.y, 1, 1); }
+      g.globalAlpha = 1;
+      const R = Math.round(Math.min(w, h) * 0.22), sy = hy - Math.round(R * 0.2);
+      for (let dy = -R; dy <= R; dy++) {                                                           // striped sun
+        if (dy > 0 && (dy % 7) < dy / 4) continue;
+        const k = Math.round(R * Math.sqrt(1 - (dy * dy) / (R * R)));
+        rect(g, mix('#ffe45e', '#ff2d95', (dy + R) / (2 * R)), vx - k, sy + dy, 2 * k + 1, 1);
+      }
+      ridge(g, '#1a0640', w, h, hy - 6, 6, 0.07, 0.19, px * 6, 1); rect(g, '#0a0220', 0, hy, w, h - hy);
+      g.globalAlpha = 0.8;                                                                          // the grid rushes toward you
+      for (let i = -9; i <= 9; i++) pline(g, '#ff3d9a', vx, hy, vx + i * w * 0.2, h);
+      for (let k = 0; k < 12; k++) { const z = (((k - t * 0.9) % 12) + 12) % 12; rect(g, '#4df5d2', 0, hy + Math.round((h - hy) * Math.pow(z / 12, 2.2)), w, 1); }
+      g.globalAlpha = 1;
+    },
+  };
+
+  /* ------------------------------------------------------------- DEEP SEA ---- */
+  SCENES['ex-sea'] = {
+    init(sc) {
+      const r = rng(12), w = sc.w, h = sc.h;
+      return {
+        bub: Array.from({ length: 30 }, () => ({ x: r() * w, y: r() * h, v: 4 + r() * 8, ph: r() * 6 })),
+        fish: Array.from({ length: 7 }, (_, i) => ({ x: r() * w, y: h * (0.2 + r() * 0.5), v: (6 + r() * 10) * (i % 2 ? 1 : -1), c: ['#ffd27a', '#ff8fa3', '#8be9ff'][i % 3] })),
+        jel: Array.from({ length: 3 }, () => ({ x: r() * w, y: h * (0.2 + r() * 0.4), ph: r() * 6 })),
+        weed: Array.from({ length: Math.ceil(w / 9) }, () => ({ x: r() * w, l: 6 + r() * 12, ph: r() * 6 })),
+      };
+    },
+    draw(sc, t, px, py) {
+      const g = sc.ctx, w = sc.w, h = sc.h, S = sc.state, ox = px * 3;
+      for (let y = 0; y < h; y += 2) rect(g, mix('#0a6fa8', '#020b1c', Math.pow(y / h, 0.8)), 0, y, w, 2);
+      g.globalAlpha = 0.07;                                                                         // light rays
+      for (let i = 0; i < 5; i++) { const x0 = w * (0.1 + i * 0.22) + Math.sin(t * 0.3 + i) * 6 - ox; for (let y = 0; y < h * 0.8; y++) rect(g, '#bfeaff', x0 + y * 0.35, y, 6 + (i % 3) * 2, 1); }
+      g.globalAlpha = 0.6; for (const b of S.bub) rect(g, '#d7f3ff', b.x + Math.sin(t + b.ph) * 3 - ox * 0.5, wrap(b.y - t * b.v, h + 10) - 5, 1, 1);
+      g.globalAlpha = 1;
+      for (const f of S.fish) {
+        const d = f.v > 0 ? 1 : -1, x = wrap(f.x + t * f.v, w + 30) - 15, y = f.y + Math.sin(t * 2 + f.x) * 2;
+        disc(g, f.c, x, y, 3, 2); rect(g, f.c, x - d * 4, y - 1, 2, 3); rect(g, '#021018', x + d * 2, y - 1, 1, 1);
+      }
+      for (const j of S.jel) {                                                                      // glowing jellyfish
+        const x = j.x - ox, y = j.y + Math.sin(t * 0.7 + j.ph) * 8, p = 0.5 + 0.5 * Math.sin(t * 2 + j.ph);
+        g.globalAlpha = 0.25; disc(g, '#ff7be5', x, y, 9, 7); g.globalAlpha = 0.9; disc(g, '#ff9be6', x, y, 5 + p, 3 + p);
+        for (let k = -2; k <= 2; k++) for (let n = 0; n < 8; n++) rect(g, '#ff9be6', x + k * 2 + Math.sin(t * 2 + n * 0.6 + k) * 1.5, y + 4 + n, 1, 1);
+        g.globalAlpha = 1;
+      }
+      ridge(g, '#06202e', w, h, h * 0.9, 4, 0.06, 0.15, ox * 3, 2);
+      for (const e of S.weed) for (let k = 0; k < e.l; k++) rect(g, '#0f6b4a', e.x + Math.sin(t * 1.5 + e.ph + k * 0.3) * k * 0.25 - ox * 3, h * 0.93 - k, 2, 1);
+    },
+  };
+
+  /* --------------------------------------------------------------- AURORA ---- */
+  SCENES['ex-aurora'] = {
+    init(sc) {
+      const r = rng(15);
+      return { stars: Array.from({ length: 80 }, () => ({ x: r() * sc.w, y: r() * sc.h * 0.7, ph: r() * 6 })), pal: Array.from({ length: 16 }, (_, i) => mix('#38ffb0', '#a24bff', i / 15)) };
+    },
+    draw(sc, t, px, py) {
+      const g = sc.ctx, w = sc.w, h = sc.h, S = sc.state, ox = px * 3;
+      for (const s of S.stars) { g.globalAlpha = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * 1.4 + s.ph)); rect(g, '#e8f6ff', s.x - ox * 0.3, s.y, 1, 1); }
+      for (let x = 0; x < w; x++) {                                                                 // curtains of light
+        const base = h * 0.26 + Math.sin(x * 0.05 + t * 0.4) * 8 + Math.sin(x * 0.02 - t * 0.2) * 10, L = h * 0.32 * (0.6 + 0.4 * Math.sin(x * 0.13 + t * 0.7));
+        for (let y = 0; y < L; y += 2) { g.globalAlpha = (1 - y / L) * 0.55; rect(g, S.pal[Math.min(15, ((y / L) * 16) | 0)], x, base + y, 1, 2); }
+      }
+      g.globalAlpha = 1;
+      ridge(g, '#0d1b2e', w, h, h * 0.78, 6, 0.04, 0.11, ox * 1.5, 1); ridge(g, '#08111f', w, h, h * 0.88, 5, 0.06, 0.15, ox * 3, 3);
+    },
+  };
+
   class SceneBG {
     constructor(canvas) { this.cv = canvas; this.ctx = canvas.getContext('2d'); this.id = null; this.state = null; this.last = -1e9; this.resize(); }
     resize() {

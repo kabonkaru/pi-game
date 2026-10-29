@@ -13,7 +13,7 @@
 
   /* ------------------------------ config -------------------------------- */
   const CONFIG = {
-    VERSION: '1.5.3',
+    VERSION: '1.5.4',
     ABOUT: { developer: '', repo: '' },   // shown in Settings > About Us only when filled in
     COINS_PER_SCORE: 0.01,   // PLACEHOLDER: Pi Coins earned per run = final score x this
     DECIMALS: 1000,          // digits after "3."
@@ -44,6 +44,11 @@
     { id: 'hw-fog', name: 'GRAVEYARD FOG', tag: 'COMMON', rarity: 'common', swatch: 'sw-hw-fog', bgm: 'haunted', meta: '#0c1517', tagline: 'something is out there' },
     { id: 'hw-backrooms', name: 'THE BACKROOMS', tag: 'LEGENDARY', rarity: 'legendary', swatch: 'sw-hw-backrooms', bgm: 'haunted', meta: '#8a7430', tagline: 'you noclipped out of reality' },
     { id: 'hw-eldritch', name: 'ELDRITCH SKY', tag: 'GODLY', rarity: 'godly', swatch: 'sw-hw-eldritch', bgm: 'haunted', meta: '#05020a', tagline: 'it knows your digits' },
+    { id: 'hw-manor', name: 'HAUNTED MANOR', tag: 'EPIC', rarity: 'epic', swatch: 'sw-hw-manor', bgm: 'haunted', meta: '#1a0f12', tagline: "the portraits are watching" },
+    { id: 'hw-carnival', name: 'CURSED CARNIVAL', tag: 'MYTHIC', rarity: 'mythic', swatch: 'sw-hw-carnival', bgm: 'haunted', meta: '#1a0830', tagline: "step right up... if you dare" },
+    { id: 'ex-neon', name: 'NEON GRID', tag: 'EPIC', rarity: 'epic', swatch: 'sw-ex-neon', bgm: 'chill', meta: '#12002e', tagline: "type like it's 1985" },
+    { id: 'ex-sea', name: 'DEEP SEA', tag: 'LEGENDARY', rarity: 'legendary', swatch: 'sw-ex-sea', bgm: 'chill', meta: '#020b1c', tagline: "digits float up like bubbles" },
+    { id: 'ex-aurora', name: 'AURORA', tag: 'MYTHIC', rarity: 'mythic', swatch: 'sw-ex-aurora', bgm: 'chill', meta: '#050c1a', tagline: "a sky full of digits" },
   ];
   const themeById = (id) => THEMES.find((t) => t.id === id);
   const isOwned = (t) => !!t.free || wallet.owns(t.id);

@@ -741,7 +741,7 @@ dialog.modal[open] { display: flex; flex-direction: column; }
 
 /* ================= v1.5: themes for the Shop (defaults, plain colours, Singularity) ================= */
 /* plain themes: every token comes from one hue (--h) + saturation (--s), so a new colour is two lines */
-:root[data-theme^="plain-"], :root[data-theme^="hw-"], :root[data-theme="default-dark"] {
+:root[data-theme^="plain-"], :root[data-theme^="hw-"], :root[data-theme^="ex-"], :root[data-theme="default-dark"] {
   --h: 225; --s: 24%;
   color-scheme: dark;
   --bg-a: hsl(var(--h) var(--s) 6%); --bg-b: hsl(var(--h) var(--s) 11%); --bg-c: hsl(calc(var(--h) + 16) var(--s) 18%);
@@ -989,3 +989,15 @@ body[data-screen="game"] #app { height: auto; min-height: 100dvh; }
 .sw-hw-backrooms { background: linear-gradient(180deg, #e4daa0 0 30%, #bfa94f 30% 62%, #8a7430 62%); }
 .sw-hw-eldritch { background: radial-gradient(circle at 50% 48%, #000 0 9%, #ff4d9a 10% 14%, #efe6ff 15% 30%, #7a1fa0 31% 45%, transparent 47%), linear-gradient(#05020a, #240a3a); }
 :root[data-theme="hw-backrooms"] :is(.tagline, .pi-hint, .hint) { color: #fffbd6; text-shadow: 2px 2px 0 #1b1608; opacity: 1; }
+
+/* ===== v1.5.4: Haunted Manor, Cursed Carnival, Neon Grid, Deep Sea, Aurora ===== */
+:root[data-theme="hw-manor"] { --h: 25; --s: 35%; }
+:root[data-theme="hw-carnival"] { --h: 330; --s: 55%; }
+:root[data-theme="ex-neon"] { --h: 300; --s: 70%; }
+:root[data-theme="ex-sea"] { --h: 195; --s: 60%; }
+:root[data-theme="ex-aurora"] { --h: 160; --s: 50%; }
+.sw-hw-manor { background: radial-gradient(circle at 70% 35%, #cfe0ff 0 10%, transparent 11%), linear-gradient(180deg, #0b0710, #241418 60%, #3a2410); }
+.sw-hw-carnival { background: radial-gradient(circle at 70% 55%, transparent 0 22%, #ff4d9a 23% 27%, transparent 28%), linear-gradient(180deg, #14052a, #3a0f5c 60%, #b3245a); }
+.sw-ex-neon { background: radial-gradient(circle at 50% 58%, #ffe45e 0 22%, transparent 23%), linear-gradient(180deg, #12002e, #ff2d95 58%, #0a0220 58%); }
+.sw-ex-sea { background: linear-gradient(180deg, #0a6fa8, #020b1c); }
+.sw-ex-aurora { background: linear-gradient(180deg, #050c1a, #0f6e5a 45%, #7a3cff 70%, #050c1a); }
