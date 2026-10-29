@@ -68,7 +68,15 @@ Every correct digit is worth `round(100 × speed multiplier × combo multiplier)
 
 ### Game Over tips
 
-The results screen shows a random tip or fact picked by how many digits you reached (0-9, 10-30, 31-50, 51+). They live in the `FEEDBACK` list in `js/app.js`. The facts were checked: NASA's JPL uses 15 decimal places of pi for interplanetary navigation; Indiana's House passed a 1897 bill that would have set pi to about 3.2 and the Senate shelved it; and the Guinness record is 70,000 digits recited blindfolded in nearly 10 hours.
+The results screen shows a random tip or fact picked by how many digits you reached (0-9, 10-30, 31-50, 51+). Facts and tips live in `js/facts-data.js` (see *Fun facts and tips* below). The facts were checked: NASA's JPL uses 15 decimal places of pi for interplanetary navigation; Indiana's House passed a 1897 bill that would have set pi to about 3.2 and the Senate shelved it; and the Guinness record is 70,000 digits recited blindfolded in nearly 10 hours.
+
+### Fun facts and tips
+
+All of them live in [`js/facts-data.js`](js/facts-data.js) in three lists: `general` (loading screen), `stats` (Game Over, picked by how your run went) and `tips` (Game Over, gameplay advice). Copy a line to add one: `{ id, text, label?, when?, source? }`. Text is plain text up to 160 characters and may use `{digits}`, `{decimals}` and `{combo}`. `when` narrows an entry to a digit range, mode, game-over reason or combo. Put where you verified a fact in `source`. Entries rotate without repeats until all matching ones were shown. Run `node tests/factstest.js` after editing.
+
+### Loading screen
+
+A black screen with the Pi icon in your theme's colour and font. On the first load it waits for the theme's fonts (up to 4 seconds), shows a general fact and ends with **TAP TO START**, which also lets the music begin. Before every run there is only a short black transition. With reduced motion the loader is static.
 
 Each mode has its own **top 10** leaderboard (name up to 12 characters, score, date as `MMM-DD-YYYY`), saved in your browser's `localStorage`.
 
@@ -145,12 +153,13 @@ js/store.js       settings, leaderboards and Pi Coin wallet (localStorage)
 js/audio.js       Web Audio synth: SFX + generative BGM tracks
 js/fx.js          pixel icons, Deep Space parallax, the pixel-art theme scenes (incl. the reactive Singularity), particles, shine/tilt, shake
 js/shop.js        the Shop screen, drop rates, collection and the chest-opening sequence
+js/facts-data.js  data + helpers: fun facts and tips (loading screen and Game Over)
 js/app.js         screens, game loop, input, results, theme shop, settings
 favicon.svg
 docs/GACHA_BLUEPRINT.md   how the Gacha & Shop works, decisions and open questions
 ```
 
-`js/` scripts load in the order `pi → score → gacha-data → gacha → store → audio → fx → shop → app` (see the bottom of `index.html`).
+`js/` scripts load in the order `pi → score → gacha-data → gacha → store → audio → fx → shop → facts-data → app` (see the bottom of `index.html`).
 
 ## Customising
 

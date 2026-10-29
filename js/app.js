@@ -10,10 +10,11 @@
   const { settings, scores, wallet } = PiGame.store;
   const audio = PiGame.audio;
   const fx = PiGame.fx;
+  const facts = PiGame.facts, usedFacts = { general: new Set(), stats: new Set(), tips: new Set() };
 
   /* ------------------------------ config -------------------------------- */
   const CONFIG = {
-    VERSION: '1.5.5',
+    VERSION: '1.6.0',
     ABOUT: { developer: '', repo: '' },   // shown in Settings > About Us only when filled in
     COINS_PER_SCORE: 0.01,   // PLACEHOLDER: Pi Coins earned per run = final score x this
     DECIMALS: 1000,          // digits after "3."
@@ -337,34 +338,6 @@
   }
 
   /* ------------------------------- results ------------------------------- */
-  // Game Over feedback: [label, text], chosen by how many digits you reached.
-  // (Fact-checked: NASA/JPL = 15 decimal places; Indiana 1897 = passed the House, shelved by the Senate;
-  //  Guinness record = 70,000 digits, blindfolded, nearly 10 hours.)
-  const FEEDBACK = [
-    { max: 9, items: [
-      ['DID YOU KNOW?', 'Most people only remember a handful of digits of Pi, like 3.14159!'],
-      ['TIP', "Try chunking digits into groups of 3 or 4 in your mind (e.g., '141', '592', '653')!"],
-    ] },
-    { max: 30, items: [
-      ['GREAT JOB!', "You've gone well beyond what most people can recite from memory."],
-      ['PI FACT', "NASA's JPL uses just 15 decimal places of Pi for its highest-precision interplanetary navigation!"],
-    ] },
-    { max: 50, items: [
-      ['MEMORY WALL BROKEN!', "You broke past the 'Memory Wall'! Very few people can recite 30+ digits of Pi."],
-      ['PI FACT', "In 1897, Indiana's House passed a bill that would have set Pi to about 3.2. The Senate shelved it, so it never became law!"],
-    ] },
-    { max: Infinity, items: [
-      ['LEGENDARY RECALL!', 'Memory athletes train for exactly this kind of streak.'],
-      ['PI FACT', 'The Guinness record for memorizing Pi is 70,000 digits, recited blindfolded in nearly 10 hours!'],
-    ] },
-  ];
-  function pickTip(digits) {
-    const group = FEEDBACK.find((g) => digits <= g.max);
-    let i = Math.floor(Math.random() * group.items.length);
-    if (group.items.length > 1 && state.lastTip === group.max + ':' + i) i = (i + 1) % group.items.length;   // don't repeat back-to-back
-    state.lastTip = group.max + ':' + i;
-    return group.items[i];
-  }
 
   function showResult() {
     const eng = state.engine;
@@ -390,7 +363,7 @@
     const rc = $('#res-coins');
     rc.innerHTML = earned > 0 ? '<span data-icon="coin"></span>+' + fmtCoins(earned) + ' PI COIN' : '';
     fx.icons.mount(rc);
-    const tip = pickTip(sum.totalDigits), box0 = $('#res-tip');
+    const tip = pickResultTip({ digits: sum.totalDigits, mode, reason: eng.reason, combo: sum.maxCombo }), box0 = $('#res-tip');
     box0.textContent = '';
     const tb = document.createElement('b'), tt = document.createElement('span');
     tb.textContent = tip[0]; tt.textContent = tip[1];
@@ -726,9 +699,9 @@
         return;
       }
       const start = e.target.closest('[data-start]');
-      if (start) startGame(start.dataset.start);
+      if (start) wipe(() => startGame(start.dataset.start));
     });
-    $('#btn-again').addEventListener('click', () => startGame(state.lastResult ? state.lastResult.mode : 'timer'));
+    $('#btn-again').addEventListener('click', () => wipe(() => startGame(state.lastResult ? state.lastResult.mode : 'timer')));
     $$('[data-tab]').forEach((t) => t.addEventListener('click', () => showBoard(t.dataset.tab)));
 
     // UI sounds: click on press, a soft tick on hover (mouse only)
@@ -803,14 +776,60 @@
 
   // v1.5.1: lock page scroll while any dialog or the chest overlay is open
   const syncLock = () => document.documentElement.classList.toggle('modal-open',
-    !!document.querySelector('dialog[open]') || !$('#pull').hidden);
+    !!document.querySelector('dialog[open]') || !$('#pull').hidden || !$('#loader').hidden);
   new MutationObserver(syncLock).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['open', 'hidden'] });
+  syncLock();
 
   boot();
+  runLoader();
 
   // tiny hook for automated tests / debugging (harmless in production)
   window.__piGame = { state, go, startGame, onDigit, PI };
   installCheats();
+
+  /* ---- fun facts for Game Over (v1.6.0): data lives in js/facts-data.js ---- */
+  function pickResultTip(ctx) {
+    ctx.decimals = ctx.digits + 2;
+    const order = Math.random() < 0.3 ? ['tips', 'stats'] : ['stats', 'tips'];      // mostly stat facts, sometimes a gameplay tip
+    for (const cat of order) {
+      const e = facts.pick(facts[cat], ctx, usedFacts[cat]);
+      if (e) return [e.label || (cat === 'tips' ? 'TIP' : 'PI FACT'), facts.fill(e.text, ctx)];
+    }
+    return ['PI FACT', 'Pi never ends, and neither does the next run.'];
+  }
+
+  /* ---- loader + transition (v1.6.0) ---- */
+  function reduced() { return matchMedia('(prefers-reduced-motion: reduce)').matches; }   // a function (not a const) so runLoader() can use it at boot
+  function themeFonts() {                                      // the equipped theme's font families
+    const cs = getComputedStyle(document.documentElement);
+    return Array.from(new Set(['--font-pixel', '--font-body', '--font-display'].map((v) => (cs.getPropertyValue(v).split(',')[0] || '').replace(/["']/g, '').trim()).filter(Boolean)));
+  }
+  function waitFonts() {                                       // never wait more than 4 s (offline, blocked fonts)
+    if (!document.fonts || !document.fonts.load) return Promise.resolve();
+    const jobs = themeFonts().map((f) => document.fonts.load('16px "' + f + '"').catch(() => null));
+    return Promise.race([Promise.all(jobs), new Promise((r) => window.setTimeout(r, 4000))]);
+  }
+  async function runLoader() {                                 // first boot: wait for fonts, show a fact, then TAP TO START
+    const L = $('#loader');
+    if (!L) return;
+    const f = facts.pick(facts.general, {}, usedFacts.general);
+    $('#ld-fact').textContent = f ? facts.fill(f.text, {}) : '';
+    await Promise.all([waitFonts(), new Promise((r) => window.setTimeout(r, reduced() ? 600 : 1500))]);
+    $('#ld-title').textContent = 'READY'; $('#ld-hint').hidden = false; L.classList.add('ready');
+    await new Promise((res) => {
+      const go = () => { L.removeEventListener('pointerdown', go); document.removeEventListener('keydown', go); res(); };
+      L.addEventListener('pointerdown', go); document.addEventListener('keydown', go);
+    });
+    audio.unlock();                                            // this tap is the gesture that lets the music start
+    L.classList.add('out');
+    window.setTimeout(() => { L.hidden = true; L.className = 'loader'; }, reduced() ? 0 : 300);
+  }
+  function wipe(cb) {                                          // short black transition before a run starts (no fact)
+    const L = $('#loader');
+    if (!L || reduced() || !L.hidden) { cb(); return; }
+    L.className = 'loader quick'; L.hidden = false;
+    window.setTimeout(() => { cb(); window.setTimeout(() => { L.hidden = true; L.className = 'loader'; }, 160); }, 220);
+  }
 
   /* ---- console cheats (v1.5.2): type these in the browser console ---- */
   function installCheats() {

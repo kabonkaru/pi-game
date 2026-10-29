@@ -31,6 +31,17 @@
 </head>
 <body data-screen="menu">
 
+  <!-- ===== loader / transition: black screen + theme-coloured icon (shown from the first paint) ===== -->
+  <div id="loader" class="loader" role="status" aria-live="polite">
+    <div class="ld-box">
+      <span class="ld-icon" data-icon="pi" aria-hidden="true"></span>
+      <div class="ld-bar" aria-hidden="true"><i></i></div>
+      <p class="ld-title" id="ld-title">LOADING</p>
+      <p class="ld-fact" id="ld-fact"></p>
+      <p class="ld-hint" id="ld-hint" hidden>TAP TO START</p>
+    </div>
+  </div>
+
   <!-- shared SVG gradient used by the big pixel pi -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
     <defs>
@@ -255,7 +266,7 @@
       <div id="spanel-about" class="about" role="tabpanel" aria-labelledby="stab-about" hidden>
         <div class="about-hero">
           <span class="about-pi" data-icon="pi"></span>
-          <span><b>PI GAME</b><small id="about-ver">v1.5.5</small></span>
+          <span><b>PI GAME</b><small id="about-ver">v1.6.0</small></span>
         </div>
         <p>A tiny 8-bit game about one big number. Type as many digits of pi as you can, chase speed and combo bonuses, earn Pi Coins and unlock new worlds.</p>
         <h3 class="modal-sub">YOUR DATA</h3>
@@ -274,7 +285,7 @@
 
     <div class="modal-foot">
       <button class="btn small danger" id="btn-reset-scores">RESET SCORES</button>
-      <span class="ver" id="app-ver">v1.5.5</span>
+      <span class="ver" id="app-ver">v1.6.0</span>
     </div>
   </dialog>
 
@@ -373,6 +384,7 @@
   <script src="js/audio.js"></script>
   <script src="js/fx.js"></script>
   <script src="js/shop.js"></script>
+  <script src="js/facts-data.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

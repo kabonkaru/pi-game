@@ -1001,3 +1001,24 @@ body[data-screen="game"] #app { height: auto; min-height: 100dvh; }
 .sw-ex-neon { background: radial-gradient(circle at 50% 58%, #ffe45e 0 22%, transparent 23%), linear-gradient(180deg, #12002e, #ff2d95 58%, #0a0220 58%); }
 .sw-ex-sea { background: linear-gradient(180deg, #0a6fa8, #020b1c); }
 .sw-ex-aurora { background: linear-gradient(180deg, #050c1a, #0f6e5a 45%, #7a3cff 70%, #050c1a); }
+
+/* ===== v1.6.0: loader (first boot) + short transition before a run ===== */
+.loader { position: fixed; inset: 0; z-index: 400; display: grid; place-items: center; background: #000; color: #e8e8f0; --ld-a: var(--c-zen-a); animation: ldIn .15s linear; cursor: pointer; }
+:root[data-theme="terminal"] .loader { color: #9bbc0f; }
+.loader.out { opacity: 0; transition: opacity .3s linear; pointer-events: none; }
+.ld-box { width: min(420px, 88vw); display: grid; justify-items: center; gap: 16px; text-align: center; }
+.ld-icon { width: 64px; height: 44px; color: var(--ld-a); filter: drop-shadow(0 0 14px var(--ld-a)); animation: bob 1.2s steps(4) infinite; }
+.ld-icon svg { display: block; width: 100%; height: 100%; }
+.ld-bar { width: min(240px, 70%); height: 14px; padding: 2px; border: 3px solid var(--ld-a); }
+.ld-bar i { display: block; height: 100%; width: 100%; transform-origin: left; background: repeating-linear-gradient(90deg, var(--ld-a) 0 8px, transparent 8px 10px); animation: ldBar 1.4s steps(12) infinite; }
+.loader.ready .ld-bar i { animation: none; }
+.ld-title { margin: 0; font-family: var(--font-pixel); font-size: calc(.8rem * var(--pf, 1)); letter-spacing: .1em; }
+.ld-fact { margin: 0; min-height: 4.8em; font-family: var(--font-body); font-size: calc(1.3rem * var(--tf, 1)); line-height: 1.15; color: #cfd2e6; }
+:root[data-theme="terminal"] .ld-fact { color: #8bac0f; }
+.ld-hint { margin: 0; font-family: var(--font-pixel); font-size: calc(.6rem * var(--pf, 1)); color: var(--ld-a); animation: blink 1s steps(2) infinite; }
+.loader.quick { cursor: default; }
+.loader.quick :is(.ld-title, .ld-fact, .ld-hint) { display: none; }
+@keyframes ldBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes ldIn { from { opacity: 0; } to { opacity: 1; } }
+body:has(#loader:not([hidden])) { overflow: hidden; }
+html:has(#loader:not([hidden])), html:has(#loader:not([hidden])) body { background: #000; }   /* no coloured scrollbar-gutter strip beside the loader */

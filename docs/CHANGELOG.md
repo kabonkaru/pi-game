@@ -2,6 +2,11 @@
 
 All notable changes to the Pi Game project will be documented in this file.
 
+## [1.6.0]
+- Added a black loader in the theme's colors and font: waits for fonts on first load, shows a general fact, ends with TAP TO START (which also starts the music). A short black wipe plays before each run.
+- Moved fun facts and tips into js/facts-data.js with placeholders, per-category matching and no-repeat rotation; Game Over now picks stat facts and tips by digits, mode, reason and combo.
+- Added tests/factstest.js; verified facts carry a source.
+
 ## [1.5.5]
 - Pi Fright! music: unique tracks for the Common Halloween colours (Trick or Treat), Haunted Manor (Manor Hours), The Backrooms (Fluorescent Hum), Cursed Carnival (Cursed Calliope) and Eldritch Sky (Eldritch Drone).
 
