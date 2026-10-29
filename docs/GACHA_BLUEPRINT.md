@@ -18,7 +18,7 @@
 
 **Cosmic Beginnings** (live): 5 Common plain colours (Ruby, Ocean, Mint, Grape, Sunny) with the Chill track, **Epic** Deep Space and Neon Grid, **Legendary** Dreamy Day and Deep Sea, **Mythic** Phosphor and Aurora, **Godly** Singularity (a black hole that reacts to your typing).
 
-**Pi Fright!** (Halloween event, live): 5 Common Halloween colours (Pumpkin, Witching Hour, Toxic Slime, Blood Moon, Graveyard Fog), Epic Haunted Manor, Legendary The Backrooms, Mythic Hapi Halloween and Cursed Carnival, Godly Eldritch Sky, all with the Haunted Waltz track. To close it, set its `status` to `'coming-soon'` in `js/gacha-data.js`.
+**Pi Fright!** (Halloween event, live): 5 Common Halloween colours (Pumpkin, Witching Hour, Toxic Slime, Blood Moon, Graveyard Fog), Epic Haunted Manor, Legendary The Backrooms, Mythic Hapi Halloween and Cursed Carnival, Godly Eldritch Sky, each tier with its own track (Trick or Treat, Manor Hours, Fluorescent Hum, Hapi Halloween's Haunted Waltz, Cursed Calliope, Eldritch Drone). To close it, set its `status` to `'coming-soon'` in `js/gacha-data.js`.
 
 ### Drop rates (`BANNERS.*.rates`)
 

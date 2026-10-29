@@ -2,6 +2,9 @@
 
 All notable changes to the Pi Game project will be documented in this file.
 
+## [1.5.5]
+- Pi Fright! music: unique tracks for the Common Halloween colours (Trick or Treat), Haunted Manor (Manor Hours), The Backrooms (Fluorescent Hum), Cursed Carnival (Cursed Calliope) and Eldritch Sky (Eldritch Drone).
+
 ## [1.5.4]
 - Pi Fright!: added Haunted Manor (Epic) and Cursed Carnival (Mythic), both with animated scenes; the banner now has 10 themes.
 - Cosmic Beginnings: added Neon Grid (Epic), Deep Sea (Legendary) and Aurora (Mythic), all with animated scenes.

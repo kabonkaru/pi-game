@@ -4,7 +4,7 @@
 
    * SFX : chiptune blips. Key presses climb a pentatonic scale as your score
            grows, so a long run literally sounds like it is going up.
-   * BGM : three generative tracks, one bundled with each theme:
+   * BGM : generative tracks (see TRACKS), one bundled with each theme:
            DEEP SPACE (dark)  - slow "space dreamy" pad, soft arpeggio, bells
            DREAMY DAY (light) - sunny music-box melody over a bouncy bass
            PHOSPHOR (retro)   - driving 8-bit minor-key chip tune with drums
@@ -47,6 +47,11 @@
     'haunted':    { name: 'HAUNTED WALTZ', bpm: 126, echo: 0.75 },
     'chill':      { name: 'CHILL',         bpm: 72,  echo: 0.75 },                  // default for plain themes
     'singularity': { name: 'EVENT HORIZON', bpm: 60, echo: 0.75 },
+    'trick':      { name: 'TRICK OR TREAT',   bpm: 112, echo: 0.75 },   // Pi Fright! (v1.5.5): one track per tier
+    'manor':      { name: 'MANOR HOURS',      bpm: 66,  echo: 0.75 },
+    'backrooms':  { name: 'FLUORESCENT HUM',  bpm: 54,  echo: 0.75 },
+    'carnival':   { name: 'CURSED CALLIOPE',  bpm: 132, echo: 0.5 },
+    'eldritch':   { name: 'ELDRITCH DRONE',   bpm: 48,  echo: 0.75 },
     'shop':       { name: 'SHOP',          bpm: 104, echo: 0.75, hidden: true },   // plays in the shop only (not in the picker)
   };
   CHORDS.m7 = CHORDS.m7 || [0, 3, 7, 10];
@@ -89,6 +94,13 @@
   const SHOP_PENT = [72, 74, 76, 79, 81, 84];
   // EVENT HORIZON: a slow drone around D, stacked fifths
   const HORIZON_PING = [74, 77, 81, 86, 88];
+
+  // v1.5.5: tracks for Pi Fright! (Trick or Treat is the Common Halloween track)
+  const TRICK_PROG = [[45, 'm'], [50, 'm'], [52, 'maj'], [45, 'm']];                           // A harmonic minor
+  const TRICK_SCALE = [69, 71, 72, 74, 76, 77, 80, 81, 83, 84];
+  const MANOR_PROG = [[50, 'm'], [46, 'maj'], [43, 'm'], [45, 'maj']];                         // Dm Bb Gm A
+  const CAR_PROG = [[50, 'm'], [45, 'maj'], [50, 'm'], [43, 'm'], [45, 'maj'], [50, 'm']];     // D minor oom-pah
+  const CAR_SCALE = [62, 64, 65, 67, 69, 70, 73, 74, 76, 77, 79, 81];                          // D harmonic minor
 
   class Audio8 {
     constructor() {
@@ -491,6 +503,11 @@
       else if (this.track === 'chill') this._stepChill(step, t);
       else if (this.track === 'shop') this._stepShop(step, t);
       else if (this.track === 'singularity') this._stepHorizon(step, t);
+      else if (this.track === 'trick') this._stepTrick(step, t);
+      else if (this.track === 'manor') this._stepManor(step, t);
+      else if (this.track === 'backrooms') this._stepBackrooms(step, t);
+      else if (this.track === 'carnival') this._stepCarnival(step, t);
+      else if (this.track === 'eldritch') this._stepEldritch(step, t);
       else this._stepDeepSpace(step, t);
     }
 
@@ -651,6 +668,91 @@
         this._voice(out, { freq: midi(note), slideTo: midi(note - 1), t, dur: 0.05, type: 'sine', vol: 0.03, a: 0.01, r: 2.2, delay: 0.75, verb: 0.7 });
       }
       if (s === 8 && bar % 8 === 5) this._voice(out, { freq: midi(62), slideTo: midi(50), t, dur: L * 7, type: 'sine', vol: 0.03, a: 0.4, r: 1.2, verb: 0.6 });   // time dilation
+    }
+
+    /* ---------------------------------------------------- TRICK OR TREAT ---- */
+    _stepTrick(step, t) {
+      const s = step % 16, bar = Math.floor(step / 16), L = this.stepLen, out = this.musicBus;
+      const [root, type] = TRICK_PROG[bar % TRICK_PROG.length], tones = CHORDS[type];
+      let bass = 36 + (root % 12); if (bass < 38) bass += 12;
+      if (s === 0 || s === 6 || s === 8 || s === 14) this._voice(out, { freq: midi(bass + (s === 6 || s === 14 ? 7 : 0)), t, dur: L * 1.2, type: 'triangle', vol: 0.11, a: 0.004, r: 0.1, lp: 800 });   // bouncy pizzicato bass
+      if (s % 4 === 2) tones.forEach((iv) => this._voice(out, { freq: midi(root + 24 + iv), t, dur: L * 0.8, wave: this.pulse125, vol: 0.018, a: 0.003, r: 0.08, lp: 2600, verb: 0.2 }));   // off-beat stabs
+      if (s === 4 || s === 12) this._noise(out, t, 0.03, 0.05, 2500, 8000);                                   // finger snaps
+      if (s % 2 === 0) this._noise(out, t, 0.02, s % 4 === 0 ? 0.012 : 0.007, 8500, null);
+      const hit = { 0: 0.9, 2: 0.4, 4: 0.6, 6: 0.4, 8: 0.7, 10: 0.4, 12: 0.6, 14: 0.5 }[s];
+      if (hit && Math.random() < hit) {                                                                          // xylophone melody
+        if (this._tm == null) this._tm = 4;
+        this._tm = Math.max(0, Math.min(TRICK_SCALE.length - 1, this._tm + Math.floor(Math.random() * 5) - 2));
+        const n = TRICK_SCALE[this._tm];
+        this._voice(out, { freq: midi(n), t, dur: 0.03, type: 'sine', vol: 0.06, a: 0.002, r: 0.22, delay: 0.4, verb: 0.25 });
+        this._voice(out, { freq: midi(n + 12), t, dur: 0.02, type: 'triangle', vol: 0.02, a: 0.002, r: 0.1 });
+      }
+      if (s === 15 && bar % 4 === 3 && Math.random() < 0.5) this._voice(out, { freq: midi(88), slideTo: midi(76), t, dur: 0.25, type: 'sine', vol: 0.03, a: 0.01, r: 0.3, verb: 0.5 });   // a little "boo" swoop
+    }
+
+    /* ----------------------------------------------------------- MANOR HOURS ---- */
+    _stepManor(step, t) {
+      const s = step % 16, bar = Math.floor(step / 16), L = this.stepLen, out = this.musicBus;
+      const [root, type] = MANOR_PROG[bar % MANOR_PROG.length], tones = CHORDS[type];
+      const padRoot = root < 47 ? root + 12 : root;
+      if (s === 0) {
+        tones.forEach((iv) => this._voice(out, { freq: midi(padRoot + iv), t, dur: L * 15, type: 'triangle', vol: 0.02, a: 0.8, r: 1.2, lp: 700, verb: 0.5, detune: Math.random() * 8 - 4 }));   // organ pad
+        this._voice(out, { freq: midi(root - 12), t, dur: L * 14, type: 'sine', vol: 0.08, a: 0.05, r: 0.6, lp: 400 });
+      }
+      const pool = tones.map((iv) => padRoot + 12 + iv).concat(tones.map((iv) => padRoot + 24 + iv));
+      if (s % 2 === 0 && Math.random() < 0.85) this._voice(out, { freq: midi(pool[[0, 1, 2, 3, 2, 1, 2, 1][s % 8] % pool.length]), t, dur: 0.04, wave: this.pulse125, vol: 0.035, a: 0.002, r: 0.35, lp: 3500, delay: 0.4, verb: 0.35 });   // harpsichord
+      if (s % 4 === 0) {                                                                                         // the clock: tick, tock
+        this._noise(out, t, 0.012, s % 8 === 0 ? 0.03 : 0.018, 2500, 7000);
+        if (s % 8 === 0) this._voice(out, { freq: 170, slideTo: 120, t, dur: 0.05, type: 'sine', vol: 0.05, r: 0.08 });
+      }
+      if (s === 0 && bar % 8 === 3 && Math.random() < 0.6) this._noise(out, t, L * 14, 0.06, 30, 240);        // thunder far away
+      if (s === 0 && bar % 4 === 0) this._noise(out, t, L * 16, 0.018, 300, 1100);                             // wind in the halls
+    }
+
+    /* ------------------------------------------------------- FLUORESCENT HUM ---- */
+    _stepBackrooms(step, t) {
+      const s = step % 16, bar = Math.floor(step / 16), L = this.stepLen, out = this.musicBus;
+      if (s === 0 && bar % 4 === 0) {                                                                            // the hum never stops
+        [[34, 0.05, 'sine', 0], [46, 0.022, 'sine', 5], [58, 0.012, 'sine', -6], [46, 0.01, 'sawtooth', 9]].forEach((v) =>
+          this._voice(out, { freq: midi(v[0]), t, dur: L * 62, type: v[2], vol: v[1], a: 1.5, r: 2, lp: v[2] === 'sawtooth' ? 380 : 1200, detune: v[3] }));
+      }
+      if (s === 0 && bar % 2 === 0) [60, 64, 67, 71].forEach((n) => this._voice(out, { freq: midi(n), t, dur: L * 30, type: 'triangle', vol: 0.008, a: 1, r: 1.5, lp: 900, verb: 0.6, detune: Math.random() * 60 - 30 }));   // far-off, out-of-tune mall muzak
+      if (s % 4 === 2 && Math.random() < 0.12) this._voice(out, { freq: midi(84 + Math.floor(Math.random() * 12)), t, dur: 0.05, type: 'sine', vol: 0.025, a: 0.01, r: 2.4, delay: 0.75, verb: 0.7 });   // echoing pings
+      if (Math.random() < 0.05) this._noise(out, t, 0.008, 0.025, 4000, null);                                  // tube flicker
+      if (s === 8 && bar % 8 === 5) this._voice(out, { freq: 70, slideTo: 40, t, dur: 0.4, type: 'sine', vol: 0.06, a: 0.01, r: 0.5, verb: 0.4 });   // a door, somewhere
+    }
+
+    /* ------------------------------------------------------- CURSED CALLIOPE ---- */
+    _stepCarnival(step, t) {
+      const s = step % 16, bar = Math.floor(step / 16), L = this.stepLen, out = this.musicBus;
+      const [root, type] = CAR_PROG[bar % CAR_PROG.length], tones = CHORDS[type];
+      let bass = 36 + (root % 12); if (bass < 38) bass += 12;
+      if (s === 0 || s === 8) this._voice(out, { freq: midi(bass + (s === 8 ? 7 : 0)), t, dur: L * 3, type: 'triangle', vol: 0.12, a: 0.005, r: 0.12, lp: 700 });   // oom
+      if (s === 4 || s === 12) {                                                                                 // pah
+        tones.forEach((iv) => this._voice(out, { freq: midi(root + 12 + iv), t, dur: L * 2, wave: this.pulse25, vol: 0.022, a: 0.004, r: 0.1, lp: 2200, detune: Math.random() * 30 - 15 }));
+        this._noise(out, t, 0.06, 0.04, 1500, 7000);
+      }
+      if (s % 2 === 0) this._noise(out, t, 0.02, 0.01, 9000, null);
+      if (s % 2 === 0 && (s % 8 !== 6 || Math.random() < 0.6)) {                                                 // warped calliope lead
+        if (this._cm == null) this._cm = 4;
+        this._cm = Math.max(0, Math.min(CAR_SCALE.length - 1, this._cm + Math.floor(Math.random() * 5) - 2));
+        const n = CAR_SCALE[this._cm] + (Math.random() < 0.04 ? 6 : 0);                                          // now and then, a wrong note
+        [-18, 18].forEach((det) => this._voice(out, { freq: midi(n), t, dur: L * 1.5, wave: this.pulse125, vol: 0.024, a: 0.006, r: 0.12, lp: 3400, detune: det, slideTo: s === 14 ? midi(n - 1) : 0, delay: 0.3 }));
+      }
+      if (s === 10 && Math.random() < 0.15) this._voice(out, { freq: midi(100), t, dur: 0.03, type: 'sine', vol: 0.03, a: 0.002, r: 1.2, verb: 0.5 });   // a bell
+    }
+
+    /* ------------------------------------------------------ ELDRITCH DRONE ---- */
+    _stepEldritch(step, t) {
+      const s = step % 16, bar = Math.floor(step / 16), L = this.stepLen, out = this.musicBus;
+      if (s === 0 && bar % 4 === 0) {                                                                            // sub-drone with a grinding minor second
+        [[23, 0.06, 0], [24, 0.04, 7], [35, 0.02, -5]].forEach((v) => this._voice(out, { freq: midi(v[0]), t, dur: L * 62, type: 'sine', vol: v[1], a: 3, r: 3, lp: 500, detune: v[2], verb: 0.4 }));
+        [47, 48, 54, 59].forEach((n, k) => this._voice(out, { freq: midi(n), t: t + k * 1.1, dur: L * 54, type: 'triangle', vol: 0.011, a: 4, r: 4, lp: 1100, verb: 0.8, detune: k * 7 - 10 }));   // choir cluster
+      }
+      if (s === 0 && bar % 3 === 1 && Math.random() < 0.5) this._voice(out, { freq: midi(76), slideTo: midi(62), t, dur: L * 10, type: 'sine', vol: 0.03, a: 0.5, r: 1.5, delay: 0.75, verb: 0.7 });   // something calling
+      if (s === 0 && bar % 8 === 6) { this._voice(out, { freq: midi(40), t, dur: 0.05, type: 'sine', vol: 0.08, a: 0.005, r: 4, lp: 500, verb: 0.7 }); this._voice(out, { freq: midi(40) * 2.76, t, dur: 0.05, type: 'sine', vol: 0.03, a: 0.005, r: 3, verb: 0.7 }); }   // slow bell
+      if (s % 8 === 4 && Math.random() < 0.25) this._noise(out, t, L * 6, 0.025, 60, 260);                       // scraping under the floor
+      if (s % 8 === 0) this._voice(out, { freq: 60, slideTo: 32, t, dur: 0.4, type: 'sine', vol: 0.07, r: 0.3, lp: 200 });   // the slow pulse
     }
 
     /* ---------------------------------------------------- HAUNTED WALTZ ---- */

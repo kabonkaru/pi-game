@@ -107,11 +107,11 @@ Every theme has its own fonts, UI shape and music, and the bigger ones have an a
 | **Neon Grid** | Epic | synthwave sun, a grid floor rushing toward you, mountains | Chill |
 | **Deep Sea** | Legendary | light rays, bubbles, fish, glowing jellyfish, swaying weed | Chill |
 | **Aurora** | Mythic | green and violet northern lights over dark peaks | Chill |
-| **Pumpkin, Witching Hour, Toxic Slime, Blood Moon, Graveyard Fog** | Common (Pi Fright!) | one-hue Halloween colours | Haunted Waltz |
-| **Haunted Manor** | Epic (Pi Fright!) | candlelit hall, storm window, portraits whose eyes follow your pointer | Haunted Waltz |
-| **The Backrooms** | Legendary (Pi Fright!) | endless yellow hallway with buzzing lights | Haunted Waltz |
-| **Cursed Carnival** | Mythic (Pi Fright!) | ferris wheel, striped tent, string lights, a red balloon | Haunted Waltz |
-| **Eldritch Sky** | Godly (Pi Fright!) | a giant eye that follows your pointer, tentacles | Haunted Waltz |
+| **Pumpkin, Witching Hour, Toxic Slime, Blood Moon, Graveyard Fog** | Common (Pi Fright!) | one-hue Halloween colours | Trick or Treat |
+| **Haunted Manor** | Epic (Pi Fright!) | candlelit hall, storm window, portraits whose eyes follow your pointer | Manor Hours |
+| **The Backrooms** | Legendary (Pi Fright!) | endless yellow hallway with buzzing lights | Fluorescent Hum |
+| **Cursed Carnival** | Mythic (Pi Fright!) | ferris wheel, striped tent, string lights, a red balloon | Cursed Calliope |
+| **Eldritch Sky** | Godly (Pi Fright!) | a giant eye that follows your pointer, tentacles | Eldritch Drone |
 | **Singularity** | Godly | a **black hole that reacts to your typing**: the disk flares on every digit, spins faster and burns hotter as your combo climbs, and a wrong key sends a red shockwave | Event Horizon |
 
 **Existing players keep everything:** themes they already bought, plus Deep Space and Dreamy Day (they used to be free defaults).
@@ -142,7 +142,7 @@ js/score.js       scoring, combo and survival clock                   (unit-test
 js/gacha-data.js  data only: shop items, banners, drop rates, costs
 js/gacha.js       pure pull logic: rolls, duplicates, refunds, fake-out  (unit-testable)
 js/store.js       settings, leaderboards and Pi Coin wallet (localStorage)
-js/audio.js       Web Audio synth: SFX + three generative BGM tracks
+js/audio.js       Web Audio synth: SFX + generative BGM tracks
 js/fx.js          pixel icons, Deep Space parallax, the pixel-art theme scenes (incl. the reactive Singularity), particles, shine/tilt, shake
 js/shop.js        the Shop screen, drop rates, collection and the chest-opening sequence
 js/app.js         screens, game loop, input, results, theme shop, settings
