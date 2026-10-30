@@ -2,6 +2,13 @@
 
 All notable changes to the Pi Game project will be documented in this file.
 
+## [1.6.1]
+- Added a custom spinner loading indicator styled to match active theme colors, providing clear visual feedback during asset preloading and scene transitions.
+- Designed dedicated static background scenes for all Rank C themes, giving lower-tier unlocks distinct visual identity and polish.
+- Added animated Eldritch eyes atmospheric effects to enrich the background scenes of Eldritch-tier themes.
+- Rebalanced drop rates, stats, and progression scaling across S, A, B, and C rank themes for a more balanced unlock curve.
+- Redesigned the theme picker interface into a streamlined, single-column layout for clearer navigation and improved mobile responsiveness.
+
 ## [1.6.0]
 - Added a black loader in the theme's colors and font: waits for fonts on first load, shows a general fact, ends with TAP TO START (which also starts the music). A short black wipe plays before each run.
 - Moved fun facts and tips into js/facts-data.js with placeholders, per-category matching and no-repeat rotation; Game Over now picks stat facts and tips by digits, mode, reason and combo.
