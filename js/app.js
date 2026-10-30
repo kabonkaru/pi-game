@@ -14,7 +14,7 @@
 
   /* ------------------------------ config -------------------------------- */
   const CONFIG = {
-    VERSION: '1.6.0',
+    VERSION: '1.6.1',
     ABOUT: { developer: '', repo: '' },   // shown in Settings > About Us only when filled in
     COINS_PER_SCORE: 0.01,   // PLACEHOLDER: Pi Coins earned per run = final score x this
     DECIMALS: 1000,          // digits after "3."
@@ -26,30 +26,30 @@
 
   /* ------------------------ themes (each bundles a music track) ------------------------ */
   const THEMES = [
-    { id: 'default-dark',  name: 'MIDNIGHT',       tag: 'DEFAULT',   rarity: 'default',   swatch: 'sw-default-dark',  bgm: 'chill', free: true, meta: '#10131c', tagline: 'how many digits can you remember?' },
-    { id: 'default-light', name: 'DAYLIGHT',       tag: 'DEFAULT',   rarity: 'default',   swatch: 'sw-default-light', bgm: 'chill', free: true, meta: '#eef3fb', tagline: 'how many digits can you remember?' },
-    { id: 'plain-ruby',    name: 'RUBY',           tag: 'COMMON',    rarity: 'common',    swatch: 'sw-plain-ruby',    bgm: 'chill', meta: '#1a080e', tagline: 'seeing red? keep typing' },
-    { id: 'plain-ocean',   name: 'OCEAN',          tag: 'COMMON',    rarity: 'common',    swatch: 'sw-plain-ocean',   bgm: 'chill', meta: '#071a24', tagline: 'dive into the digits' },
-    { id: 'plain-mint',    name: 'MINT',           tag: 'COMMON',    rarity: 'common',    swatch: 'sw-plain-mint',    bgm: 'chill', meta: '#06231a', tagline: 'cool head, fresh digits' },
-    { id: 'plain-grape',   name: 'GRAPE',          tag: 'COMMON',    rarity: 'common',    swatch: 'sw-plain-grape',   bgm: 'chill', meta: '#140a24', tagline: 'sweet digits ahead' },
-    { id: 'plain-sun',     name: 'SUNNY',          tag: 'COMMON',    rarity: 'common',    swatch: 'sw-plain-sun',     bgm: 'chill', meta: '#241c06', tagline: 'sunny side up' },
-    { id: 'dark',          name: 'DEEP SPACE',     tag: 'EPIC',      rarity: 'epic',      swatch: 'sw-dark',          bgm: 'deep-space', meta: '#05041a', tagline: 'how many digits can you remember?' },
-    { id: 'light',         name: 'DREAMY DAY',     tag: 'LEGENDARY', rarity: 'legendary', swatch: 'sw-light',         bgm: 'dreamy-day', meta: '#cfe6ff', tagline: 'sunny skies and a few digits of pi' },
-    { id: 'singularity',   name: 'SINGULARITY',    tag: 'GODLY', rarity: 'godly',     swatch: 'sw-singularity',   bgm: 'singularity', meta: '#000000', tagline: 'stare into the void' },
-    { id: 'halloween',     name: 'HAPI HALLOWEEN', tag: 'MYTHIC',    rarity: 'mythic',    swatch: 'sw-halloween',     bgm: 'haunted',    meta: '#0b0218', tagline: 'HaPi Halloween, woo!' },
-    { id: 'terminal',      name: 'PHOSPHOR',       tag: 'MYTHIC', rarity: 'mythic',    swatch: 'sw-terminal',      bgm: 'phosphor',   meta: '#9bbc0f', tagline: 'press start to remember pi' },
-    { id: 'hw-pumpkin', name: 'PUMPKIN', tag: 'COMMON', rarity: 'common', swatch: 'sw-hw-pumpkin', bgm: 'trick', meta: '#1e0f02', tagline: 'trick or type!' },
-    { id: 'hw-witch', name: 'WITCHING HOUR', tag: 'COMMON', rarity: 'common', swatch: 'sw-hw-witch', bgm: 'trick', meta: '#150a22', tagline: 'midnight digits brew best' },
-    { id: 'hw-slime', name: 'TOXIC SLIME', tag: 'COMMON', rarity: 'common', swatch: 'sw-hw-slime', bgm: 'trick', meta: '#0d1a05', tagline: 'slime time, keep typing' },
-    { id: 'hw-blood', name: 'BLOOD MOON', tag: 'COMMON', rarity: 'common', swatch: 'sw-hw-blood', bgm: 'trick', meta: '#1c060a', tagline: 'the moon is watching' },
-    { id: 'hw-fog', name: 'GRAVEYARD FOG', tag: 'COMMON', rarity: 'common', swatch: 'sw-hw-fog', bgm: 'trick', meta: '#0c1517', tagline: 'something is out there' },
-    { id: 'hw-backrooms', name: 'THE BACKROOMS', tag: 'LEGENDARY', rarity: 'legendary', swatch: 'sw-hw-backrooms', bgm: 'backrooms', meta: '#8a7430', tagline: 'you noclipped out of reality' },
-    { id: 'hw-eldritch', name: 'ELDRITCH SKY', tag: 'GODLY', rarity: 'godly', swatch: 'sw-hw-eldritch', bgm: 'eldritch', meta: '#05020a', tagline: 'it knows your digits' },
-    { id: 'hw-manor', name: 'HAUNTED MANOR', tag: 'EPIC', rarity: 'epic', swatch: 'sw-hw-manor', bgm: 'manor', meta: '#1a0f12', tagline: "the portraits are watching" },
-    { id: 'hw-carnival', name: 'CURSED CARNIVAL', tag: 'MYTHIC', rarity: 'mythic', swatch: 'sw-hw-carnival', bgm: 'carnival', meta: '#1a0830', tagline: "step right up... if you dare" },
-    { id: 'ex-neon', name: 'NEON GRID', tag: 'EPIC', rarity: 'epic', swatch: 'sw-ex-neon', bgm: 'chill', meta: '#12002e', tagline: "type like it's 1985" },
-    { id: 'ex-sea', name: 'DEEP SEA', tag: 'LEGENDARY', rarity: 'legendary', swatch: 'sw-ex-sea', bgm: 'chill', meta: '#020b1c', tagline: "digits float up like bubbles" },
-    { id: 'ex-aurora', name: 'AURORA', tag: 'MYTHIC', rarity: 'mythic', swatch: 'sw-ex-aurora', bgm: 'chill', meta: '#050c1a', tagline: "a sky full of digits" },
+    { id: 'default-dark',  name: 'MIDNIGHT', tag: 'DEFAULT', rarity: 'default', swatch: 'sw-default-dark',  bgm: 'chill', free: true, meta: '#10131c', tagline: 'how many digits can you remember?', desc: 'Plain dark gradient. The default for dark mode.' },
+    { id: 'default-light', name: 'DAYLIGHT', tag: 'DEFAULT', rarity: 'default', swatch: 'sw-default-light', bgm: 'chill', free: true, meta: '#eef3fb', tagline: 'how many digits can you remember?', desc: 'Plain light gradient. The default for light mode.' },
+    { id: "plain-ruby", name: "RUBY DUNES", tag: "RANK C", rarity: "common", swatch: "sw-plain-ruby", bgm: "chill", meta: "#1a080e", tagline: "seeing red? keep typing", desc: "A still red desert at sunset, dunes rolling to the horizon." },
+    { id: "plain-ocean", name: "OCEAN BAY", tag: "RANK C", rarity: "common", swatch: "sw-plain-ocean", bgm: "chill", meta: "#071a24", tagline: "dive into the digits", desc: "A calm bay at sunrise with a lone sailboat." },
+    { id: "plain-mint", name: "MINT WOODS", tag: "RANK C", rarity: "common", swatch: "sw-plain-mint", bgm: "chill", meta: "#06231a", tagline: "cool head, fresh digits", desc: "Misty mint-green pine woods under a pale moon." },
+    { id: "plain-grape", name: "GRAPE DUSK", tag: "RANK C", rarity: "common", swatch: "sw-plain-grape", bgm: "chill", meta: "#140a24", tagline: "sweet digits ahead", desc: "A violet city skyline at dusk, windows just lighting up." },
+    { id: "plain-sun", name: "SUNNY MEADOW", tag: "RANK C", rarity: "common", swatch: "sw-plain-sun", bgm: "chill", meta: "#241c06", tagline: "sunny side up", desc: "A sunflower meadow under a big yellow sun." },
+    { id: "hw-pumpkin", name: "PUMPKIN PATCH", tag: "RANK C", rarity: "common", swatch: "sw-hw-pumpkin", bgm: "trick", meta: "#1e0f02", tagline: "trick or type!", desc: "A moonlit pumpkin patch, every jack-o-lantern grinning." },
+    { id: "hw-witch", name: "WITCH MOON", tag: "RANK C", rarity: "common", swatch: "sw-hw-witch", bgm: "trick", meta: "#150a22", tagline: "midnight digits brew best", desc: "A giant purple moon and a witch on her broom." },
+    { id: "hw-slime", name: "SLIME SWAMP", tag: "RANK C", rarity: "common", swatch: "sw-hw-slime", bgm: "trick", meta: "#0d1a05", tagline: "slime time, keep typing", desc: "A glowing green swamp with slime dripping from above." },
+    { id: "hw-blood", name: "BLOOD MOON", tag: "RANK C", rarity: "common", swatch: "sw-hw-blood", bgm: "trick", meta: "#1c060a", tagline: "the moon is watching", desc: "A blood-red moon over dead trees and crooked crosses." },
+    { id: "hw-fog", name: "FOGGY GRAVEYARD", tag: "RANK C", rarity: "common", swatch: "sw-hw-fog", bgm: "trick", meta: "#0c1517", tagline: "something is out there", desc: "Gravestones in thick fog, one lantern still burning." },
+    { id: "ex-neon", name: "NEON GRID", tag: "RANK B", rarity: "epic", swatch: "sw-ex-neon", bgm: "chill", meta: "#12002e", tagline: "type like it's 1985", desc: "A striped synthwave sun and a neon grid rushing toward you." },
+    { id: "ex-sea", name: "DEEP SEA", tag: "RANK B", rarity: "epic", swatch: "sw-ex-sea", bgm: "chill", meta: "#020b1c", tagline: "digits float up like bubbles", desc: "Light rays, bubbles, fish and glowing jellyfish." },
+    { id: "ex-aurora", name: "AURORA", tag: "RANK B", rarity: "epic", swatch: "sw-ex-aurora", bgm: "chill", meta: "#050c1a", tagline: "a sky full of digits", desc: "Green and violet northern lights over dark peaks." },
+    { id: "hw-manor", name: "HAUNTED MANOR", tag: "RANK B", rarity: "epic", swatch: "sw-hw-manor", bgm: "manor", meta: "#1a0f12", tagline: "the portraits are watching", desc: "A candlelit hall with a stormy window and portraits that watch you." },
+    { id: "dark", name: "DEEP SPACE", tag: "RANK A", rarity: "legendary", swatch: "sw-dark", bgm: "deep-space", meta: "#05041a", tagline: "how many digits can you remember?", desc: "Parallax stars, a ringed planet, a moon and shooting stars." },
+    { id: "light", name: "DREAMY DAY", tag: "RANK A", rarity: "legendary", swatch: "sw-light", bgm: "dreamy-day", meta: "#cfe6ff", tagline: "sunny skies and a few digits of pi", desc: "A sunny pixel day with clouds, hills, a balloon and birds." },
+    { id: "terminal", name: "PHOSPHOR", tag: "RANK A", rarity: "legendary", swatch: "sw-terminal", bgm: "phosphor", meta: "#9bbc0f", tagline: "press start to remember pi", desc: "A handheld-LCD world with a little pi runner." },
+    { id: "halloween", name: "HAPI HALLOWEEN", tag: "RANK A", rarity: "legendary", swatch: "sw-halloween", bgm: "haunted", meta: "#0b0218", tagline: "HaPi Halloween, woo!", desc: "Ghosts, bats, a haunted house and glowing pumpkins." },
+    { id: "hw-carnival", name: "CURSED CARNIVAL", tag: "RANK A", rarity: "legendary", swatch: "sw-hw-carnival", bgm: "carnival", meta: "#1a0830", tagline: "step right up... if you dare", desc: "A ferris wheel, a striped tent and a drifting red balloon." },
+    { id: "hw-backrooms", name: "THE BACKROOMS", tag: "RANK A", rarity: "legendary", swatch: "sw-hw-backrooms", bgm: "backrooms", meta: "#8a7430", tagline: "you noclipped out of reality", desc: "An endless yellow hallway with buzzing lights." },
+    { id: "singularity", name: "SINGULARITY", tag: "RANK S", rarity: "godly", swatch: "sw-singularity", bgm: "singularity", meta: "#000000", tagline: "stare into the void", desc: "A black hole that flares with every digit you type." },
+    { id: "hw-eldritch", name: "ELDRITCH SKY", tag: "RANK S", rarity: "godly", swatch: "sw-hw-eldritch", bgm: "eldritch", meta: "#05020a", tagline: "it knows your digits", desc: "Many eyes all over the screen, all following your pointer." },
   ];
   const themeById = (id) => THEMES.find((t) => t.id === id);
   const isOwned = (t) => !!t.free || wallet.owns(t.id);
@@ -514,16 +514,27 @@
     updateAudioSummary();
   }
 
-  function renderThemes() {                                   // "Themes" window: theme cards
+  function hintFor(t) {                                       // where a locked theme comes from
+    const B = PiGame.gacha.BANNERS, id = Object.keys(B).find((k) => B[k].pool.indexOf(t.id) >= 0);
+    return id ? 'Find it in the ' + B[id].name + ' banner in the Shop' + (B[id].status === 'live' ? '.' : ' (opening soon).') : 'Find it in the Shop.';
+  }
+
+  function renderThemes() {                                   // "Themes" window: one column, tap a row to open it, then EQUIP
     const host = $('#theme-grid');
     if (!host) return;
-    const cur = currentTheme().id;
+    const cur = currentTheme().id, open = host.dataset.open || '';
     host.innerHTML = THEMES.map((t) => {
-      const owned = isOwned(t);
-      return '<button class="theme-card rarity-' + t.rarity + (owned ? '' : ' locked') + '" data-theme-id="' + t.id + '" aria-pressed="' + String(owned && cur === t.id) + '">' +
+      const owned = isOwned(t), isOpen = open === t.id, worn = owned && cur === t.id;
+      return '<div class="theme-row rarity-' + t.rarity + (owned ? '' : ' locked') + (isOpen ? ' open' : '') + (worn ? ' current' : '') + '">' +
+        '<button class="tr-head" data-theme-id="' + t.id + '" aria-expanded="' + String(isOpen) + '">' +
         '<span class="swatch ' + t.swatch + '">' + (owned ? '' : '<span class="lock" data-icon="lock"></span>') + '</span>' +
-        '<span class="t-name">' + t.name + '</span><span class="t-tag">' + t.tag + '</span>' +
-        (owned ? (cur === t.id ? '<span class="t-worn">WEARING</span>' : '') : '<span class="t-price">FIND IN SHOP</span>') + '</button>';
+        '<span class="tr-name">' + (owned ? t.name : '???') + '</span><span class="t-tag">' + t.tag + '</span>' +
+        (worn ? '<span class="t-worn">WEARING</span>' : '') + '<span class="chev" aria-hidden="true"></span></button>' +
+        '<div class="tr-body"' + (isOpen ? '' : ' hidden') + '><p class="tr-desc">' +
+        (owned ? t.desc : 'You do not own this theme yet. ' + hintFor(t)) + '</p><div class="tr-actions">' +
+        (owned ? '<button class="btn small' + (worn ? '' : ' btn-primary') + '" data-equip="' + t.id + '"' + (worn ? ' disabled' : '') + '>' + (worn ? 'WEARING' : 'EQUIP') + '</button>'
+               : '<button class="btn small" disabled>NOT OWNED</button><button class="btn small" data-goshop="1">OPEN SHOP</button>') +
+        '</div></div></div>';
     }).join('');
     fx.icons.mount(host);
     $('#themes-current').textContent = currentTheme().name;
@@ -533,12 +544,15 @@
     wallet.onChange(() => refreshCoins());
 
     $('#theme-grid').addEventListener('click', (e) => {
-      const card = e.target.closest('[data-theme-id]');
-      const t = card && themeById(card.dataset.themeId);
-      if (!t) return;
-      if (isOwned(t)) { equipTheme(t.id); audio.sfx('toggle_on'); return; }
-      audio.sfx('reject'); toast(t.name + ' comes from the Shop');          // locked: send them to the shop
-      $$('dialog[open]').forEach((d) => d.close()); go('shop');
+      const eq = e.target.closest('[data-equip]');
+      if (eq) { equipTheme(eq.dataset.equip); audio.sfx('toggle_on'); return; }
+      if (e.target.closest('[data-goshop]')) { audio.sfx('click'); $$('dialog[open]').forEach((d) => d.close()); go('shop'); return; }
+      const head = e.target.closest('[data-theme-id]');
+      if (!head) return;
+      const host = e.currentTarget, id = head.dataset.themeId;
+      host.dataset.open = host.dataset.open === id ? '' : id;           // only one row open at a time
+      audio.sfx(isOwned(themeById(id)) ? 'click' : 'reject');
+      renderThemes(); updateFades($('#themes-modal'));
     });
     $('#bgm-list').addEventListener('click', (e) => {
       const b = e.target.closest('[data-bgm]');

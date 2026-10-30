@@ -650,30 +650,50 @@
   };
 
   /* ---------------------------------------------- ELDRITCH SKY (Pi Fright!) ---- */
+  // many eyes scattered over the screen, all following the pointer. They keep clear of the UI (sc.avoid) so they are never hidden behind the calculator.
   SCENES['hw-eldritch'] = {
+    layout: true,
     init(sc) {
       const r = rng(66), w = sc.w, h = sc.h;
       return {
+        r, seen: -9,
         stars: Array.from({ length: 90 }, () => ({ x: r() * w, y: r() * h * 0.8, ph: r() * 6, c: r() < 0.3 ? '#d9a6ff' : '#ffffff' })),
         tent: Array.from({ length: 9 }, (_, i) => ({ x: (i + 0.5) * w / 9 + (r() - 0.5) * 8, len: h * (0.16 + r() * 0.2), ph: r() * 6, a: 4 + r() * 5 })),
+        eyes: Array.from({ length: 18 }, (_, i) => ({ x: -99, y: -99, R: i < 3 ? 7 + Math.floor(r() * 3) : 3 + Math.floor(r() * 4), open: 0, want: 0, ph: r() * 6 })),
       };
     },
     draw(sc, t, px, py) {
-      const g = sc.ctx, w = sc.w, h = sc.h, S = sc.state, cx = w / 2, cy = h * 0.2, R = Math.min(w, h * 0.8) * 0.18, pulse = 0.5 + 0.5 * Math.sin(t * 0.8);
+      const g = sc.ctx, w = sc.w, h = sc.h, S = sc.state, av = sc.avoid || [], tx = (px + 1) / 2 * w, ty = (py + 1) / 2 * h;
+      const free = (x, y, R, me) => {
+        const rx = R * 1.5 + 2, ry = R * 0.9 + 2;
+        return x - rx > 1 && x + rx < w - 1 && y - ry > 1 && y + ry < h - 1 && !av.some((a) => x + rx > a[0] && x - rx < a[2] && y + ry > a[1] && y - ry < a[3]) &&
+          !S.eyes.some((e) => e !== me && e.want && Math.abs(e.x - x) < e.R * 1.5 + rx && Math.abs(e.y - y) < e.R * 0.9 + ry);
+      };
+      if (t - S.seen > 0.6) {                                                        // twice a second: an eye the UI now covers closes, a closed eye finds a free spot
+        S.seen = t;
+        for (const e of S.eyes) {
+          if (e.want && !free(e.x, e.y, e.R, e)) e.want = 0;
+          if (!e.want) for (let n = 0; n < 30; n++) { const x = 6 + S.r() * (w - 12), y = 6 + S.r() * (h - 12); if (free(x, y, e.R, e)) { e.x = x; e.y = y; e.want = 1; break; } }
+        }
+      }
       for (const s of S.stars) { g.globalAlpha = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * 1.3 + s.ph)); rect(g, s.c, s.x, s.y, 1, 1); }
-      g.globalAlpha = 0.16 + 0.1 * pulse; disc(g, '#7a1fa0', cx, cy, R * 2.2, R * 1.6);
-      g.globalAlpha = 0.3; disc(g, '#3a0a55', cx, cy, R * 1.55, R * 1.1); g.globalAlpha = 1;
-      disc(g, '#efe6ff', cx, cy, R * 1.35, R * 0.75);                                 // the eye follows your pointer
-      const ix = cx + px * R * 0.55, iy = cy + py * R * 0.3;
-      disc(g, '#9a1fd0', ix, iy, R * 0.62, R * 0.62); disc(g, '#ff4d9a', ix, iy, R * 0.42, R * 0.42);
-      disc(g, '#000', ix, iy, R * (0.12 + 0.1 * pulse), R * 0.58); rect(g, '#ffffff', ix - R * 0.2, iy - R * 0.3, 2, 2);
-      const blink = Math.max(0, Math.sin(t * 0.5) * 8 - 7);                           // rare slow blink
-      if (blink > 0) rect(g, '#0a0414', cx - R * 1.4, cy - R * 0.8, Math.round(R * 2.8), Math.round(R * 1.6 * Math.min(1, blink)));
-      for (const T of S.tent) {                                                       // tentacles creeping up from below
+      g.globalAlpha = 1;
+      for (const T of S.tent) {                                                      // tentacles creeping up from below
         for (let k = 0; k < T.len; k += 2) {
           const x = T.x + Math.sin(t * 1.2 + T.ph + k * 0.09) * T.a * (k / T.len + 0.2);
           rect(g, k < T.len * 0.85 ? '#1b0a2a' : '#2a0f40', x, h - k, k > T.len * 0.6 ? 2 : 3, 2);
           if (k % 12 === 0) rect(g, '#7a1fa0', x + 1, h - k, 1, 1);
+        }
+      }
+      for (const e of S.eyes) {
+        e.open += ((e.want ? 1 : 0) - e.open) * 0.12;
+        if (e.open < 0.06) continue;
+        const R = e.R, cx = Math.round(e.x), cy = Math.round(e.y), blink = Math.max(0, Math.sin(t * 0.6 + e.ph * 3) * 9 - 8), o = Math.max(0.08, e.open * (1 - Math.min(1, blink)));
+        g.globalAlpha = 0.16 * e.open; disc(g, '#7a1fa0', cx, cy, R * 2.2, R * 1.5); g.globalAlpha = 1;
+        disc(g, '#efe6ff', cx, cy, R * 1.5, R * 0.9 * o);                            // the eye
+        if (o > 0.35) {
+          const dx = tx - e.x, dy = ty - e.y, d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / (R * 4)), ix = cx + Math.round(dx / d * R * 0.6 * k), iy = cy + Math.round(dy / d * R * 0.3 * k), q = Math.min(1, o);
+          disc(g, '#9a1fd0', ix, iy, R * 0.62, R * 0.62 * q); disc(g, '#ff4d9a', ix, iy, R * 0.4, R * 0.4 * q); disc(g, '#000000', ix, iy, Math.max(1, R * 0.12), R * 0.5 * q);   // iris, pupil that tracks you
         }
       }
     },
@@ -815,8 +835,99 @@
     },
   };
 
+  /* ====================== Rank C: still, designed scenes (drawn once, no animation) ====================== */
+  const rr = (g, c, x, y, w, h) => rect(g, c, x, y, Math.max(1, Math.round(w)), Math.max(1, Math.round(h)));
+  const skyRows = (g, w, c1, c2, to) => { for (let y = 0; y < to; y += 2) rect(g, mix(c1, c2, y / to), 0, y, w, 2); };
+  const starDots = (g, w, n, seed, maxY, c) => { const r = rng(seed); g.globalAlpha = 0.8; for (let i = 0; i < n; i++) rect(g, c || '#ffffff', r() * w, r() * maxY, 1, 1); g.globalAlpha = 1; };
+  const still = (draw) => ({ static: true, init() { return {}; }, draw(sc) { draw(sc.ctx, sc.w, sc.h); } });
+
+  SCENES['plain-ruby'] = still((g, w, h) => {                                   // RUBY DUNES
+    skyRows(g, w, '#2a0610', '#ff6a3d', h * 0.62); starDots(g, w, 40, 1, h * 0.3, '#ffd6c2');
+    disc(g, '#ffd27a', w * 0.7, h * 0.55, Math.max(10, w * 0.08)); disc(g, '#fff0b0', w * 0.7 - 2, h * 0.55 - 2, Math.max(5, w * 0.04));
+    ridge(g, '#8a1f2a', w, h, h * 0.66, 5, 0.04, 0.1, 0, 1); ridge(g, '#5e1220', w, h, h * 0.74, 7, 0.05, 0.12, 30, 2); ridge(g, '#2f0912', w, h, h * 0.86, 8, 0.03, 0.09, 80, 4);
+    [0.18, 0.5, 0.82].forEach((f) => { const x = Math.round(w * f), y = ridgeY(h * 0.86, 8, 0.03, 0.09, 80, 4, x), c = '#14040a'; rect(g, c, x, y - 12, 2, 12); rect(g, c, x - 3, y - 8, 3, 2); rect(g, c, x - 3, y - 11, 2, 4); rect(g, c, x + 2, y - 7, 3, 2); rect(g, c, x + 4, y - 10, 2, 4); });
+  });
+  SCENES['plain-ocean'] = still((g, w, h) => {                                  // OCEAN BAY
+    const hy = Math.round(h * 0.55), r = rng(8);
+    skyRows(g, w, '#0a2a5a', '#ffb58a', hy); disc(g, '#fff0c0', w * 0.3, hy - 4, Math.max(9, w * 0.07));
+    g.drawImage(cloudSprite(34, 13, '#ffd9c7', '#e8a89a'), Math.round(w * 0.6), Math.round(h * 0.18)); g.drawImage(cloudSprite(24, 10, '#ffd9c7', '#e8a89a'), Math.round(w * 0.12), Math.round(h * 0.3));
+    for (let y = hy; y < h; y++) rect(g, mix('#ff9a7a', '#06304f', Math.min(1, ((y - hy) / (h - hy)) * 1.4)), 0, y, w, 1);
+    for (let y = hy; y < hy + h * 0.22; y += 2) rr(g, '#ffe9b0', w * 0.3 - 7 + (y % 4), y, 14 - (y - hy) * 0.1, 1);
+    g.globalAlpha = 0.7; for (let i = 0; i < 70; i++) rect(g, '#9ad7ff', r() * w, hy + 4 + r() * (h - hy - 4), 3 + r() * 3, 1); g.globalAlpha = 1;
+    const bx = Math.round(w * 0.72), by = hy + 4; rect(g, '#2a1a10', bx - 4, by, 10, 2); rect(g, '#2a1a10', bx, by - 15, 1, 15);
+    for (let k = 0; k < 12; k++) rr(g, '#fff4e0', bx + 1, by - 14 + k, k * 0.6 + 1, 1);
+  });
+  SCENES['plain-mint'] = still((g, w, h) => {                                   // MINT WOODS
+    skyRows(g, w, '#06231a', '#9ff0cf', h * 0.7); starDots(g, w, 30, 3, h * 0.35, '#e8fff4'); disc(g, '#f2fff8', w * 0.75, h * 0.2, Math.max(8, w * 0.05));
+    const layer = (c, base, amp, off, ph) => { ridge(g, c, w, h, base, amp, 0.05, 0.13, off, 1); for (let x = 3; x < w; x += ph * 0.6) { const y = ridgeY(base, amp, 0.05, 0.13, off, 1, x); for (let k = 0; k < ph; k++) rr(g, c, x - k * 0.35, y - ph + k, k * 0.7 + 1, 1); } };
+    layer('#3f9d7a', h * 0.66, 5, 0, 12); layer('#1f6e55', h * 0.76, 5, 40, 16); layer('#0d3d30', h * 0.88, 6, 90, 22);
+    g.globalAlpha = 0.22; for (let i = 0; i < 3; i++) rect(g, '#d7fff0', 0, h * (0.6 + i * 0.1), w, 3); g.globalAlpha = 1;
+  });
+  SCENES['plain-grape'] = still((g, w, h) => {                                  // GRAPE DUSK
+    const r = rng(6);
+    skyRows(g, w, '#1a0a33', '#ff7bb8', h * 0.75); starDots(g, w, 35, 5, h * 0.35, '#f3e6ff'); disc(g, '#ffe6f5', w * 0.25, h * 0.22, Math.max(7, w * 0.045));
+    for (let x = 0, k = 0; x < w; k++) {
+      const bw = 8 + Math.floor(r() * 10), bh = Math.round(h * (0.18 + r() * 0.28)); rect(g, k % 2 ? '#241046' : '#170a30', x, h - bh, bw, bh);
+      for (let wy = h - bh + 3; wy < h - 3; wy += 4) for (let wx = x + 2; wx < x + bw - 2; wx += 3) if (r() < 0.35) rect(g, '#ffd27a', wx, wy, 1, 2);
+      x += bw + 1;
+    }
+  });
+  SCENES['plain-sun'] = still((g, w, h) => {                                    // SUNNY MEADOW
+    const r = rng(7);
+    skyRows(g, w, '#3a9be0', '#cfeeff', h * 0.62); disc(g, '#fff3a0', w * 0.78, h * 0.18, Math.max(12, w * 0.09)); disc(g, '#ffd84d', w * 0.78, h * 0.18, Math.max(8, w * 0.065));
+    g.drawImage(cloudSprite(34, 13, '#ffffff', '#d8e6ff'), Math.round(w * 0.12), Math.round(h * 0.16)); g.drawImage(cloudSprite(24, 10, '#ffffff', '#d8e6ff'), Math.round(w * 0.45), Math.round(h * 0.3));
+    ridge(g, '#7fd06a', w, h, h * 0.66, 4, 0.05, 0.12, 0, 1); ridge(g, '#4fb04a', w, h, h * 0.76, 4, 0.06, 0.15, 30, 2);
+    for (let i = 0; i < w / 4; i++) { const x = Math.round(r() * w), y = Math.round(h * (0.78 + r() * 0.2)); rect(g, '#2f8a3a', x, y, 1, 6); disc(g, '#ffcf1f', x, y - 2, 2, 2); rect(g, '#7a4a10', x, y - 2, 1, 1); }
+  });
+
+  SCENES['hw-pumpkin'] = still((g, w, h) => {                                   // PUMPKIN PATCH
+    const r = rng(12), ps = [];
+    skyRows(g, w, '#0a0412', '#5a1a08', h * 0.7); starDots(g, w, 40, 11, h * 0.4, '#ffe9b0');
+    g.globalAlpha = 0.2; disc(g, '#ff9a1f', w * 0.72, h * 0.2, Math.max(18, w * 0.12)); g.globalAlpha = 1; disc(g, '#ffb347', w * 0.72, h * 0.2, Math.max(12, w * 0.08)); disc(g, '#ffd27a', w * 0.72 - 2, h * 0.2 - 2, Math.max(7, w * 0.05));
+    ridge(g, '#1a0a1e', w, h, h * 0.7, 5, 0.05, 0.12, 0, 2); rect(g, '#0a0414', 0, Math.round(h * 0.82), w, h);
+    for (let i = 0; i < 10; i++) ps.push({ x: (i + 0.5) * w / 10 + (r() - 0.5) * 6, y: h * (0.86 + r() * 0.12), r: 6 + Math.floor(r() * 9), lit: r() < 0.85 });
+    ps.sort((a, b) => a.y - b.y).forEach((p, i) => pumpkin(g, Math.round(p.x), Math.round(p.y), p.r, p.lit, 0, i));
+  });
+  SCENES['hw-witch'] = still((g, w, h) => {                                     // WITCH MOON
+    const mx = w * 0.62, my = h * 0.3, mr = Math.max(18, Math.min(w, h) * 0.2), k = '#0a0414', wx = Math.round(mx - mr * 0.2), wy = Math.round(my - mr * 0.1);
+    skyRows(g, w, '#0b0420', '#4a1a6e', h); starDots(g, w, 50, 13, h * 0.7, '#e8d9ff');
+    g.globalAlpha = 0.2; disc(g, '#c9a6ff', mx, my, mr * 1.4); g.globalAlpha = 1; disc(g, '#e9dcff', mx, my, mr); disc(g, '#cdb8f0', mx + mr * 0.3, my + mr * 0.2, mr * 0.2); disc(g, '#cdb8f0', mx - mr * 0.35, my - mr * 0.1, mr * 0.14);
+    pline(g, k, wx - 14, wy + 6, wx + 12, wy + 2); for (let i = 0; i < 6; i++) pline(g, k, wx - 14, wy + 6, wx - 20, wy + 3 + i);                // broom
+    disc(g, k, wx, wy - 1, 3, 4); rect(g, k, wx - 4, wy - 6, 9, 2); rect(g, k, wx - 1, wy - 10, 3, 4); rect(g, k, wx, wy - 12, 1, 2);        // witch + hat
+    bat(g, w * 0.2, h * 0.25, 0, 1); bat(g, w * 0.32, h * 0.4, 0.4, 2); bat(g, w * 0.86, h * 0.52, 0.8, 3);
+    ridge(g, '#12051f', w, h, h * 0.88, 5, 0.06, 0.15, 0, 3); g.drawImage(deadTree(38, 50, 9), Math.round(w * 0.06), Math.round(h * 0.88 - 46));
+  });
+  SCENES['hw-slime'] = still((g, w, h) => {                                     // SLIME SWAMP
+    const r = rng(14), wy = Math.round(h * 0.74);
+    skyRows(g, w, '#031006', '#2f6a1a', h * 0.7); g.globalAlpha = 0.25; disc(g, '#9aff4a', w * 0.25, h * 0.2, Math.max(16, w * 0.1)); g.globalAlpha = 1; disc(g, '#c9ff7a', w * 0.25, h * 0.2, Math.max(9, w * 0.06));
+    ridge(g, '#0d2a0c', w, h, h * 0.66, 5, 0.05, 0.12, 0, 1);
+    for (let y = wy; y < h; y++) rect(g, mix('#1f6b12', '#07200a', (y - wy) / (h - wy)), 0, y, w, 1);
+    g.drawImage(deadTree(30, 38, 4), Math.round(w * 0.78), wy - 34); g.drawImage(deadTree(38, 50, 9), Math.round(w * 0.05), wy - 46);
+    for (let i = 0; i < 28; i++) { rect(g, '#b8ff8a', r() * w, wy + 3 + r() * (h - wy - 4), 2, 2); } for (let i = 0; i < 18; i++) rect(g, '#d9ff6a', r() * w, h * (0.3 + r() * 0.4), 1, 1);
+    for (let i = 0; i < 9; i++) { const x = (i + 0.5) * w / 9 + (r() - 0.5) * 8, len = Math.round(8 + r() * 24); rect(g, '#7aff3a', x, 0, 4, len); disc(g, '#7aff3a', x + 1, len, 3, 3); rect(g, '#d9ff9a', x + 1, 2, 1, len - 2); }
+  });
+  SCENES['hw-blood'] = still((g, w, h) => {                                     // BLOOD MOON
+    const mx = w * 0.5, my = h * 0.28, mr = Math.max(20, Math.min(w, h) * 0.22), c = '#0d0205';
+    skyRows(g, w, '#120206', '#5a0a14', h * 0.75); starDots(g, w, 35, 21, h * 0.4, '#ffb3b3');
+    g.globalAlpha = 0.25; disc(g, '#ff2d3d', mx, my, mr * 1.35); g.globalAlpha = 1; disc(g, '#c4182a', mx, my, mr); disc(g, '#e8323f', mx - mr * 0.25, my - mr * 0.25, mr * 0.55);
+    disc(g, '#8a0f1c', mx + mr * 0.35, my + mr * 0.25, mr * 0.18); disc(g, '#8a0f1c', mx - mr * 0.3, my + mr * 0.4, mr * 0.12);
+    ridge(g, c, w, h, h * 0.82, 4, 0.05, 0.12, 0, 2); g.drawImage(deadTree(38, 50, 9), Math.round(w * 0.75), Math.round(h * 0.82 - 44)); g.drawImage(deadTree(30, 38, 4), Math.round(w * 0.08), Math.round(h * 0.82 - 34));
+    [0.3, 0.42, 0.55, 0.62].forEach((f, i) => { const x = Math.round(w * f), y = Math.round(h * 0.9 + (i % 2) * 6); rect(g, c, x, y - 14, 2, 14); rect(g, c, x - 4, y - 10, 10, 2); });
+  });
+  SCENES['hw-fog'] = still((g, w, h) => {                                       // FOGGY GRAVEYARD
+    const r = rng(31);
+    skyRows(g, w, '#050b0d', '#2f5a5f', h * 0.8); g.globalAlpha = 0.2; disc(g, '#dff3f0', w * 0.3, h * 0.18, Math.max(14, w * 0.09)); g.globalAlpha = 1; disc(g, '#dff3f0', w * 0.3, h * 0.18, Math.max(8, w * 0.05));
+    for (let l = 0; l < 3; l++) {
+      const base = h * (0.7 + l * 0.1);
+      ridge(g, ['#13292c', '#0d1c1f', '#070f11'][l], w, h, base, 3, 0.05, 0.1, l * 40, l);
+      for (let i = 0; i < 4 + l * 2; i++) tomb(g, Math.round(r() * w), Math.round(base + 6), 7 + 2 * Math.floor(r() * 2), 8 + Math.floor(r() * 6) + l * 2, ['#1d3a3f', '#14292c', '#0c1a1c'][l]);
+      g.globalAlpha = 0.22; rect(g, '#cfeee9', 0, base - 6, w, 7); g.globalAlpha = 1;
+    }
+    const lx = Math.round(w * 0.7); rect(g, '#0c1a1c', lx, Math.round(h * 0.72), 1, 16); g.globalAlpha = 0.25; disc(g, '#ffb347', lx, h * 0.72, 10); g.globalAlpha = 1; rect(g, '#ffb347', lx - 1, Math.round(h * 0.72) - 3, 3, 4);
+  });
+
   class SceneBG {
-    constructor(canvas) { this.cv = canvas; this.ctx = canvas.getContext('2d'); this.id = null; this.state = null; this.last = -1e9; this.resize(); }
+    constructor(canvas) { this.cv = canvas; this.ctx = canvas.getContext('2d'); this.id = null; this.state = null; this.last = -1e9; this.avoid = []; this.avoidAt = -1e9; this.drawn = false; this.resize(); }
     resize() {
       const S = Math.max(3, Math.min(5, Math.round(Math.min(innerWidth, innerHeight) / 160)));
       this.w = Math.ceil(innerWidth / S); this.h = Math.ceil(innerHeight / S);
@@ -826,18 +937,29 @@
     setTheme(id) {
       this.id = SCENES[id] ? id : null;
       this.state = this.id ? SCENES[this.id].init(this) : null;
-      this.last = -1e9;
+      this.last = -1e9; this.avoidAt = -1e9; this.drawn = false;
       this.ctx.clearRect(0, 0, this.w, this.h);
     }
     react(kind, v) {                               // the game pokes the scene (singularity reacts to typing)
       const s = this.id && SCENES[this.id];
       if (s && s.react && this.state) s.react(this.state, kind, v);
     }
+    layout() {                                     // the UI's rectangles in scene pixels, so a scene can keep clear of them
+      const k = this.w / innerWidth, out = [];
+      document.querySelectorAll('.lcd, .keypad, .hud, .meter, .hint, .menu-card, .hero, .menu-links, .panel, .topbar > *').forEach((e) => {
+        const r = e.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) out.push([r.left * k, r.top * k, r.right * k, r.bottom * k]);
+      });
+      this.avoid = out;
+    }
     render(t, px, py, force) {
       if (!this.id || (!force && t - this.last < 32)) return;
+      const sc = SCENES[this.id];
+      if (sc.static && this.drawn && !force) return;                                  // still scenes are painted once
+      if (sc.layout && (force || t - this.avoidAt > 400)) { this.layout(); this.avoidAt = t; }
       this.last = t; this.ctx.globalAlpha = 1; this.ctx.globalCompositeOperation = 'source-over';
       this.ctx.clearRect(0, 0, this.w, this.h);
-      SCENES[this.id].draw(this, t / 1000, px, py);
+      sc.draw(this, t / 1000, px, py); this.drawn = true;
     }
   }
 

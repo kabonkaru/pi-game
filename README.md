@@ -93,34 +93,36 @@ Each mode has its own **top 10** leaderboard (name up to 12 characters, score, d
 
 ### Banners
 
+Themes come in four ranks, judged by design: **Rank C** = a still, designed scene with standard music; **Rank B** = an animated scene; **Rank A** = a parallax or great-looking scene with its own music; **Rank S** = an interactive scene that reacts to you, with its own music. Midnight and Daylight (plain gradients) are the free defaults.
+
 | Banner | Contents | Status |
 | --- | --- | --- |
-| **Cosmic Beginnings** | 5 Common plain colours, Epic Deep Space and Neon Grid, Legendary Dreamy Day and Deep Sea, Mythic Phosphor and Aurora, Godly Singularity | live |
-| **Pi Fright!** (Halloween event) | 5 Common Halloween colours, Epic Haunted Manor, Legendary The Backrooms, Mythic Hapi Halloween and Cursed Carnival, Godly Eldritch Sky | live |
+| **Cosmic Beginnings** | C: Ruby Dunes, Ocean Bay, Mint Woods, Grape Dusk, Sunny Meadow. B: Neon Grid, Deep Sea, Aurora. A: Deep Space, Dreamy Day, Phosphor. S: Singularity | live |
+| **Pi Fright!** (Halloween, always open) | C: Pumpkin Patch, Witch Moon, Slime Swamp, Blood Moon, Foggy Graveyard. B: Haunted Manor. A: Hapi Halloween, Cursed Carnival, The Backrooms. S: Eldritch Sky | live |
 
-Rates: Common 62% (12.4% each), Epic 24%, Legendary 9%, Mythic 4%, Godly 1%. See [`docs/GACHA_BLUEPRINT.md`](docs/GACHA_BLUEPRINT.md) for the full design and what is still open.
+Placeholder rates (a balance pass is planned): Cosmic Beginnings C 60% / B 25% / A 12% / S 3%; Pi Fright! C 55% / B 22% / A 18% / S 5%. See [`docs/GACHA_BLUEPRINT.md`](docs/GACHA_BLUEPRINT.md) for the full design and what is still open.
 
 ### Themes
 
-Every theme has its own fonts, UI shape and music, and the bigger ones have an animated pixel-art world.
+Every theme has its own fonts, UI shape and a scene; the Settings > Themes list is one column: tap a row to open it, then press EQUIP. Themes you do not own show `???` and tell you which banner they come from.
 
-| Theme | Rarity | World and look | Music |
+| Theme | Rank | Scene | Music |
 | --- | --- | --- | --- |
 | **Midnight** / **Daylight** | default (free) | plain dark / light gradient, follows your OS setting | Chill |
-| **Ruby, Ocean, Mint, Grape, Sunny** | Common | plain colour gradients (each is one hue) | Chill |
-| **Deep Space** | Epic | stars, a ringed planet, a moon and shooting stars | Deep Space |
-| **Dreamy Day** | Legendary | pixel sun, drifting clouds, layered hills with flowers, a hot-air balloon and birds; soft rounded UI | Dreamy Day |
-| **Phosphor** | Mythic | handheld console: four shades of green, LCD pixel grid, a side-scrolling world with a π runner | Phosphor |
-| **Hapi Halloween** | Mythic (event) | giant moon, ghosts, bats, a haunted house, pumpkins, cobwebs; gothic titles | Haunted Waltz |
-| **Neon Grid** | Epic | synthwave sun, a grid floor rushing toward you, mountains | Chill |
-| **Deep Sea** | Legendary | light rays, bubbles, fish, glowing jellyfish, swaying weed | Chill |
-| **Aurora** | Mythic | green and violet northern lights over dark peaks | Chill |
-| **Pumpkin, Witching Hour, Toxic Slime, Blood Moon, Graveyard Fog** | Common (Pi Fright!) | one-hue Halloween colours | Trick or Treat |
-| **Haunted Manor** | Epic (Pi Fright!) | candlelit hall, storm window, portraits whose eyes follow your pointer | Manor Hours |
-| **The Backrooms** | Legendary (Pi Fright!) | endless yellow hallway with buzzing lights | Fluorescent Hum |
-| **Cursed Carnival** | Mythic (Pi Fright!) | ferris wheel, striped tent, string lights, a red balloon | Cursed Calliope |
-| **Eldritch Sky** | Godly (Pi Fright!) | a giant eye that follows your pointer, tentacles | Eldritch Drone |
-| **Singularity** | Godly | a **black hole that reacts to your typing**: the disk flares on every digit, spins faster and burns hotter as your combo climbs, and a wrong key sends a red shockwave | Event Horizon |
+| **Ruby Dunes, Ocean Bay, Mint Woods, Grape Dusk, Sunny Meadow** | C | still pixel scenes: desert, bay, pine woods, city skyline, sunflower meadow | Chill |
+| **Pumpkin Patch, Witch Moon, Slime Swamp, Blood Moon, Foggy Graveyard** | C (Pi Fright!) | still Halloween scenes | Trick or Treat |
+| **Neon Grid** | B | synthwave sun, a grid floor rushing toward you | Chill |
+| **Deep Sea** | B | light rays, bubbles, fish, glowing jellyfish | Chill |
+| **Aurora** | B | green and violet northern lights over dark peaks | Chill |
+| **Haunted Manor** | B (Pi Fright!) | candlelit hall, storm window, portraits whose eyes follow your pointer | Manor Hours |
+| **Deep Space** | A | stars, a ringed planet, a moon and shooting stars | Deep Space |
+| **Dreamy Day** | A | pixel sun, clouds, hills with flowers, a balloon and birds; soft rounded UI | Dreamy Day |
+| **Phosphor** | A | handheld console: four shades of green, LCD grid, a pi runner | Phosphor |
+| **Hapi Halloween** | A (Pi Fright!) | moon, ghosts, bats, a haunted house, pumpkins, cobwebs | Haunted Waltz |
+| **Cursed Carnival** | A (Pi Fright!) | ferris wheel, striped tent, string lights, a red balloon | Cursed Calliope |
+| **The Backrooms** | A (Pi Fright!) | endless yellow hallway with buzzing lights | Fluorescent Hum |
+| **Singularity** | S | a black hole that flares with every digit you type, spins faster with your combo, and shockwaves on a mistake | Event Horizon |
+| **Eldritch Sky** | S (Pi Fright!) | many eyes all over the screen, all following your pointer; they keep clear of the keypad | Eldritch Drone |
 
 **Existing players keep everything:** themes they already bought, plus Deep Space and Dreamy Day (they used to be free defaults).
 
@@ -200,7 +202,7 @@ console.log(k.totalScore); // 150 + 1 * 500 = 650
 
 ## Changelog
 
-Full history lives in [`docs/CHANGELOG.md`](docs/CHANGELOG.md).
+Full history lives in [`CHANGELOG.md`](CHANGELOG.md).
 
 - **v1.5**: the **Gacha & Shop**: rainbow shop icon, Cosmic Beginnings banner (x1/x5/x10 pulls, duplicate refunds, fake-out), drop rates and collection windows, a chest-opening sequence with shop music. New themes: plain Midnight/Daylight defaults, five Common colours and the Godly **Singularity** (a black hole that reacts to your typing). New Chill, Shop and Event Horizon tracks. Direct theme buying is replaced by pulls; existing players keep everything. Hapi Halloween moves to a locked event banner.
 - **v1.4.1**: hotfix. Settings is now a short menu with a **Themes** window, an **Audio & BGM** window and an **About Us** tab (the dropdowns are gone). Fixed scrollbars flashing in during screen shake. Settings windows no longer reach the screen edges and use a soft scroll fade instead of a scrollbar. Added inert scaffolding and a [blueprint](docs/GACHA_BLUEPRINT.md) for the Gacha & Shop update.

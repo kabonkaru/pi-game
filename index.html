@@ -34,8 +34,7 @@
   <!-- ===== loader / transition: black screen + theme-coloured icon (shown from the first paint) ===== -->
   <div id="loader" class="loader" role="status" aria-live="polite">
     <div class="ld-box">
-      <span class="ld-icon" data-icon="pi" aria-hidden="true"></span>
-      <div class="ld-bar" aria-hidden="true"><i></i></div>
+      <div class="ld-ring" aria-hidden="true"><span class="ld-icon" data-icon="pi"></span></div>
       <p class="ld-title" id="ld-title">LOADING</p>
       <p class="ld-fact" id="ld-fact"></p>
       <p class="ld-hint" id="ld-hint" hidden>TAP TO START</p>
@@ -266,7 +265,7 @@
       <div id="spanel-about" class="about" role="tabpanel" aria-labelledby="stab-about" hidden>
         <div class="about-hero">
           <span class="about-pi" data-icon="pi"></span>
-          <span><b>PI GAME</b><small id="about-ver">v1.6.0</small></span>
+          <span><b>PI GAME</b><small id="about-ver">v1.6.1</small></span>
         </div>
         <p>A tiny 8-bit game about one big number. Type as many digits of pi as you can, chase speed and combo bonuses, earn Pi Coins and unlock new worlds.</p>
         <h3 class="modal-sub">YOUR DATA</h3>
@@ -285,7 +284,7 @@
 
     <div class="modal-foot">
       <button class="btn small danger" id="btn-reset-scores">RESET SCORES</button>
-      <span class="ver" id="app-ver">v1.6.0</span>
+      <span class="ver" id="app-ver">v1.6.1</span>
     </div>
   </dialog>
 
@@ -297,7 +296,7 @@
       <span class="coin-inline" aria-label="Your Pi Coins"><span data-icon="coin"></span><b id="themes-coins">0</b></span>
     </div>
     <div class="modal-body fade-scroll">
-      <p class="modal-note">Tap a theme to wear it. Locked themes come from the Shop.</p>
+      <p class="modal-note">Tap a theme to open it, then press EQUIP. Locked themes show ??? and tell you where to find them.</p>
       <div class="themes" id="theme-grid"></div>
     </div>
   </dialog>

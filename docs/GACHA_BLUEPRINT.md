@@ -16,21 +16,22 @@
 
 ## 2. Banners and items
 
-**Cosmic Beginnings** (live): 5 Common plain colours (Ruby, Ocean, Mint, Grape, Sunny) with the Chill track, **Epic** Deep Space and Neon Grid, **Legendary** Dreamy Day and Deep Sea, **Mythic** Phosphor and Aurora, **Godly** Singularity (a black hole that reacts to your typing).
+Four ranks (internal keys kept: `common` = **C**, `epic` = **B**, `legendary` = **A**, `godly` = **S**). By design: **C** still scene + standard music, **B** animated scene, **A** parallax / great scene + own music, **S** interactive scene + own music. Plain gradients are only the free Midnight / Daylight defaults.
 
-**Pi Fright!** (Halloween event, live): 5 Common Halloween colours (Pumpkin, Witching Hour, Toxic Slime, Blood Moon, Graveyard Fog), Epic Haunted Manor, Legendary The Backrooms, Mythic Hapi Halloween and Cursed Carnival, Godly Eldritch Sky, each tier with its own track (Trick or Treat, Manor Hours, Fluorescent Hum, Hapi Halloween's Haunted Waltz, Cursed Calliope, Eldritch Drone). To close it, set its `status` to `'coming-soon'` in `js/gacha-data.js`.
+**Cosmic Beginnings** (live): C Ruby Dunes, Ocean Bay, Mint Woods, Grape Dusk, Sunny Meadow; B Neon Grid, Deep Sea, Aurora; A Deep Space, Dreamy Day, Phosphor; S Singularity.
 
-### Drop rates (`BANNERS.*.rates`)
+**Pi Fright!** (Halloween event, live, always open): C Pumpkin Patch, Witch Moon, Slime Swamp, Blood Moon, Foggy Graveyard (Trick or Treat); B Haunted Manor (Manor Hours); A Hapi Halloween (Haunted Waltz), Cursed Carnival (Cursed Calliope), The Backrooms (Fluorescent Hum); S Eldritch Sky (Eldritch Drone).
 
-| Rarity | Rate | Items |
+### Drop rates (`BANNERS.*.rates`, placeholders)
+
+| Rank | Cosmic Beginnings | Pi Fright! |
 | --- | --- | --- |
-| Common | 62% (12.4% each) | 5 |
-| Epic | 24% | 2 |
-| Legendary | 9% | 2 |
-| Mythic | 4% | 2 |
-| Godly | 1% | 1 |
+| C | 60% (12% each) | 55% (11% each) |
+| B | 25% | 22% |
+| A | 12% | 18% |
+| S | 3% | 5% |
 
-The Shop's **Drop rates** window shows these live. Completing the 12-item banner takes about **127 pulls** on average (about 12,700 Pi Coins before duplicate refunds). At about 65 Pi Coins per typical run, tune `COINS_PER_SCORE` or the rates if that feels too slow.
+The Shop's **Drop rates** window shows these live. Completing the 12-item Cosmic Beginnings banner takes about **60 pulls** on average (about 6,000 Pi Coins before duplicate refunds). The balance pass should target about 2 runs per pull for a typical 20-digit run.
 
 ## 3. Decisions made (change them in one place)
 

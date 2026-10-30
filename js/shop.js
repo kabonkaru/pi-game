@@ -195,7 +195,7 @@
       const k = Math.min(1, (performance.now() - build0) / T);
       st.shake = reduceMotion() ? 0 : k * 3; st.glow = 0.2 + k * 0.8;
       st.col = rc(RANK[Math.min(rank, Math.floor(k * (rank + 1)))]);
-      if (rank === 4) st.suck = k;
+      if (res.rarity === 'godly') st.suck = k;
       while (tk < ticks && k >= 1 - Math.pow(1 - (tk + 1) / ticks, 1.8)) { audio.sfx('pull_tick', { n: (tk + 1) / ticks }); tk++; }
       if (k >= 1) break;
       await sleep(16);
@@ -210,7 +210,7 @@
     audio.duck(false); audio.sfx('pull_reveal', { rarity: res.rarity });
     showCard(res);
     if (res.fakeout && !pv.skip) await fakeout(res);
-    if (total === 1 || RANK.indexOf(res.rarity) >= 3 || res.isNew || res.fakeout) await waitTap(); else await Promise.race([sleep(1100), waitTap()]);
+    if (total === 1 || RANK.indexOf(res.rarity) >= 2 || res.isNew || res.fakeout) await waitTap(); else await Promise.race([sleep(1100), waitTap()]);
     cardEl.hidden = true; st.open = 0; st.rays = 0; st.glow = 0;
   }
 

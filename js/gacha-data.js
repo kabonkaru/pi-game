@@ -8,12 +8,11 @@
   'use strict';
 
   /** rarity ladder, lowest to highest; `css` is the matching colour token in style.css */
-  const RARITIES = {
-    common:    { rank: 1, label: 'COMMON',    css: '--rarity-common',    color: '#aab4c3' },
-    epic:      { rank: 2, label: 'EPIC',      css: '--rarity-epic',      color: '#b366ff' },
-    legendary: { rank: 3, label: 'LEGENDARY', css: '--rarity-legendary', color: '#ffb938' },
-    mythic:    { rank: 4, label: 'MYTHIC',    css: '--rarity-mythic',    color: '#ff4d6d' },
-    godly:     { rank: 5, label: 'GODLY',     css: '--rarity-godly',     color: '#8be9ff' },
+  const RARITIES = {      // v1.6.1: four ranks. Internal keys kept: common = C, epic = B, legendary = A, godly = S
+    common:    { rank: 1, label: 'RANK C', css: '--rarity-common',    color: '#aab4c3' },
+    epic:      { rank: 2, label: 'RANK B', css: '--rarity-epic',      color: '#b366ff' },
+    legendary: { rank: 3, label: 'RANK A', css: '--rarity-legendary', color: '#ffb938' },
+    godly:     { rank: 4, label: 'RANK S', css: '--rarity-godly',     color: '#8be9ff' },
   };
 
   const SHOP = {
@@ -26,43 +25,43 @@
 
   /** every theme that can come out of a pull */
   const ITEMS = {
-    'plain-ruby':  { rarity: 'common',    name: 'RUBY' },
-    'plain-ocean': { rarity: 'common',    name: 'OCEAN' },
-    'plain-mint':  { rarity: 'common',    name: 'MINT' },
-    'plain-grape': { rarity: 'common',    name: 'GRAPE' },
-    'plain-sun':   { rarity: 'common',    name: 'SUNNY' },
-    'dark':        { rarity: 'epic',      name: 'DEEP SPACE' },
-    'light':       { rarity: 'legendary', name: 'DREAMY DAY' },
-    'singularity': { rarity: 'godly',     name: 'SINGULARITY' },
-    'terminal':    { rarity: 'mythic',    name: 'PHOSPHOR' },
-    'halloween':   { rarity: 'mythic',    name: 'HAPI HALLOWEEN' },
-    'hw-pumpkin': { rarity: 'common', name: 'PUMPKIN' },
-    'hw-witch': { rarity: 'common', name: 'WITCHING HOUR' },
-    'hw-slime': { rarity: 'common', name: 'TOXIC SLIME' },
-    'hw-blood': { rarity: 'common', name: 'BLOOD MOON' },
-    'hw-fog': { rarity: 'common', name: 'GRAVEYARD FOG' },
-    'hw-backrooms': { rarity: 'legendary', name: 'THE BACKROOMS' },
-    'hw-eldritch': { rarity: 'godly', name: 'ELDRITCH SKY' },
-    'hw-manor': { rarity: 'epic', name: 'HAUNTED MANOR' },
-    'hw-carnival': { rarity: 'mythic', name: 'CURSED CARNIVAL' },
-    'ex-neon': { rarity: 'epic', name: 'NEON GRID' },
-    'ex-sea': { rarity: 'legendary', name: 'DEEP SEA' },
-    'ex-aurora': { rarity: 'mythic', name: 'AURORA' },
+    "plain-ruby": { rarity: "common", name: "RUBY DUNES" },
+    "plain-ocean": { rarity: "common", name: "OCEAN BAY" },
+    "plain-mint": { rarity: "common", name: "MINT WOODS" },
+    "plain-grape": { rarity: "common", name: "GRAPE DUSK" },
+    "plain-sun": { rarity: "common", name: "SUNNY MEADOW" },
+    "hw-pumpkin": { rarity: "common", name: "PUMPKIN PATCH" },
+    "hw-witch": { rarity: "common", name: "WITCH MOON" },
+    "hw-slime": { rarity: "common", name: "SLIME SWAMP" },
+    "hw-blood": { rarity: "common", name: "BLOOD MOON" },
+    "hw-fog": { rarity: "common", name: "FOGGY GRAVEYARD" },
+    "ex-neon": { rarity: "epic", name: "NEON GRID" },
+    "ex-sea": { rarity: "epic", name: "DEEP SEA" },
+    "ex-aurora": { rarity: "epic", name: "AURORA" },
+    "hw-manor": { rarity: "epic", name: "HAUNTED MANOR" },
+    "dark": { rarity: "legendary", name: "DEEP SPACE" },
+    "light": { rarity: "legendary", name: "DREAMY DAY" },
+    "terminal": { rarity: "legendary", name: "PHOSPHOR" },
+    "halloween": { rarity: "legendary", name: "HAPI HALLOWEEN" },
+    "hw-carnival": { rarity: "legendary", name: "CURSED CARNIVAL" },
+    "hw-backrooms": { rarity: "legendary", name: "THE BACKROOMS" },
+    "singularity": { rarity: "godly", name: "SINGULARITY" },
+    "hw-eldritch": { rarity: "godly", name: "ELDRITCH SKY" },
   };
 
   const BANNERS = {
     standard: {
       id: 'standard', name: 'COSMIC BEGINNINGS', status: 'live',
       blurb: 'Plain colours, neon grids, deep seas, auroras, deep space, sunny days, a handheld and a black hole.',
-      pool: ['plain-ruby', 'plain-ocean', 'plain-mint', 'plain-grape', 'plain-sun', 'dark', 'light', 'singularity', 'terminal', 'ex-neon', 'ex-sea', 'ex-aurora'],
+      pool: ['plain-ruby', 'plain-ocean', 'plain-mint', 'plain-grape', 'plain-sun', 'ex-neon', 'ex-sea', 'ex-aurora', 'dark', 'light', 'terminal', 'singularity'],
       featured: ['singularity'],
-      rates: { common: 62, epic: 24, legendary: 9, mythic: 4, godly: 1 },     // percent per rarity (sums to 100)
+      rates: { common: 60, epic: 25, legendary: 12, godly: 3 },     // percent per rarity (sums to 100)
     },
     'event-halloween': {
       id: 'event-halloween', name: 'PI FRIGHT!', status: 'live',     // "coming-soon" = locked, "live" = open
       blurb: "Ha'Pi' Halloween!! Haunt the Manor, ride the Cursed Carnival, creep through the yellow Backrooms and dare an Eldritch pull. Spooky themes with their own haunted music!",
-      pool: ['hw-pumpkin', 'hw-witch', 'hw-slime', 'hw-blood', 'hw-fog', 'hw-manor', 'hw-backrooms', 'halloween', 'hw-carnival', 'hw-eldritch'], featured: ['hw-eldritch'],
-      rates: { common: 55, epic: 22, legendary: 12, mythic: 8, godly: 3 },      // placeholder: tune in the balance pass
+      pool: ['hw-pumpkin', 'hw-witch', 'hw-slime', 'hw-blood', 'hw-fog', 'hw-manor', 'halloween', 'hw-carnival', 'hw-backrooms', 'hw-eldritch'], featured: ['hw-eldritch'],
+      rates: { common: 55, epic: 22, legendary: 18, godly: 5 },      // placeholder: tune in the balance pass
     },
   };
 
